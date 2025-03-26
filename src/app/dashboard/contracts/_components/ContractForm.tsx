@@ -12,6 +12,7 @@ import { ContractFormData, ContractSchema } from "@/schemas/contractSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { Contract } from "@prisma/client";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   type: "create" | "edit" | "detail";
@@ -342,20 +343,20 @@ const ContactForm = ({ type, id, initialData }: Props) => {
 
         {type !== "detail" && (
           <div className="flex justify-end space-x-4 mt-6">
-            <button
+            <Button
               type="button"
               onClick={() => router.push("/contracts")}
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
             >
               Batal
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
               {isSubmitting ? "Menyimpan..." : "Simpan Kontrak"}
-            </button>
+            </Button>
           </div>
         )}
         </form>
