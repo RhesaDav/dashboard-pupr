@@ -25,7 +25,30 @@ export async function verifyToken(token: string) {
       new TextEncoder().encode(SECRET_KEY)
     )
     return payload
-  } catch {
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === 'JWTExpired') {
+        return 'expired'
+      }
+    }
+    return null
+
+  }
+}
+
+export async function refreshToken(oldToken: string) {
+  try {
+    const payload = await verifyToken(oldToken)
+    
+    if (payload && typeof payload === 'object') {
+      const newToken = await createToken({
+        id: payload.id,
+        role: payload.role
+      })
+      
+      return newToken
+    }
+  } catch (error) {
     return null
   }
 }

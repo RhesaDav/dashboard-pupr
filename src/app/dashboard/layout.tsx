@@ -4,6 +4,7 @@ import Header from "@/components/layout/Header";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyToken } from "@/lib/auth";
+import { TokenRefreshProvider } from "@/components/auth/TokenRefreshProvider";
 
 interface LayoutProps {
   children: ReactNode;
@@ -25,6 +26,7 @@ const Layout = async ({ children }: LayoutProps) => {
 
   return (
     <div className="flex min-h-screen bg-muted/30">
+      <TokenRefreshProvider/>
       <Sidebar />
       <div className="flex flex-col flex-1">
         <Header />

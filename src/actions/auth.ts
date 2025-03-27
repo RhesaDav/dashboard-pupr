@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { hashPassword, comparePassword, createToken } from "@/lib/auth";
+import { hashPassword, comparePassword, createToken, refreshToken } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -82,3 +82,27 @@ export async function logoutAction() {
   cookiesHeaders.delete("session");
   redirect("/signin");
 }
+
+export async function refreshTokenAction() {
+  const cookiesHeaders = await cookies()
+  const oldToken = cookiesHeaders.get('session')?.value
+
+  if (!oldToken) {
+    return { success: false }
+  }
+
+  const newToken = await refreshToken(oldToken)
+
+  if (newToken) {
+    // Set token baru
+    cookiesHeaders.set('session', newToken, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production' 
+    })
+
+    return { success: true }
+  }
+
+  return { success: false }
+}
+
