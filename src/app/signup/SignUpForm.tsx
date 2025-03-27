@@ -16,24 +16,25 @@ import {
 import { Input } from "@/components/ui/input";
 import { LuLoader } from "react-icons/lu";
 import { useRouter } from "next/navigation";
-import { loginAction } from "@/actions/auth";
+import { loginAction, registerAction } from "@/actions/auth";
 import toast from "react-hot-toast";
 
-const SignInSchema = z.object({
+const SignUpSchema = z.object({
+  name: z.string().min(5, "nama minimal 5 karakter"),
   email: z.string().email("Email tidak valid"),
   password: z.string().min(6, "Password minimal 6 karakter"),
 });
 
-type SignInFormData = z.infer<typeof SignInSchema>;
+type SignInFormData = z.infer<typeof SignUpSchema>;
 
-function SignInForm() {
+function SignUpForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const form = useForm<SignInFormData>({
-    resolver: zodResolver(SignInSchema),
+    resolver: zodResolver(SignUpSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
     },
@@ -41,29 +42,23 @@ function SignInForm() {
 
   const onSubmit = async (values: SignInFormData) => {
     setLoading(true);
-    setErrorMessage(null);
 
     try {
       const formData = new FormData();
+      formData.append("name", values.name);
       formData.append("email", values.email);
       formData.append("password", values.password);
 
-      const res = await loginAction(formData);
+      const res = await registerAction(formData);
 
       if (!res?.error) {
         toast.success("Login berhasil!");
         router.push("/dashboard");
       } else {
-        setErrorMessage(
-          res?.error || "Login gagal, periksa kembali kredensial Anda."
-        );
         toast.error(res?.error || "Login gagal.");
       }
     } catch (error) {
-      if (error instanceof Error) {
-        setErrorMessage("Terjadi kesalahan saat login.");
-        toast.error("Terjadi kesalahan.");
-      }
+      toast.error("Terjadi kesalahan.");
     } finally {
       setLoading(false);
     }
@@ -72,9 +67,27 @@ function SignInForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-center mb-4">Sign In</h2>
+        <h2 className="text-2xl font-bold text-center mb-4">Sign Up</h2>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="JohnDoe"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="email"
@@ -107,14 +120,13 @@ function SignInForm() {
               )}
             />
 
-            {/* Submit Button */}
             <Button
               type="submit"
               className="w-full flex items-center justify-center gap-2"
               disabled={loading}
             >
               {loading && <LuLoader className="w-4 h-4 animate-spin" />}
-              Sign In
+              Sign Up
             </Button>
           </form>
         </Form>
@@ -123,4 +135,4 @@ function SignInForm() {
   );
 }
 
-export default SignInForm;
+export default SignUpForm;

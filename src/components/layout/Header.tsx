@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { logoutAction } from "@/actions/auth";
 
 const Header = () => {
   return (
@@ -23,7 +24,7 @@ const Header = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => console.log("Sign out")}>
+            <DropdownMenuItem onClick={async() => await logoutAction()}>
               <FiLogOut className="mr-2 w-5 h-5" />
               Sign Out
             </DropdownMenuItem>

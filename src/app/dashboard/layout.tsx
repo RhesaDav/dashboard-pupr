@@ -1,12 +1,28 @@
 import { ReactNode } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { verifyToken } from "@/lib/auth";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = async ({ children }: LayoutProps) => {
+  const cookiesHeaders = await cookies()
+  const token = cookiesHeaders.get('session')?.value
+
+  if (!token) {
+    redirect('/signin')
+  }
+
+  const payload = await verifyToken(token)
+
+  if (!payload) {
+    redirect('/signin')
+  }
+
   return (
     <div className="flex min-h-screen bg-muted/30">
       <Sidebar />
