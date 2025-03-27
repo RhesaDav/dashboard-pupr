@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { LuLoader } from "react-icons/lu";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 // Schema validasi dengan Zod
 const SignInSchema = z.object({
@@ -30,11 +31,23 @@ function SignInForm() {
   });
 
   const onSubmit = async (values: SignInFormData) => {
-    setLoading(true);
-    console.log("Form Data:", values);
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulasi request API
-    setLoading(false);
-    router.push("/dashboard/home")
+    // setLoading(true);
+    // console.log("Form Data:", values);
+    // await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulasi request API
+    // setLoading(false);
+    const result = await signIn('credentials', {
+      redirect: false,
+      email: values.email,
+      password: values.password
+    })
+    if (result?.ok) {
+      router.push("/dashboard/home")
+    }
+
+    if (result?.error) {
+      console.log("Login gagal. Periksa email dan password Anda.")
+    }
+
   };
 
   return (

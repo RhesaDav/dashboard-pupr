@@ -1,5 +1,5 @@
 import React from "react";
-import {signIn} from "@/auth"
+import {signIn} from "@/lib/auth"
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
