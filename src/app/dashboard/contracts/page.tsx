@@ -1,5 +1,5 @@
 import { ConfirmModal } from "@/components/ConfirmModal";
-import { ContractsPage } from "./ContractPage";
+import { ContractsPage } from "./_components/ContractPage";
 
 export default function HomePage() {
     return (

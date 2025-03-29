@@ -5,7 +5,7 @@ import {
   createContract,
   editContract,
   getContractById,
-} from "../actions/contract";
+} from "../../../../actions/contract";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { ContractFormData, ContractSchema } from "@/schemas/contractSchemas";

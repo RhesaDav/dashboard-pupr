@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiHome, FiFileText } from "react-icons/fi";
+import { FiHome, FiFileText, FiUser } from "react-icons/fi";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +12,7 @@ const Sidebar = () => {
   const menuItems = [
     { label: "Home", icon: FiHome, href: "/dashboard/home" },
     { label: "Data Kontrak", icon: FiFileText, href: "/dashboard/contracts" },
+    { label: "Management User", icon: FiUser, href: "/dashboard/user-management"}
   ];
 
   return (
