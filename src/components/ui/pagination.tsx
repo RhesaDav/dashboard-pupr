@@ -43,7 +43,7 @@ export default function Pagination({ totalPages = 1 }: TablePaginationProps) {
       </div>
 
       <Select value={String(pageSize)} onValueChange={(value) => setQueryParams("pageSize", value)}>
-        <SelectTrigger className="w-[100px]">
+        <SelectTrigger className="w-[150px]">
           <SelectValue placeholder="Items per page" />
         </SelectTrigger>
         <SelectContent>

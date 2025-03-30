@@ -1,21 +1,10 @@
 "use client";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
 import React, { useEffect, useState } from "react";
-import { FiMoreHorizontal } from "react-icons/fi";
 import { LuArrowUpDown } from "react-icons/lu";
 import { DeleteUserDialog } from "./delete-user-dialog";
-import { toast } from "sonner";
-import { getAllUsers } from "@/actions/user";
 import { User } from "@prisma/client";
 import EditUserDialog from "./edit-user-dialog";
 
@@ -24,8 +13,6 @@ interface UserManagementTableTypes {
 }
 
 function UserManagementTable({ users }: UserManagementTableTypes) {
-  const [loading, setLoading] = useState(true);
-
   const columns: ColumnDef<User>[] = [
     {
       accessorKey: "name",
