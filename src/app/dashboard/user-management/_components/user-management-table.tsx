@@ -7,6 +7,8 @@ import { LuArrowUpDown } from "react-icons/lu";
 import { DeleteUserDialog } from "./delete-user-dialog";
 import { User } from "@prisma/client";
 import EditUserDialog from "./edit-user-dialog";
+import { Accessibility, AccessibilityIcon, Eye } from "lucide-react";
+import UserAccessibilitySheet from "./user-accessibility-sheet";
 
 interface UserManagementTableTypes {
   users?: User[];
@@ -68,6 +70,7 @@ function UserManagementTable({ users }: UserManagementTableTypes) {
           <div className="flex items-center gap-2">
             <DeleteUserDialog userId={user.id} userName={user.name || ""} />
             <EditUserDialog user={user} />
+            <UserAccessibilitySheet/>
           </div>
         );
       },

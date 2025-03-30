@@ -9,7 +9,7 @@ import {
   CreateContractType,
 } from "@/schemas/contractSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader } from "lucide-react";
+import { Loader, Map } from "lucide-react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -134,6 +134,9 @@ export default function CreateContractDialog() {
               <Label htmlFor="titikKoordinat">Titik Koordinat (Opsional)</Label>
               <Input id="titikKoordinat" {...form.register("titikKoordinat")} />
             </div>
+              <Button type="button" variant="outline">
+                <Map/>
+              </Button>
           </div>
           
           {/* Bagian Pejabat Pembuat Komitmen */}
