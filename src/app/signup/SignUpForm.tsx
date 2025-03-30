@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { LuLoader } from "react-icons/lu";
 import { useRouter } from "next/navigation";
 import { loginAction, registerAction } from "@/actions/auth";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const SignUpSchema = z.object({
   name: z.string().min(5, "nama minimal 5 karakter"),

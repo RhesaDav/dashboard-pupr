@@ -27,9 +27,7 @@ import {
   LuFilter,
 } from "react-icons/lu";
 import { useModalStore } from "@/store/useModalStore";
-import { ConfirmModal } from "@/components/ConfirmModal";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -56,6 +54,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 type ContractData = {
   id: string;

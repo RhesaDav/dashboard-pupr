@@ -15,16 +15,18 @@ datasource db {
 }
 
 enum UserRole {
+  SUPERADMIN
   ADMIN
+  CONSULTANT
   USER
 }
 
 model User {
-  id        String    @id @default(cuid())
+  id        String    @id @default(uuid())
   email     String    @unique
   password  String
   name      String?
-  role      UserRole  @default(USER)
+  role      UserRole  @default(SUPERADMIN)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }

@@ -1,200 +1,205 @@
-"use server"
-import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
-import { ContractSchema } from '@/schemas/contractSchemas';
+"use server";
 
-export type ContractInput = z.input<typeof ContractSchema>;
+import { prisma } from "@/lib/prisma";
+import {
+  CreateUserSchema,
+  UpdateUserSchema,
+  UserIdSchema,
+} from "@/schemas/userSchemas";
+import { Prisma } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { revalidatePath } from "next/cache";
+import { ZodError } from "zod";
 
-export async function getContracts(params?: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-}) {
+export const createUser = async (formData: FormData) => {
   try {
-    const page = params?.page || 1;
-    const pageSize = params?.pageSize || 10;
-    const search = params?.search || '';
+    const data = Object.fromEntries(formData.entries());
 
-    const where = search ? {
-      OR: [
-        { namaPaket: { contains: search } },
-        { nomorKontrak: { contains: search } },
-        { namaPenyedia: { contains: search } }
-      ]
-    } : {};
+    const validatedData = CreateUserSchema.parse(data);
 
-    const [total, contracts] = await Promise.all([
-      prisma.contract.count({ where }),
-      prisma.contract.findMany({
-        where,
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        orderBy: { tanggalKontrak: 'desc' }
-      })
-    ]);
+    const checkUser = await prisma.user.findFirst({
+      where: {
+        email: validatedData.email
+      }
+    })
 
+    if (checkUser) {
+      return {
+        success: false,
+        error: "Email registered"
+      }
+    }
+
+    const newUser = await prisma.user.create({
+      data: {
+        ...validatedData,
+        password: await bcrypt.hash(validatedData.password, 10)
+      },
+    });
+
+    revalidatePath("/dashboard/user-management","page")
+
+    return { success: true, user: newUser };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return {
+        success: false,
+        error: error.errors.map((err) => err.message).join(", "),
+      };
+    }
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: "Something wrong" };
+  }
+};
+
+export const getAllUsers = async (
+  page = 1,
+  limit = 10,
+  search = "",
+) => {
+  try {
+    const skip = (page - 1) * limit;
+    
+    const searchCondition: Prisma.UserWhereInput = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
+            { email: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
+          ],
+        }
+      : {};
+    
+    const users = await prisma.user.findMany({
+      where: searchCondition,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    });
+    
+    const totalUsers = await prisma.user.count({
+      where: searchCondition,
+    });
+    
+    const totalPages = Math.ceil(totalUsers / limit);
+    
     return {
       success: true,
-      data: contracts,
-      total,
-      page,
-      pageSize
+      users,
+      pagination: {
+        total: totalUsers,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
     };
-
   } catch (error) {
-    console.error('Error fetching contracts:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch contracts' 
+    if (error instanceof ZodError) {
+      return {
+        success: false,
+        error: error.errors.map((err) => err.message).join(", "),
+      };
+    }
+    
+    if (error instanceof Error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+    
+    return {
+      success: false,
+      error: "Something wrong",
     };
   }
-}
+};
 
-export async function createContract(rawData: ContractInput) {
+export const getUserById = async (id: string) => {
   try {
-    const validatedData = ContractSchema.parse(rawData);
+    const validatedId = UserIdSchema.parse({ id });
 
-    const newContract = await prisma.contract.create({
+    const user = await prisma.user.findUnique({
+      where: { id: validatedId.id },
+    });
+
+    if (!user) return { success: false, error: "User not found" };
+
+    return { success: true, user };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return {
+        success: false,
+        error: error.errors.map((err) => err.message).join(", "),
+      };
+    }
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: "Something wrong" };
+  }
+};
+
+export const updateUser = async (formData: FormData) => {
+  try {
+    const data = Object.fromEntries(formData.entries());
+
+    const validatedData = UpdateUserSchema.parse(data);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: validatedData.id },
       data: {
-        namaPaket: validatedData.namaPaket,
-        kabupatenKota: validatedData.kabupatenKota,
-        distrik: validatedData.distrik,
-        kampung: validatedData.kampung,
-        titikKoordinat: validatedData.titikKoordinat,
-        
-        pejabatPembuatKomitmen: validatedData.pejabatPembuatKomitmen,
-        nipPejabatPembuatKomitmen: validatedData.nipPejabatPembuatKomitmen,
-        
-        nomorKontrak: validatedData.nomorKontrak,
-        namaPenyedia: validatedData.namaPenyedia,
-        
-        nilaiKontrak: validatedData.nilaiKontrak,
-        nilaiAnggaran: validatedData.nilaiAnggaran,
-        sumberDana: validatedData.sumberDana,
-        
-        tanggalKontrak: validatedData.tanggalKontrak,
-        
-        volumeKontrak: validatedData.volumeKontrak,
-        satuanKontrak: validatedData.satuanKontrak,
-        
-        korwaslap: validatedData.korwaslap,
-        nipKorwaslap: validatedData.nipKorwaslap,
-        
-        pengawasLapangan: validatedData.pengawasLapangan,
-        nipPengawasLapangan: validatedData.nipPengawasLapangan,
-        
-        hasilProdukAkhir: validatedData.hasilProdukAkhir,
-        progresFisik: validatedData.progresFisik,
-        progresKeuangan: validatedData.progresKeuangan,
-        
-        keuanganTerbayar: validatedData.keuanganTerbayar,
-        volumeCapaian: validatedData.volumeCapaian,
-        satuanCapaian: validatedData.satuanCapaian,
-      }
+        ...validatedData,
+        password: await bcrypt.hash(validatedData.password, 10)
+      },
     });
-    revalidatePath("/dashboard/contracts", "page")
 
-    return { 
-      success: true, 
-      data: newContract,
-      message: 'Kontrak berhasil dibuat' 
-    };
+    revalidatePath("/dashboard/user-management","page")
+
+    return { success: true, user: updatedUser };
   } catch (error) {
-    console.error('Error creating contract:', error);
-    
-    if (error instanceof z.ZodError) {
-      return { 
-        success: false, 
-        error: 'Validasi data gagal',
-        details: error.errors
+    if (error instanceof ZodError) {
+      return {
+        success: false,
+        error: error.errors.map((err) => err.message).join(", "),
       };
     }
-
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Gagal membuat kontrak' 
-    };
-  }
-}
-
-export async function editContract(id: string, rawData: Partial<ContractInput>) {
-  try {
-    const validatedData = ContractSchema.partial().parse(rawData);
-
-    const updatedContract = await prisma.contract.update({
-      where: { id },
-      data: validatedData
-    });
-    revalidatePath("/dashboard/contracts", "page")
-
-    return { 
-      success: true, 
-      data: updatedContract,
-      message: 'Kontrak berhasil diperbarui' 
-    };
-  } catch (error) {
-    console.error('Error updating contract:', error);
-    
-    if (error instanceof z.ZodError) {
-      return { 
-        success: false, 
-        error: 'Validasi data gagal',
-        details: error.errors 
-      };
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
     }
 
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Gagal memperbarui kontrak' 
-    };
+    return { success: false, error: "Something wrong" };
   }
-}
+};
 
-export async function deleteContract(id: string) {
+export const deleteUser = async (id: string) => {
+  console.log(id)
   try {
-    const deletedContract = await prisma.contract.delete({
-      where: { id }
+    const validatedId = UserIdSchema.parse({ id });
+
+    await prisma.user.delete({
+      where: { id: validatedId.id },
     });
 
-    revalidatePath("/dashboard/contracts", "page")
+    revalidatePath("/dashboard/user-management","page")
 
-    return { 
-      success: true, 
-      data: deletedContract,
-      message: 'Kontrak berhasil dihapus' 
-    };
+    return { success: true, message: "User deleted successfully" };
   } catch (error) {
-    console.error('Error deleting contract:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Gagal menghapus kontrak' 
-    };
-  }
-}
-
-export async function getContractById(id: string) {
-  try {
-    const contract = await prisma.contract.findUnique({
-      where: { id }
-    });
-
-    if (!contract) {
-      return { 
-        success: false, 
-        error: 'Kontrak tidak ditemukan' 
+    if (error instanceof ZodError) {
+      return {
+        success: false,
+        error: error.errors.map((err) => err.message).join(", "),
       };
     }
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
 
-    return { 
-      success: true, 
-      data: contract 
-    };
-  } catch (error) {
-    console.error('Error fetching contract:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Gagal mengambil kontrak' 
-    };
+    return { success: false, error: "Something wrong" };
   }
-}
+};

@@ -1,5 +1,4 @@
 "use client";
-import toast from "react-hot-toast";
 import FormInput from "./FormInput";
 import {
   createContract,
@@ -13,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { Contract } from "@prisma/client";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface Props {
   type: "create" | "edit" | "detail";

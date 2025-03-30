@@ -1,42 +1,5 @@
 import { z } from "zod";
 
-// export const ContractSchema = z.object({
-//   namaPaket: z.string().min(1, "Nama Paket harus diisi"),
-//   kabupatenKota: z.string().min(1, "Kabupaten/Kota harus diisi"),
-//   distrik: z.string().min(1, "Distrik harus diisi"),
-//   kampung: z.string().min(1, "Kampung harus diisi"),
-//   titikKoordinat: z.string().optional(),
-  
-//   pejabatPembuatKomitmen: z.string().min(1, "Pejabat Pembuat Komitmen harus diisi"),
-//   nipPejabatPembuatKomitmen: z.string().min(1, "NIP Pejabat Pembuat Komitmen harus diisi"),
-  
-//   nomorKontrak: z.string().min(1, "Nomor Kontrak harus diisi"),
-//   namaPenyedia: z.string().min(1, "Nama Penyedia harus diisi"),
-  
-//   nilaiKontrak: z.string().refine((val) => !isNaN(parseFloat(val)), "Nilai Kontrak harus angka"),
-//   nilaiAnggaran: z.string().refine((val) => !isNaN(parseFloat(val)), "Nilai Anggaran harus angka"),
-//   sumberDana: z.string().min(1, "Sumber Dana harus diisi"),
-  
-//   tanggalKontrak: z.string().refine((val) => !isNaN(Date.parse(val)), "Tanggal Kontrak tidak valid"),
-  
-//   volumeKontrak: z.string().refine((val) => !isNaN(parseFloat(val)), "Volume Kontrak harus angka"),
-//   satuanKontrak: z.string().min(1, "Satuan Kontrak harus diisi"),
-  
-//   korwaslap: z.string().min(1, "Korwaslap harus diisi"),
-//   nipKorwaslap: z.string().min(1, "NIP Korwaslap harus diisi"),
-  
-//   pengawasLapangan: z.string().min(1, "Pengawas Lapangan harus diisi"),
-//   nipPengawasLapangan: z.string().min(1, "NIP Pengawas Lapangan harus diisi"),
-  
-//   hasilProdukAkhir: z.string().optional(),
-//   progresFisik: z.string().optional(),
-//   progresKeuangan: z.string().optional(),
-  
-//   keuanganTerbayar: z.string().optional(),
-//   volumeCapaian: z.string().optional(),
-//   satuanCapaian: z.string().optional(),
-// });
-
 export const ContractSchema = z.object({
   namaPaket: z.string().min(1, { message: "Nama Paket harus diisi" }),
   kabupatenKota: z.string().min(1, { message: "Kabupaten/Kota harus diisi" }),

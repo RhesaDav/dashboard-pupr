@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { LuLoader } from "react-icons/lu";
 import { useRouter } from "next/navigation";
 import { loginAction } from "@/actions/auth";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const SignInSchema = z.object({
   email: z.string().email("Email tidak valid"),

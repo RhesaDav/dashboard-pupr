@@ -10,43 +10,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { LuArrowUpDown } from "react-icons/lu";
+import { DeleteUserDialog } from "./delete-user-dialog";
+import { toast } from "sonner";
+import { getAllUsers } from "@/actions/user";
+import { User } from "@prisma/client";
+import EditUserDialog from "./edit-user-dialog";
 
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: "active" | "inactive";
-};
+interface UserManagementTableTypes {
+  users?: User[];
+}
 
-const data: User[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    role: "Admin",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    role: "User",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Bob Johnson",
-    email: "bob.johnson@example.com",
-    role: "Editor",
-    status: "inactive",
-  },
-];
+function UserManagementTable({ users }: UserManagementTableTypes) {
+  const [loading, setLoading] = useState(true);
 
-function UserManagementTable() {
   const columns: ColumnDef<User>[] = [
     {
       accessorKey: "name",
@@ -61,6 +40,9 @@ function UserManagementTable() {
           </Button>
         );
       },
+      cell: ({ row }) => {
+        return row.original.name || "-";
+      },
     },
     {
       accessorKey: "email",
@@ -69,21 +51,26 @@ function UserManagementTable() {
     {
       accessorKey: "role",
       header: "Role",
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("status") as string;
-        return (
-          <div
-            className={`font-medium ${
-              status === "active" ? "text-green-500" : "text-red-500"
-            }`}
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </div>
-        );
+        const role = row.getValue("role") as string;
+
+    const roleColorMap: Record<string, string> = {
+      ADMIN: "bg-green-100 text-green-800",
+      SUPERADMIN: "bg-blue-100 text-blue-800",
+      USER: "bg-red-100 text-red-800",
+      CONSULTANT: "bg-yellow-100 text-yellow-800",
+    };
+
+    return (
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${
+          roleColorMap[role] || "bg-gray-100 text-gray-800"
+        }`}
+      >
+        {role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()}
+      </span>
+    );
+
       },
     },
     {
@@ -91,27 +78,10 @@ function UserManagementTable() {
       cell: ({ row }) => {
         const user = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <FiMoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(user.id)}
-              >
-                Copy ID
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Edit User</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
-                Delete User
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <DeleteUserDialog userId={user.id} userName={user.name || ""} />
+            <EditUserDialog user={user} />
+          </div>
         );
       },
     },
@@ -120,10 +90,10 @@ function UserManagementTable() {
   return (
     <DataTable
       columns={columns}
-      data={data}
+      data={users || []}
       searchKey="name"
       pageSizeOptions={[5, 10, 20, 50]}
-      defaultPageSize={5}
+      defaultPageSize={10}
     />
   );
 }
