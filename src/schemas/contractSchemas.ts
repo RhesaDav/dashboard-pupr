@@ -1,96 +1,51 @@
 import { z } from "zod";
 
-export const ContractSchema = z.object({
-  namaPaket: z.string().min(1, { message: "Nama Paket harus diisi" }),
-  kabupatenKota: z.string().min(1, { message: "Kabupaten/Kota harus diisi" }),
-  distrik: z.string().min(1, { message: "Distrik harus diisi" }),
-  kampung: z.string().min(1, { message: "Kampung harus diisi" }),
+export const CreateContractSchema = z.object({
+  namaPaket: z.string().min(1, "Nama paket tidak boleh kosong"),
+  kabupatenKota: z.string().min(1, "Kabupaten/kota tidak boleh kosong"),
+  distrik: z.string().min(1, "Distrik tidak boleh kosong"),
+  kampung: z.string().min(1, "Kampung tidak boleh kosong"),
   titikKoordinat: z.string().optional(),
 
-  pejabatPembuatKomitmen: z.string().min(1, { message: "Pejabat Pembuat Komitmen harus diisi" }),
-  nipPejabatPembuatKomitmen: z.string().min(1, { message: "NIP Pejabat Pembuat Komitmen harus diisi" }),
+  pejabatPembuatKomitmen: z.string().min(1, "Pejabat Pembuat Komitmen tidak boleh kosong"),
+  nipPejabatPembuatKomitmen: z.string().min(1, "NIP Pejabat Pembuat Komitmen tidak boleh kosong"),
 
-  nomorKontrak: z.string().min(1, { message: "Nomor Kontrak harus diisi" }),
-  namaPenyedia: z.string().min(1, { message: "Nama Penyedia harus diisi" }),
+  nomorKontrak: z.string().min(1, "Nomor kontrak tidak boleh kosong"),
+  namaPenyedia: z.string().min(1, "Nama penyedia tidak boleh kosong"),
 
-  nilaiKontrak: z
-    .string()
-    .min(1, { message: "Nilai Kontrak harus diisi" })
-    .transform((val) => Number(val))
-    .refine((val) => !isNaN(val) && val >= 0, {
-      message: "Nilai Kontrak harus berupa angka positif",
-    }),
+  nilaiKontrak: z.number().positive("Nilai kontrak harus lebih dari 0"),
+  nilaiAnggaran: z.number().positive("Nilai anggaran harus lebih dari 0"),
+  sumberDana: z.string().min(1, "Sumber dana tidak boleh kosong"),
 
-  nilaiAnggaran: z
-    .string()
-    .min(1, { message: "Nilai Anggaran harus diisi" })
-    .transform((val) => Number(val))
-    .refine((val) => !isNaN(val) && val >= 0, {
-      message: "Nilai Anggaran harus berupa angka positif",
-    }),
+  tanggalKontrak: z.coerce.date(),
 
-  sumberDana: z.string().min(1, { message: "Sumber Dana harus diisi" }),
+  volumeKontrak: z.number().positive("Volume kontrak harus lebih dari 0"),
+  satuanKontrak: z.string().min(1, "Satuan kontrak tidak boleh kosong"),
 
-  tanggalKontrak: z
-    .string()
-    .min(1, { message: "Tanggal Kontrak harus diisi" })
-    .transform((val) => new Date(val))
-    .refine((val) => !isNaN(val.getTime()), {
-      message: "Tanggal Kontrak tidak valid, format harus berupa tanggal",
-    }),
+  korwaslap: z.string().min(1, "Koordinator Pengawas Lapangan tidak boleh kosong"),
+  nipKorwaslap: z.string().min(1, "NIP Koordinator Pengawas Lapangan tidak boleh kosong"),
 
-  volumeKontrak: z
-    .string()
-    .min(1, { message: "Volume Kontrak harus diisi" })
-    .transform((val) => Number(val))
-    .refine((val) => !isNaN(val) && val >= 0, {
-      message: "Volume Kontrak harus berupa angka positif",
-    }),
-
-  satuanKontrak: z.string().min(1, { message: "Satuan Kontrak harus diisi" }),
-
-  korwaslap: z.string().min(1, { message: "Korwaslap harus diisi" }),
-  nipKorwaslap: z.string().min(1, { message: "NIP Korwaslap harus diisi" }),
-
-  pengawasLapangan: z.string().min(1, { message: "Pengawas Lapangan harus diisi" }),
-  nipPengawasLapangan: z.string().min(1, { message: "NIP Pengawas Lapangan harus diisi" }),
+  pengawasLapangan: z.string().min(1, "Pengawas Lapangan tidak boleh kosong"),
+  nipPengawasLapangan: z.string().min(1, "NIP Pengawas Lapangan tidak boleh kosong"),
 
   hasilProdukAkhir: z.string().optional(),
+  progresFisik: z.number().min(0).max(100).optional(),
+  progresKeuangan: z.number().min(0).max(100).optional(),
 
-  progresFisik: z
-    .string()
-    .optional()
-    .transform((val) => (val ? Number(val) : 0))
-    .refine((val) => !isNaN(val) && val >= 0 && val <= 100, {
-      message: "Progres Fisik harus berupa angka antara 0% - 100%",
-    }),
-
-  progresKeuangan: z
-    .string()
-    .optional()
-    .transform((val) => (val ? Number(val) : 0))
-    .refine((val) => !isNaN(val) && val >= 0 && val <= 100, {
-      message: "Progres Keuangan harus berupa angka antara 0% - 100%",
-    }),
-
-  keuanganTerbayar: z
-    .string()
-    .optional()
-    .transform((val) => (val ? Number(val) : 0))
-    .refine((val) => !isNaN(val) && val >= 0, {
-      message: "Keuangan Terbayar harus berupa angka positif",
-    }),
-
-  volumeCapaian: z
-    .string()
-    .optional()
-    .transform((val) => (val ? Number(val) : 0))
-    .refine((val) => !isNaN(val) && val >= 0, {
-      message: "Volume Capaian harus berupa angka positif",
-    }),
-
+  keuanganTerbayar: z.number().optional(),
+  volumeCapaian: z.number().optional(),
   satuanCapaian: z.string().optional(),
+
 });
 
+export const UpdateContractSchema = CreateContractSchema.extend({
+  id: z.string().uuid(),
+});
 
-export type ContractFormData = z.infer<typeof ContractSchema>;
+export const ContractIdSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export type CreateContractType = z.infer<typeof CreateContractSchema>;
+export type UpdateContractType = z.infer<typeof UpdateContractSchema>;
+export type ContractIdType = z.infer<typeof ContractIdSchema>

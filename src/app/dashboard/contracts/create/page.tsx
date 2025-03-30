@@ -1,9 +1,9 @@
 import React from 'react'
-import ContactForm from '../_components/ContractForm'
+import CreateContractDialog from '../_components/create-contract-form'
 
 function page() {
   return (
-    <ContactForm type='create'/>
+    <CreateContractDialog/>
   )
 }
 
