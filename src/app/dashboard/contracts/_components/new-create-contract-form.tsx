@@ -37,188 +37,200 @@ import { useRouter } from "next/navigation";
 import { SelectGroup, SelectLabel } from "@radix-ui/react-select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { romanize } from "@/lib/utils";
-
-const ContractSchema = z.object({
-  namaPaket: z.string().min(1, { message: "Nama paket tidak boleh kosong" }),
-  namaPenyedia: z
-    .string()
-    .min(1, { message: "Nama penyedia tidak boleh kosong" }),
-  kota: z.string().min(1, { message: "Kota tidak boleh kosong" }),
-  distrik: z.string().min(1, { message: "Distrik tidak boleh kosong" }),
-  kampung: z.string().min(1, { message: "Kampung tidak boleh kosong" }),
-  koordinatAwal: z
-    .string()
-    .min(1, { message: "Koordinat awal tidak boleh kosong" }),
-  koordinatAkhir: z
-    .string()
-    .min(1, { message: "Koordinat akhir tidak boleh kosong" }),
-  ppk: z.string().min(1, { message: "PPK tidak boleh kosong" }),
-  nipPPK: z.string().min(1, { message: "NIP PPK tidak boleh kosong" }),
-  korwaslap: z.string().min(1, { message: "Korwaslap tidak boleh kosong" }),
-  nipKorwaslap: z
-    .string()
-    .min(1, { message: "NIP Korwaslap tidak boleh kosong" }),
-  pengawasLapangan: z
-    .string()
-    .min(1, { message: "Pengawas lapangan tidak boleh kosong" }),
-  nipPengawasLapangan: z
-    .string()
-    .min(1, { message: "NIP Pengawas lapangan tidak boleh kosong" }),
-  paguAnggaran: z
-    .string()
-    .min(1, { message: "Pagu anggaran tidak boleh kosong" }),
-  nilaiKontrak: z
-    .number()
-    .min(1, { message: "Nilai kontrak harus lebih dari 0" }),
-  sumberDana: z.string().min(1, { message: "Sumber dana tidak boleh kosong" }),
-  nomorKontrak: z
-    .string()
-    .min(1, { message: "Nomor kontrak tidak boleh kosong" }),
-  tanggalKontrak: z.string().min(1, { message: "Tanggal kontrak harus valid" }),
-  masaPelaksanaan: z
-    .number()
-    .min(1, { message: "Masa pelaksanaan harus lebih dari 0 hari" }),
-  volumeKontrak: z
-    .string()
-    .min(1, { message: "Volume kontrak tidak boleh kosong" }),
-  satuanKontrak: z
-    .string()
-    .min(1, { message: "Satuan kontrak tidak boleh kosong" }),
-  konsultanSupervisi: z
-    .string()
-    .min(1, { message: "Nama konsultan supervisi tidak boleh kosong" }),
-  nomorKontrakSupervisi: z
-    .string()
-    .min(1, { message: "Nomor kontrak supervisi tidak boleh kosong" }),
-  tanggalKontrakSupervisi: z
-    .string()
-    .min(1, { message: "Tanggal kontrak supervisi harus valid" }),
-  masaPelaksanaanSupervisi: z
-    .number()
-    .min(0, { message: "Masa pelaksanaan supervisi tidak boleh negatif" }),
-
-  hasAddendum: z.enum(["ada", "tidak ada"], {
-    message: "Pilihan hanya bisa 'ada' atau 'tidak ada'",
-  }),
-
-  addendum: z
-    .array(
-      z.object({
-        id: z.string().uuid({ message: "ID harus berupa UUID yang valid" }),
-        name: z
-          .string()
-          .min(1, { message: "Nama addendum tidak boleh kosong" }),
-        tipe: z
-          .string()
-          .min(1, { message: "Tipe addendum tidak boleh kosong" }),
-        hari: z.string().nullable().optional(),
-        volume: z.string().nullable().optional(),
-        satuan: z.string().nullable().optional(),
-        pemberianKesempatan: z.boolean().default(false),
-      })
-    )
-    .optional(),
-
-  pemberianKesempatan: z.boolean().default(false),
-  hasilProdukAkhir: z
-    .string()
-    .min(1, { message: "Hasil produk akhir tidak boleh kosong" }),
-  dimensi: z.string().min(1, { message: "Dimensi tidak boleh kosong" }),
-  kendala: z.boolean().default(false),
-
-  permasalahan: z.string().optional(),
-  keterangan: z.string().optional(),
-
-  uangMuka: z
-    .number()
-    .min(0, { message: "Uang muka tidak boleh negatif" })
-    .max(100, { message: "Uang muka maksimal 100" }),
-  termin1: z
-    .number()
-    .min(0, { message: "Termin 1 tidak boleh negatif" })
-    .max(100, { message: "Termin 1 maksimal 100" }),
-  termin2: z
-    .number()
-    .min(0, { message: "Termin 2 tidak boleh negatif" })
-    .max(100, { message: "Termin 2 maksimal 100" }),
-  termin3: z
-    .number()
-    .min(0, { message: "Termin 3 tidak boleh negatif" })
-    .max(100, { message: "Termin 3 maksimal 100" }),
-  termin4: z
-    .number()
-    .min(0, { message: "Termin 4 tidak boleh negatif" })
-    .max(100, { message: "Termin 4 maksimal 100" }),
-
-  dokumentasiAwal: z.string().optional(),
-  dokumentasiTengah: z.string().optional(),
-  dokumentasiAkhir: z.string().optional(),
-});
-
-type ContractSchemaType = z.infer<typeof ContractSchema>;
+import {
+  CreateContractSchema,
+  CreateContractType,
+} from "@/schemas/contractSchemas";
+import { createContract, editContract } from "@/actions/contract";
+import { Addendum, Contract } from "@prisma/client";
 
 type ContactFormType = {
-    type?: "create" | "update" | "detail"
-    initialData?: ContractSchemaType
-}
+  id?: string;
+  type?: "create" | "update" | "detail";
+  initialData?: Contract & { addendum: Addendum[] };
+};
 
-export default function ContractForm({type="create", initialData}:ContactFormType) {
+export default function ContractForm({
+  id,
+  type = "create",
+  initialData,
+}: ContactFormType) {
+  const newInitialData = {
+    ...initialData,
+    tanggalKontrak: format(
+      initialData?.tanggalKontrak || new Date(),
+      "dd-MM-yyyy"
+    ),
+    tanggalKontrakSupervisi: format(
+      initialData?.tanggalKontrak || new Date(),
+      "dd-MM-yyyy"
+    ),
+    hasAddendum: (initialData?.hasAddendum as "ada") || "tidak ada",
+  };
   const router = useRouter();
-  const form = useForm<ContractSchemaType>({
-    resolver: zodResolver(ContractSchema),
-    defaultValues: initialData || {
-      distrik: "",
-      dokumentasiAkhir: "",
-      dokumentasiAwal: "",
-      dokumentasiTengah: "",
-      kampung: "",
-      koordinatAkhir: "",
-      koordinatAwal: "",
-      korwaslap: "",
-      kota: "",
-      namaPaket: "",
-      namaPenyedia: "",
-      nipKorwaslap: "",
-      nipPengawasLapangan: "",
-      nipPPK: "",
-      paguAnggaran: "",
-      pengawasLapangan: "",
-      ppk: "",
-      addendum: [],
-      dimensi: "",
-      hasilProdukAkhir: "",
-      kendala: false,
-      keterangan: "",
-      konsultanSupervisi: "",
-      masaPelaksanaan: 0,
-      masaPelaksanaanSupervisi: 0,
-      nilaiKontrak: 0,
-      nomorKontrak: "",
-      nomorKontrakSupervisi: "",
-      pemberianKesempatan: false,
-      permasalahan: "",
-      satuanKontrak: "",
-      sumberDana: "",
-      tanggalKontrak: format(new Date(), "dd-MM-yyyy"),
-      tanggalKontrakSupervisi: format(new Date(), "dd-MM-yyyy"),
-      termin1: 0,
-      termin2: 0,
-      termin3: 0,
-      termin4: 0,
-      uangMuka: 0,
-      volumeKontrak: "",
-      hasAddendum: "tidak ada",
+  const form = useForm<CreateContractType>({
+    resolver: zodResolver(CreateContractSchema),
+    defaultValues: {
+      distrik: initialData?.distrik || "",
+      dokumentasiAkhir: initialData?.dokumentasiAkhir || "",
+      dokumentasiAwal: initialData?.dokumentasiAwal || "",
+      dokumentasiTengah: initialData?.dokumentasiTengah || "",
+      kampung: initialData?.kampung || "",
+      koordinatAkhir: initialData?.koordinatAkhir || "",
+      koordinatAwal: initialData?.koordinatAwal || "",
+      korwaslap: initialData?.korwaslap || "",
+      kota: initialData?.kota || "",
+      namaPaket: initialData?.namaPaket || "",
+      namaPenyedia: initialData?.namaPenyedia || "",
+      nipKorwaslap: initialData?.nipKorwaslap || "",
+      nipPengawasLapangan: initialData?.nipPengawasLapangan || "",
+      nipPPK: initialData?.nipPPK || "",
+      paguAnggaran: initialData?.paguAnggaran || "",
+      pengawasLapangan: initialData?.pengawasLapangan || "",
+      ppk: initialData?.ppk || "",
+      addendum: initialData?.addendum || [],
+      dimensi: initialData?.dimensi || "",
+      hasilProdukAkhir: initialData?.hasilProdukAkhir || "",
+      kendala: initialData?.kendala ?? false, // Boolean pakai `??`
+      keterangan: initialData?.keterangan || "",
+      konsultanSupervisi: initialData?.konsultanSupervisi || "",
+      masaPelaksanaan: initialData?.masaPelaksanaan ?? 0, // Number pakai `??`
+      masaPelaksanaanSupervisi: initialData?.masaPelaksanaanSupervisi ?? 0,
+      nilaiKontrak: initialData?.nilaiKontrak ?? 0,
+      nomorKontrak: initialData?.nomorKontrak || "",
+      nomorKontrakSupervisi: initialData?.nomorKontrakSupervisi || "",
+      pemberianKesempatan: initialData?.pemberianKesempatan ?? false,
+      permasalahan: initialData?.permasalahan || "",
+      satuanKontrak: initialData?.satuanKontrak || "",
+      sumberDana: initialData?.sumberDana || "",
+      tanggalKontrak: initialData?.tanggalKontrak
+        ? format(new Date(initialData.tanggalKontrak), "dd-MM-yyyy")
+        : format(new Date(), "dd-MM-yyyy"),
+      tanggalKontrakSupervisi: initialData?.tanggalKontrakSupervisi
+        ? format(new Date(initialData.tanggalKontrakSupervisi), "dd-MM-yyyy")
+        : format(new Date(), "dd-MM-yyyy"),
+      termin1: initialData?.termin1 ?? 0,
+      termin2: initialData?.termin2 ?? 0,
+      termin3: initialData?.termin3 ?? 0,
+      termin4: initialData?.termin4 ?? 0,
+      uangMuka: initialData?.uangMuka ?? 0,
+      volumeKontrak: initialData?.volumeKontrak || "",
+      hasAddendum:
+        (initialData?.hasAddendum as "ada" | "tidak ada") || "tidak ada",
     },
-    mode: "onBlur"
+    mode: "onBlur",
+    disabled: type === "detail",
   });
 
   // Get values from form
   const hasAddendum = form.watch("hasAddendum");
   const addendumItems = form.watch("addendum");
 
-  const onSubmit = (data: ContractSchemaType) => {
+  const onSubmit = async (data: CreateContractType) => {
     try {
-      console.log(data);
+      const formData = new FormData();
+
+      // Append basic text fields one by one
+      formData.append("namaPaket", data.namaPaket);
+      formData.append("namaPenyedia", data.namaPenyedia);
+      formData.append("kota", data.kota);
+      formData.append("distrik", data.distrik);
+      formData.append("kampung", data.kampung);
+      formData.append("koordinatAwal", data.koordinatAwal);
+      formData.append("koordinatAkhir", data.koordinatAkhir);
+
+      // Officials
+      formData.append("ppk", data.ppk);
+      formData.append("nipPPK", data.nipPPK);
+      formData.append("korwaslap", data.korwaslap);
+      formData.append("nipKorwaslap", data.nipKorwaslap);
+      formData.append("pengawasLapangan", data.pengawasLapangan);
+      formData.append("nipPengawasLapangan", data.nipPengawasLapangan);
+
+      // Financial details
+      formData.append("paguAnggaran", data.paguAnggaran);
+      formData.append("nilaiKontrak", data.nilaiKontrak.toString());
+      formData.append("sumberDana", data.sumberDana);
+
+      // Contract details
+      formData.append("nomorKontrak", data.nomorKontrak);
+      formData.append("tanggalKontrak", data.tanggalKontrak);
+      formData.append("masaPelaksanaan", data.masaPelaksanaan.toString());
+      formData.append("volumeKontrak", data.volumeKontrak);
+      formData.append("satuanKontrak", data.satuanKontrak);
+
+      // Supervision details
+      formData.append("konsultanSupervisi", data.konsultanSupervisi);
+      formData.append("nomorKontrakSupervisi", data.nomorKontrakSupervisi);
+      formData.append("tanggalKontrakSupervisi", data.tanggalKontrakSupervisi);
+      formData.append(
+        "masaPelaksanaanSupervisi",
+        data.masaPelaksanaanSupervisi.toString()
+      );
+
+      // Addendum handling
+      formData.append("hasAddendum", data.hasAddendum);
+
+      // If addendum exists, stringify it
+      if (data.addendum && data.addendum.length > 0) {
+        formData.append("addendum", JSON.stringify(data.addendum));
+      }
+
+      // Project status
+      formData.append(
+        "pemberianKesempatan",
+        data.pemberianKesempatan.toString()
+      );
+      formData.append("hasilProdukAkhir", data.hasilProdukAkhir);
+      formData.append("dimensi", data.dimensi);
+      formData.append("kendala", data.kendala.toString());
+
+      // Optional fields
+      if (data.permasalahan) {
+        formData.append("permasalahan", data.permasalahan);
+      }
+
+      if (data.keterangan) {
+        formData.append("keterangan", data.keterangan);
+      }
+
+      // Payment terms
+      formData.append("uangMuka", data.uangMuka.toString());
+      formData.append("termin1", data.termin1.toString());
+      formData.append("termin2", data.termin2.toString());
+      formData.append("termin3", data.termin3.toString());
+      formData.append("termin4", data.termin4.toString());
+
+      // Documentation fields (if they exist)
+      if (data.dokumentasiAwal) {
+        formData.append("dokumentasiAwal", data.dokumentasiAwal);
+      }
+
+      if (data.dokumentasiTengah) {
+        formData.append("dokumentasiTengah", data.dokumentasiTengah);
+      }
+
+      if (data.dokumentasiAkhir) {
+        formData.append("dokumentasiAkhir", data.dokumentasiAkhir);
+      }
+
+      if (type === "update" && id) {
+        const updatedData = await editContract(id, data);
+
+        if (updatedData.success) {
+          toast.success("Contract created successfully");
+        } else {
+          toast.error(updatedData.error || "failed");
+        }
+      } else {
+        const createdData = await createContract(formData);
+  
+        if (createdData.success) {
+          toast.success("Contract created successfully");
+        } else {
+          toast.error(createdData.error || "failed");
+        }
+      }
     } catch (error) {
       if (error instanceof ZodError) {
         toast.error(error.message);
@@ -292,17 +304,20 @@ export default function ContractForm({type="create", initialData}:ContactFormTyp
     if (hasAddendum === "tidak ada") {
       form.setValue("addendum", []);
     } else {
-      form.setValue("addendum", [
-        {
-          id: uuid(),
-          name: "",
-          tipe: "",
-          hari: "",
-          satuan: "",
-          volume: "",
-          pemberianKesempatan: false,
-        },
-      ]);
+      form.setValue(
+        "addendum",
+        form.getValues().addendum || [
+          {
+            id: uuid(),
+            name: "",
+            tipe: "",
+            hari: "",
+            satuan: "",
+            volume: "",
+            pemberianKesempatan: false,
+          },
+        ]
+      );
     }
   }, [hasAddendum, form]);
 
@@ -374,7 +389,6 @@ export default function ContractForm({type="create", initialData}:ContactFormTyp
                 <div className="grid grid-cols-10 gap-2">
                   <Input
                     className="col-span-9"
-                    placeholder="49.46800006494457,17.11514008755796"
                     {...form.register("koordinatAwal")}
                   />
                   <Button
@@ -401,7 +415,6 @@ export default function ContractForm({type="create", initialData}:ContactFormTyp
                 <div className="grid grid-cols-10 gap-2">
                   <Input
                     className="col-span-9"
-                    placeholder="49.46800006494457,17.11514008755796"
                     {...form.register("koordinatAkhir")}
                   />
                   <Button
@@ -438,7 +451,6 @@ export default function ContractForm({type="create", initialData}:ContactFormTyp
                   <Label htmlFor="nilaiKontrak">Nilai Kontrak</Label>
                   <Input
                     id="nilaiKontrak"
-                    placeholder="100000000"
                     type="number"
                     {...form.register("nilaiKontrak", { valueAsNumber: true })}
                   />
@@ -451,11 +463,7 @@ export default function ContractForm({type="create", initialData}:ContactFormTyp
 
                 <div className="space-y-2">
                   <Label htmlFor="sumberDana">Sumber Dana</Label>
-                  <Input
-                    id="sumberDana"
-                    placeholder="No. 00000000"
-                    {...form.register("sumberDana")}
-                  />
+                  <Input id="sumberDana" {...form.register("sumberDana")} />
                   {form.formState.errors.sumberDana && (
                     <p className="text-red-500 text-sm">
                       {form.formState.errors.sumberDana.message}
@@ -465,11 +473,7 @@ export default function ContractForm({type="create", initialData}:ContactFormTyp
 
                 <div className="space-y-2">
                   <Label htmlFor="nomorKontrak">Nomor Kontrak</Label>
-                  <Input
-                    id="nomorKontrak"
-                    placeholder="No. 00000000"
-                    {...form.register("nomorKontrak")}
-                  />
+                  <Input id="nomorKontrak" {...form.register("nomorKontrak")} />
                   {form.formState.errors.nomorKontrak && (
                     <p className="text-red-500 text-sm">
                       {form.formState.errors.nomorKontrak.message}
@@ -1021,7 +1025,10 @@ export default function ContractForm({type="create", initialData}:ContactFormTyp
                 )}
 
                 {/* Dynamic Addendum Sections */}
-                {form.watch("addendum")?.filter((item) => item.pemberianKesempatan).map((item, index, array) => (
+                {form
+                  .watch("addendum")
+                  ?.filter((item) => item.pemberianKesempatan)
+                  .map((item, index, array) => (
                     <div
                       key={item.id}
                       className="grid grid-cols-12 gap-2 items-center text-sm bg-gray-50 p-2 rounded-md"
@@ -1064,8 +1071,7 @@ export default function ContractForm({type="create", initialData}:ContactFormTyp
                         </span>
                       </div>
                     </div>
-                  )
-                )}
+                  ))}
               </div>
             </CardContent>
           </Card>

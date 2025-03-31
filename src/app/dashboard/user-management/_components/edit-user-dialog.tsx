@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { LuLoader } from "react-icons/lu";
 import { toast } from "sonner";
-import { User, UserRole } from "@prisma/client";
+import { User, Role } from "@prisma/client";
 import { LucideEdit } from "lucide-react";
 
 interface EditUserDialogProps {
@@ -43,7 +43,7 @@ export default function EditUserDialog({ user }: EditUserDialogProps) {
       id: user.id,
       email: user.email || "",
       name: user.name || "",
-      role: user.role || ("USER" as UserRole),
+      role: user.role || ("CONSULTANT" as Role),
       password: "",
     },
   });
@@ -137,7 +137,7 @@ export default function EditUserDialog({ user }: EditUserDialogProps) {
                 <SelectValue placeholder="Pilih role" />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(UserRole).map((role) => (
+                {Object.values(Role).map((role) => (
                   <SelectItem key={role} value={role}>
                     {role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()}
                   </SelectItem>

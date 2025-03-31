@@ -1,75 +1,121 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" // You can change to mysql, sqlite, etc. as needed
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  SUPERADMIN
-  ADMIN
-  CONSULTANT
-  USER
+model Contract {
+  id                      String      @id @default(uuid())
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+
+  // Package Information
+  namaPaket               String
+  namaPenyedia            String
+  
+  // Location details
+  kota                    String
+  distrik                 String
+  kampung                 String
+  koordinatAwal           String
+  koordinatAkhir          String
+  
+  // Officials
+  ppk                     String
+  nipPPK                  String
+  korwaslap               String
+  nipKorwaslap            String
+  pengawasLapangan        String
+  nipPengawasLapangan     String
+  
+  // Financial details
+  paguAnggaran            String      // Kept as string to preserve formatting
+  nilaiKontrak            Float
+  sumberDana              String
+  
+  // Contract details
+  nomorKontrak            String      @unique
+  tanggalKontrak          DateTime
+  masaPelaksanaan         Int         // In days
+  volumeKontrak           String
+  satuanKontrak           String
+  
+  // Supervision details
+  konsultanSupervisi      String
+  nomorKontrakSupervisi   String
+  tanggalKontrakSupervisi DateTime
+  masaPelaksanaanSupervisi Int
+  
+  // Addendum handling
+  hasAddendum             String      // "ada" or "tidak ada"
+  addendum               Addendum[]
+  
+  // Project status and completion
+  pemberianKesempatan     Boolean     @default(false)
+  hasilProdukAkhir        String
+  dimensi                 String
+  kendala                 Boolean     @default(false)
+  permasalahan            String?
+  keterangan              String?
+  
+  // Payment terms (percentages)
+  uangMuka                Float
+  termin1                 Float
+  termin2                 Float
+  termin3                 Float
+  termin4                 Float
+  
+  // Documentation
+  dokumentasiAwal         String?
+  dokumentasiTengah       String?
+  dokumentasiAkhir        String?
+  
+  // Timestamps for tracking progression  
+  startDate               DateTime?
+  endDate                 DateTime?
+  
+  @@map("contracts")
+}
+
+model Addendum {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  name        String
+  tipe        String
+  hari        String?
+  volume      String?
+  satuan      String?
+  pemberianKesempatan Boolean
+  
+  contract    Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId  String
+  
+  @@map("addendums")
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  password  String
-  name      String?
-  role      UserRole  @default(SUPERADMIN)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  name        String
+  email       String    @unique
+  password    String
+  role        Role      @default(SUPERADMIN)
+  
+  @@map("users")
 }
 
-model Contract {
-  id                         String       @id @default(uuid())
-  namaPaket                  String
-  kabupatenKota              String
-  distrik                    String
-  kampung                    String
-  titikKoordinat             String?
-
-  pejabatPembuatKomitmen     String
-  nipPejabatPembuatKomitmen  String
-
-  nomorKontrak               String
-  namaPenyedia               String
-
-  nilaiKontrak               Float
-  nilaiAnggaran              Float
-  sumberDana                 String
-
-  tanggalKontrak             DateTime
-
-  volumeKontrak              Float
-  satuanKontrak              String
-
-  korwaslap                  String
-  nipKorwaslap               String
-
-  pengawasLapangan           String
-  nipPengawasLapangan        String
-
-  hasilProdukAkhir           String?
-  progresFisik               Float?
-  progresKeuangan            Float?
-
-  keuanganTerbayar           Float?
-  volumeCapaian              Float?
-  satuanCapaian              String?
-
-  createdAt                  DateTime  @default(now())
-  updatedAt                  DateTime  @updatedAt
+enum Role {
+  ADMIN
+  SUPERADMIN
+  CONSULTANT
 }
-
-

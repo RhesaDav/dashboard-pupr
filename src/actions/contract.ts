@@ -16,19 +16,35 @@ export const createContract = async (formData: FormData) => {
 
     const submitData = {
       ...data,
+      masaPelaksanaan: Number(data.masaPelaksanaan),
       nilaiKontrak: Number(data.nilaiKontrak),
-      volumeCapaian: Number(data.volumeCapaian),
-      keuanganTerbayar: Number(data.keuanganTerbayar),
-      nilaiAnggaran: Number(data.nilaiAnggaran),
-      volumeKontrak: Number(data.volumeKontrak),
-      progresFisik: Number(data.progresFisik),
-      progresKeuangan: Number(data.progresKeuangan),
+      masaPelaksanaanSupervisi: Number(data.masaPelaksanaanSupervisi),
+      pemberianKesempatan: Boolean(data.pemberianKesempatan),
+      kendala: Boolean(data.kendala),
+      uangMuka: Number(data.uangMuka),
+      termin1: Number(data.termin1),
+      termin2: Number(data.termin2),
+      termin3: Number(data.termin3),
+      termin4: Number(data.termin4),
+      volumeKontrak: String(data.volumeKontrak || ""),
+      addendum: data.addendum ? JSON.parse(data.addendum as string) : [],
     };
+
+    console.log(submitData);
 
     const validatedData = CreateContractSchema.parse(submitData);
 
     const newContract = await prisma.contract.create({
-      data: validatedData,
+      data: {
+        ...validatedData,
+        tanggalKontrak: new Date(validatedData.tanggalKontrak),
+        tanggalKontrakSupervisi: new Date(
+          validatedData.tanggalKontrakSupervisi
+        ),
+        addendum: {
+          create: validatedData.addendum,
+        },
+      },
     });
 
     revalidatePath("/dashboard/contracts", "page");
@@ -43,6 +59,7 @@ export const createContract = async (formData: FormData) => {
       };
     }
     if (error instanceof Error) {
+      console.log(error);
       return { success: false, error: error.message };
     }
 
@@ -125,12 +142,60 @@ export async function editContract(
   rawData: Partial<UpdateContractType>
 ) {
   try {
+    // Validate the incoming data
     const validatedData = UpdateContractSchema.partial().parse(rawData);
 
+    // Create a Prisma-compatible update object
+    const prismaUpdateData: any = {
+      ...validatedData,
+      tanggalKontrak: new Date(validatedData.tanggalKontrak || new Date),
+      tanggalKontrakSupervisi: new Date(validatedData.tanggalKontrakSupervisi || new Date),
+    };
+
+    // Handle the addendum relationship properly if it exists
+    if (validatedData.addendum) {
+      // Transform the addendum array into Prisma's expected format
+      prismaUpdateData.addendum = {
+        // This will delete any removed addendums and update existing ones
+        deleteMany: {
+          contractId: id,
+          // Only delete items that aren't in the updated list
+          NOT: validatedData.addendum.map((item) => ({ id: item.id })),
+        },
+        // Update existing items or create new ones
+        upsert: validatedData.addendum.map((item) => ({
+          where: { id: item.id },
+          update: {
+            name: item.name,
+            tipe: item.tipe,
+            hari: item.hari,
+            volume: item.volume,
+            satuan: item.satuan,
+          },
+          create: {
+            id: item.id,
+            name: item.name,
+            tipe: item.tipe,
+            hari: item.hari,
+            volume: item.volume,
+            satuan: item.satuan,
+          },
+        })),
+      };
+    }
+
+    // Remove addendum from the root object since it's now handled in the nested structure
+    delete prismaUpdateData.addendum;
+
+    // Perform the update with the transformed data
     const updatedContract = await prisma.contract.update({
       where: { id },
-      data: validatedData,
+      data: prismaUpdateData,
+      include: {
+        addendum: true, // Include the updated addendum in the response
+      },
     });
+
     revalidatePath("/dashboard/contracts", "page");
 
     return {
@@ -183,6 +248,9 @@ export async function getContractById(id: string) {
   try {
     const contract = await prisma.contract.findUnique({
       where: { id },
+      include: {
+        addendum: true,
+      },
     });
 
     if (!contract) {

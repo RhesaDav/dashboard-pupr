@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { Role } from "@prisma/client";
 import { z } from "zod";
 
 export const UserRoleEnum = z.enum(["ADMIN", "USER"]);
@@ -6,8 +6,8 @@ export const UserRoleEnum = z.enum(["ADMIN", "USER"]);
 export const CreateUserSchema = z.object({
   email: z.string().email("Email tidak valid"),
   password: z.string().min(6, "Password minimal 6 karakter"),
-  name: z.string().optional(),
-  role: z.nativeEnum(UserRole),
+  name: z.string().min(5, "Nama minimal 5 karakter"),
+  role: z.nativeEnum(Role),
 });
 
 export const UpdateUserSchema = CreateUserSchema.extend({

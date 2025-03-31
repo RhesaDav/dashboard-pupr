@@ -1,41 +1,120 @@
 import { z } from "zod";
 
 export const CreateContractSchema = z.object({
-  namaPaket: z.string().min(1, "Nama paket tidak boleh kosong"),
-  kabupatenKota: z.string().min(1, "Kabupaten/kota tidak boleh kosong"),
-  distrik: z.string().min(1, "Distrik tidak boleh kosong"),
-  kampung: z.string().min(1, "Kampung tidak boleh kosong"),
-  titikKoordinat: z.string().optional(),
+  namaPaket: z.string().min(1, { message: "Nama paket tidak boleh kosong" }),
+  namaPenyedia: z
+    .string()
+    .min(1, { message: "Nama penyedia tidak boleh kosong" }),
+  kota: z.string().min(1, { message: "Kota tidak boleh kosong" }),
+  distrik: z.string().min(1, { message: "Distrik tidak boleh kosong" }),
+  kampung: z.string().min(1, { message: "Kampung tidak boleh kosong" }),
+  koordinatAwal: z
+    .string()
+    .min(1, { message: "Koordinat awal tidak boleh kosong" }),
+  koordinatAkhir: z
+    .string()
+    .min(1, { message: "Koordinat akhir tidak boleh kosong" }),
+  ppk: z.string().min(1, { message: "PPK tidak boleh kosong" }),
+  nipPPK: z.string().min(1, { message: "NIP PPK tidak boleh kosong" }),
+  korwaslap: z.string().min(1, { message: "Korwaslap tidak boleh kosong" }),
+  nipKorwaslap: z
+    .string()
+    .min(1, { message: "NIP Korwaslap tidak boleh kosong" }),
+  pengawasLapangan: z
+    .string()
+    .min(1, { message: "Pengawas lapangan tidak boleh kosong" }),
+  nipPengawasLapangan: z
+    .string()
+    .min(1, { message: "NIP Pengawas lapangan tidak boleh kosong" }),
+  paguAnggaran: z
+    .string()
+    .min(1, { message: "Pagu anggaran tidak boleh kosong" }),
+  nilaiKontrak: z
+    .number()
+    .min(1, { message: "Nilai kontrak harus lebih dari 0" }),
+  sumberDana: z.string().min(1, { message: "Sumber dana tidak boleh kosong" }),
+  nomorKontrak: z
+    .string()
+    .min(1, { message: "Nomor kontrak tidak boleh kosong" }),
+  tanggalKontrak: z.string().min(1, { message: "Tanggal kontrak harus valid" }),
+  masaPelaksanaan: z
+    .number()
+    .min(1, { message: "Masa pelaksanaan harus lebih dari 0 hari" }),
+  volumeKontrak: z
+    .string()
+    .min(1, { message: "Volume kontrak tidak boleh kosong" }),
+  satuanKontrak: z
+    .string()
+    .min(1, { message: "Satuan kontrak tidak boleh kosong" }),
+  konsultanSupervisi: z
+    .string()
+    .min(1, { message: "Nama konsultan supervisi tidak boleh kosong" }),
+  nomorKontrakSupervisi: z
+    .string()
+    .min(1, { message: "Nomor kontrak supervisi tidak boleh kosong" }),
+  tanggalKontrakSupervisi: z
+    .string()
+    .min(1, { message: "Tanggal kontrak supervisi harus valid" }),
+  masaPelaksanaanSupervisi: z
+    .number()
+    .min(0, { message: "Masa pelaksanaan supervisi tidak boleh negatif" }),
 
-  pejabatPembuatKomitmen: z.string().min(1, "Pejabat Pembuat Komitmen tidak boleh kosong"),
-  nipPejabatPembuatKomitmen: z.string().min(1, "NIP Pejabat Pembuat Komitmen tidak boleh kosong"),
+  hasAddendum: z.enum(["ada", "tidak ada"], {
+    message: "Pilihan hanya bisa 'ada' atau 'tidak ada'",
+  }),
 
-  nomorKontrak: z.string().min(1, "Nomor kontrak tidak boleh kosong"),
-  namaPenyedia: z.string().min(1, "Nama penyedia tidak boleh kosong"),
+  addendum: z
+    .array(
+      z.object({
+        id: z.string().uuid({ message: "ID harus berupa UUID yang valid" }),
+        name: z
+          .string()
+          .min(1, { message: "Nama addendum tidak boleh kosong" }),
+        tipe: z
+          .string()
+          .min(1, { message: "Tipe addendum tidak boleh kosong" }),
+        hari: z.string().nullable().optional(),
+        volume: z.string().nullable().optional(),
+        satuan: z.string().nullable().optional(),
+        pemberianKesempatan: z.boolean().default(false),
+      })
+    )
+    .optional(),
 
-  nilaiKontrak: z.number().positive("Nilai kontrak harus lebih dari 0"),
-  nilaiAnggaran: z.number().positive("Nilai anggaran harus lebih dari 0"),
-  sumberDana: z.string().min(1, "Sumber dana tidak boleh kosong"),
+  pemberianKesempatan: z.boolean().default(false),
+  hasilProdukAkhir: z
+    .string()
+    .min(1, { message: "Hasil produk akhir tidak boleh kosong" }),
+  dimensi: z.string().min(1, { message: "Dimensi tidak boleh kosong" }),
+  kendala: z.boolean().default(false),
 
-  tanggalKontrak: z.coerce.date(),
+  permasalahan: z.string().optional(),
+  keterangan: z.string().optional(),
 
-  volumeKontrak: z.number().positive("Volume kontrak harus lebih dari 0"),
-  satuanKontrak: z.string().min(1, "Satuan kontrak tidak boleh kosong"),
+  uangMuka: z
+    .number()
+    .min(0, { message: "Uang muka tidak boleh negatif" })
+    .max(100, { message: "Uang muka maksimal 100" }),
+  termin1: z
+    .number()
+    .min(0, { message: "Termin 1 tidak boleh negatif" })
+    .max(100, { message: "Termin 1 maksimal 100" }),
+  termin2: z
+    .number()
+    .min(0, { message: "Termin 2 tidak boleh negatif" })
+    .max(100, { message: "Termin 2 maksimal 100" }),
+  termin3: z
+    .number()
+    .min(0, { message: "Termin 3 tidak boleh negatif" })
+    .max(100, { message: "Termin 3 maksimal 100" }),
+  termin4: z
+    .number()
+    .min(0, { message: "Termin 4 tidak boleh negatif" })
+    .max(100, { message: "Termin 4 maksimal 100" }),
 
-  korwaslap: z.string().min(1, "Koordinator Pengawas Lapangan tidak boleh kosong"),
-  nipKorwaslap: z.string().min(1, "NIP Koordinator Pengawas Lapangan tidak boleh kosong"),
-
-  pengawasLapangan: z.string().min(1, "Pengawas Lapangan tidak boleh kosong"),
-  nipPengawasLapangan: z.string().min(1, "NIP Pengawas Lapangan tidak boleh kosong"),
-
-  hasilProdukAkhir: z.string().optional(),
-  progresFisik: z.number().min(0).max(100).optional(),
-  progresKeuangan: z.number().min(0).max(100).optional(),
-
-  keuanganTerbayar: z.number().optional(),
-  volumeCapaian: z.number().optional(),
-  satuanCapaian: z.string().optional(),
-
+  dokumentasiAwal: z.string().optional(),
+  dokumentasiTengah: z.string().optional(),
+  dokumentasiAkhir: z.string().optional(),
 });
 
 export const UpdateContractSchema = CreateContractSchema.extend({
