@@ -1,0 +1,1412 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { addDays, format, parse } from "date-fns";
+import { Calendar, Plus, Minus, Map, Percent } from "lucide-react";
+import { v4 as uuid } from "uuid";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Progress } from "@/components/ui/progress";
+import { z, ZodError } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { SelectGroup, SelectLabel } from "@radix-ui/react-select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { romanize } from "@/lib/utils";
+
+const ContractSchema = z.object({
+  namaPaket: z.string().min(1, { message: "Nama paket tidak boleh kosong" }),
+  namaPenyedia: z
+    .string()
+    .min(1, { message: "Nama penyedia tidak boleh kosong" }),
+  kota: z.string().min(1, { message: "Kota tidak boleh kosong" }),
+  distrik: z.string().min(1, { message: "Distrik tidak boleh kosong" }),
+  kampung: z.string().min(1, { message: "Kampung tidak boleh kosong" }),
+  koordinatAwal: z
+    .string()
+    .min(1, { message: "Koordinat awal tidak boleh kosong" }),
+  koordinatAkhir: z
+    .string()
+    .min(1, { message: "Koordinat akhir tidak boleh kosong" }),
+  ppk: z.string().min(1, { message: "PPK tidak boleh kosong" }),
+  nipPPK: z.string().min(1, { message: "NIP PPK tidak boleh kosong" }),
+  korwaslap: z.string().min(1, { message: "Korwaslap tidak boleh kosong" }),
+  nipKorwaslap: z
+    .string()
+    .min(1, { message: "NIP Korwaslap tidak boleh kosong" }),
+  pengawasLapangan: z
+    .string()
+    .min(1, { message: "Pengawas lapangan tidak boleh kosong" }),
+  nipPengawasLapangan: z
+    .string()
+    .min(1, { message: "NIP Pengawas lapangan tidak boleh kosong" }),
+  paguAnggaran: z
+    .string()
+    .min(1, { message: "Pagu anggaran tidak boleh kosong" }),
+  nilaiKontrak: z
+    .number()
+    .min(1, { message: "Nilai kontrak harus lebih dari 0" }),
+  sumberDana: z.string().min(1, { message: "Sumber dana tidak boleh kosong" }),
+  nomorKontrak: z
+    .string()
+    .min(1, { message: "Nomor kontrak tidak boleh kosong" }),
+  tanggalKontrak: z.string().min(1, { message: "Tanggal kontrak harus valid" }),
+  masaPelaksanaan: z
+    .number()
+    .min(1, { message: "Masa pelaksanaan harus lebih dari 0 hari" }),
+  volumeKontrak: z
+    .string()
+    .min(1, { message: "Volume kontrak tidak boleh kosong" }),
+  satuanKontrak: z
+    .string()
+    .min(1, { message: "Satuan kontrak tidak boleh kosong" }),
+  konsultanSupervisi: z
+    .string()
+    .min(1, { message: "Nama konsultan supervisi tidak boleh kosong" }),
+  nomorKontrakSupervisi: z
+    .string()
+    .min(1, { message: "Nomor kontrak supervisi tidak boleh kosong" }),
+  tanggalKontrakSupervisi: z
+    .string()
+    .min(1, { message: "Tanggal kontrak supervisi harus valid" }),
+  masaPelaksanaanSupervisi: z
+    .number()
+    .min(0, { message: "Masa pelaksanaan supervisi tidak boleh negatif" }),
+
+  hasAddendum: z.enum(["ada", "tidak ada"], {
+    message: "Pilihan hanya bisa 'ada' atau 'tidak ada'",
+  }),
+
+  addendum: z
+    .array(
+      z.object({
+        id: z.string().uuid({ message: "ID harus berupa UUID yang valid" }),
+        name: z
+          .string()
+          .min(1, { message: "Nama addendum tidak boleh kosong" }),
+        tipe: z
+          .string()
+          .min(1, { message: "Tipe addendum tidak boleh kosong" }),
+        hari: z.string().nullable().optional(),
+        volume: z.string().nullable().optional(),
+        satuan: z.string().nullable().optional(),
+        pemberianKesempatan: z.boolean().default(false),
+      })
+    )
+    .optional(),
+
+  pemberianKesempatan: z.boolean().default(false),
+  hasilProdukAkhir: z
+    .string()
+    .min(1, { message: "Hasil produk akhir tidak boleh kosong" }),
+  dimensi: z.string().min(1, { message: "Dimensi tidak boleh kosong" }),
+  kendala: z.boolean().default(false),
+
+  permasalahan: z.string().optional(),
+  keterangan: z.string().optional(),
+
+  uangMuka: z
+    .number()
+    .min(0, { message: "Uang muka tidak boleh negatif" })
+    .max(100, { message: "Uang muka maksimal 100" }),
+  termin1: z
+    .number()
+    .min(0, { message: "Termin 1 tidak boleh negatif" })
+    .max(100, { message: "Termin 1 maksimal 100" }),
+  termin2: z
+    .number()
+    .min(0, { message: "Termin 2 tidak boleh negatif" })
+    .max(100, { message: "Termin 2 maksimal 100" }),
+  termin3: z
+    .number()
+    .min(0, { message: "Termin 3 tidak boleh negatif" })
+    .max(100, { message: "Termin 3 maksimal 100" }),
+  termin4: z
+    .number()
+    .min(0, { message: "Termin 4 tidak boleh negatif" })
+    .max(100, { message: "Termin 4 maksimal 100" }),
+
+  dokumentasiAwal: z.string().optional(),
+  dokumentasiTengah: z.string().optional(),
+  dokumentasiAkhir: z.string().optional(),
+});
+
+type ContractSchemaType = z.infer<typeof ContractSchema>;
+
+type ContactFormType = {
+    type?: "create" | "update" | "detail"
+    initialData?: ContractSchemaType
+}
+
+export default function ContractForm({type="create", initialData}:ContactFormType) {
+  const router = useRouter();
+  const form = useForm<ContractSchemaType>({
+    resolver: zodResolver(ContractSchema),
+    defaultValues: initialData || {
+      distrik: "",
+      dokumentasiAkhir: "",
+      dokumentasiAwal: "",
+      dokumentasiTengah: "",
+      kampung: "",
+      koordinatAkhir: "",
+      koordinatAwal: "",
+      korwaslap: "",
+      kota: "",
+      namaPaket: "",
+      namaPenyedia: "",
+      nipKorwaslap: "",
+      nipPengawasLapangan: "",
+      nipPPK: "",
+      paguAnggaran: "",
+      pengawasLapangan: "",
+      ppk: "",
+      addendum: [],
+      dimensi: "",
+      hasilProdukAkhir: "",
+      kendala: false,
+      keterangan: "",
+      konsultanSupervisi: "",
+      masaPelaksanaan: 0,
+      masaPelaksanaanSupervisi: 0,
+      nilaiKontrak: 0,
+      nomorKontrak: "",
+      nomorKontrakSupervisi: "",
+      pemberianKesempatan: false,
+      permasalahan: "",
+      satuanKontrak: "",
+      sumberDana: "",
+      tanggalKontrak: format(new Date(), "dd-MM-yyyy"),
+      tanggalKontrakSupervisi: format(new Date(), "dd-MM-yyyy"),
+      termin1: 0,
+      termin2: 0,
+      termin3: 0,
+      termin4: 0,
+      uangMuka: 0,
+      volumeKontrak: "",
+      hasAddendum: "tidak ada",
+    },
+    mode: "onBlur"
+  });
+
+  // Get values from form
+  const hasAddendum = form.watch("hasAddendum");
+  const addendumItems = form.watch("addendum");
+
+  const onSubmit = (data: ContractSchemaType) => {
+    try {
+      console.log(data);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        toast.error(error.message);
+      }
+      toast.error("Something wrong");
+    }
+  };
+
+  const addAddendumItem = () => {
+    const currentItems = form.getValues("addendum") || [];
+
+    form.setValue("addendum", [
+      ...currentItems,
+      {
+        id: uuid(),
+        name: "",
+        tipe: "",
+        hari: "",
+        satuan: "",
+        volume: "",
+        pemberianKesempatan: false,
+      },
+    ]);
+  };
+
+  const removeAddendumItem = (id: string) => {
+    const currentItems = form.getValues("addendum");
+    if (currentItems && currentItems.length > 1) {
+      form.setValue(
+        "addendum",
+        currentItems.filter((item) => item.id !== id)
+      );
+    }
+  };
+
+  const updateAddendumItem = (
+    id: string,
+    field: string,
+    value: string | boolean
+  ) => {
+    const currentItems = form.getValues("addendum");
+    const updatedItems = currentItems?.map((item) =>
+      item.id === id ? { ...item, [field]: value } : item
+    );
+
+    form.setValue("addendum", updatedItems);
+  };
+
+  const updateAddendumType = (id: string, type: "waktu" | "volume") => {
+    const currentItems = form.getValues("addendum");
+    console.log(currentItems, type);
+    const updatedItems = currentItems?.map((item) =>
+      item.id === id
+        ? type === "waktu"
+          ? {
+              ...item,
+              tipe: type,
+              hari: "",
+              volume: undefined,
+              satuan: undefined,
+            }
+          : { ...item, tipe: type, hari: undefined, volume: "", satuan: "" }
+        : item
+    );
+
+    form.setValue("addendum", updatedItems);
+  };
+
+  // Reset addendum items when hasAddendum changes
+  useEffect(() => {
+    if (hasAddendum === "tidak ada") {
+      form.setValue("addendum", []);
+    } else {
+      form.setValue("addendum", [
+        {
+          id: uuid(),
+          name: "",
+          tipe: "",
+          hari: "",
+          satuan: "",
+          volume: "",
+          pemberianKesempatan: false,
+        },
+      ]);
+    }
+  }, [hasAddendum, form]);
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-xl font-bold mb-6">Buat Data Kontrak Baru</h1>
+      <Progress value={(1 / 6) * 100} className="mb-6" />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Kontrak Dasar</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 mb-6">
+                <Label>Nama Paket</Label>
+                <Input {...form.register("namaPaket")} />
+                {form.formState.errors.namaPaket && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.namaPaket.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Nama Penyedia</Label>
+                <Input {...form.register("namaPenyedia")} />
+                {form.formState.errors.namaPenyedia && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.namaPenyedia.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Kabupaten / Kota</Label>
+                <Input {...form.register("kota")} />
+                {form.formState.errors.kota && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.kota.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Distrik</Label>
+                <Input {...form.register("distrik")} />
+                {form.formState.errors.distrik && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.distrik.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Kampung</Label>
+                <Input {...form.register("kampung")} />
+                {form.formState.errors.kampung && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.kampung.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Titik Koordinat Awal</Label>
+                <div className="grid grid-cols-10 gap-2">
+                  <Input
+                    className="col-span-9"
+                    placeholder="49.46800006494457,17.11514008755796"
+                    {...form.register("koordinatAwal")}
+                  />
+                  <Button
+                    onClick={() =>
+                      router.push(
+                        `https://www.google.com/maps/place/${form.watch(
+                          "koordinatAwal"
+                        )}`
+                      )
+                    }
+                  >
+                    <Map />
+                  </Button>
+                </div>
+                {form.formState.errors.koordinatAwal && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.koordinatAwal.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Titik Koordinat Akhir</Label>
+                <div className="grid grid-cols-10 gap-2">
+                  <Input
+                    className="col-span-9"
+                    placeholder="49.46800006494457,17.11514008755796"
+                    {...form.register("koordinatAkhir")}
+                  />
+                  <Button
+                    onClick={() =>
+                      router.push(
+                        `https://www.google.com/maps/place/${form.watch(
+                          "koordinatAkhir"
+                        )}`
+                      )
+                    }
+                  >
+                    <Map />
+                  </Button>
+                </div>
+                {form.formState.errors.koordinatAkhir && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.koordinatAkhir.message}
+                  </p>
+                )}{" "}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Detail Kontrak</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="nilaiKontrak">Nilai Kontrak</Label>
+                  <Input
+                    id="nilaiKontrak"
+                    placeholder="100000000"
+                    type="number"
+                    {...form.register("nilaiKontrak", { valueAsNumber: true })}
+                  />
+                  {form.formState.errors.nilaiKontrak && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.nilaiKontrak.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="sumberDana">Sumber Dana</Label>
+                  <Input
+                    id="sumberDana"
+                    placeholder="No. 00000000"
+                    {...form.register("sumberDana")}
+                  />
+                  {form.formState.errors.sumberDana && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.sumberDana.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nomorKontrak">Nomor Kontrak</Label>
+                  <Input
+                    id="nomorKontrak"
+                    placeholder="No. 00000000"
+                    {...form.register("nomorKontrak")}
+                  />
+                  {form.formState.errors.nomorKontrak && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.nomorKontrak.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="contractDate">Tanggal Kontrak</Label>
+                    <div className="relative">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            {form.watch("tanggalKontrak") ? (
+                              form.watch("tanggalKontrak")
+                            ) : (
+                              <span className="text-muted-foreground">
+                                DD-MM-YYYY
+                              </span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <CalendarComponent
+                            mode="single"
+                            onSelect={(date) =>
+                              form.setValue(
+                                "tanggalKontrak",
+                                date ? format(date, "dd-MM-yyyy") : ""
+                              )
+                            }
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    {form.formState.errors.tanggalKontrak && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.tanggalKontrak.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="masaPelaksanaan">
+                      Masa Pelaksanaan ( Hari )
+                    </Label>
+                    <Input
+                      id="masaPelaksanaan"
+                      type="number"
+                      {...form.register("masaPelaksanaan", {
+                        valueAsNumber: true,
+                      })}
+                    />
+                    {form.formState.errors.masaPelaksanaan && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.masaPelaksanaan.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="volumeKontrak">Volume Kontrak</Label>
+                    <Input
+                      id="volumeKontrak"
+                      {...form.register("volumeKontrak")}
+                    />
+                    {form.formState.errors.volumeKontrak && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.volumeKontrak.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="satuanKontrak">Satuan Kontrak</Label>
+                    <Input
+                      id="satuanKontrak"
+                      {...form.register("satuanKontrak")}
+                    />
+                    {form.formState.errors.satuanKontrak && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.satuanKontrak.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Addendum Section */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Addendum</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Status Addendum</Label>
+                  <Select
+                    defaultValue={form.watch("hasAddendum")}
+                    onValueChange={(value: "ada" | "tidak ada") =>
+                      form.setValue("hasAddendum", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Status Addendum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ada">Ada</SelectItem>
+                      <SelectItem value="tidak ada">Tidak Ada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {hasAddendum === "ada" && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <Label>Total Item: {addendumItems?.length}</Label>
+                      <div className="flex space-x-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={addAddendumItem}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            if (addendumItems) {
+                              removeAddendumItem(
+                                addendumItems[addendumItems.length - 1].id
+                              );
+                            }
+                          }}
+                          disabled={addendumItems!.length <= 1}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {addendumItems?.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className="p-4 border rounded space-y-3 relative"
+                      >
+                        <div className="space-y-2">
+                          <Label htmlFor={`addendum-text-${item.id}`}>
+                            Deskripsi Addendum
+                          </Label>
+                          <Input
+                            id={`addendum-text-${item.id}`}
+                            value={item.name}
+                            onChange={(e) =>
+                              updateAddendumItem(
+                                item.id,
+                                "name",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`addendum-type-${item.id}`}>
+                            Tipe Addendum
+                          </Label>
+                          <Select
+                            value={item.tipe}
+                            onValueChange={(value: "waktu" | "volume") =>
+                              updateAddendumType(item.id, value)
+                            }
+                          >
+                            <SelectTrigger id={`addendum-type-${item.id}`}>
+                              <SelectValue placeholder="Pilih Tipe" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="waktu">Waktu</SelectItem>
+                              <SelectItem value="volume">Volume</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {item.tipe === "waktu" && (
+                          <div className="space-y-2">
+                            <Label htmlFor={`addendum-days-${item.id}`}>
+                              Jumlah Hari
+                            </Label>
+                            <Input
+                              id={`addendum-days-${item.id}`}
+                              value={item.hari || ""}
+                              onChange={(e) =>
+                                updateAddendumItem(
+                                  item.id,
+                                  "hari",
+                                  e.target.value
+                                )
+                              }
+                              type="number"
+                            />
+                          </div>
+                        )}
+
+                        {item.tipe === "volume" && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor={`addendum-amount-${item.id}`}>
+                                Jumlah
+                              </Label>
+                              <Input
+                                id={`addendum-amount-${item.id}`}
+                                value={item.volume || ""}
+                                onChange={(e) =>
+                                  updateAddendumItem(
+                                    item.id,
+                                    "volume",
+                                    e.target.value
+                                  )
+                                }
+                                type="number"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`addendum-unit-${item.id}`}>
+                                Satuan
+                              </Label>
+                              <Input
+                                id={`addendum-unit-${item.id}`}
+                                value={item.satuan || ""}
+                                onChange={(e) =>
+                                  updateAddendumItem(
+                                    item.id,
+                                    "satuan",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Checkbox untuk Pemberian Kesempatan di kanan bawah */}
+                        <div className="flex justify-end items-end mt-4">
+                          <Label
+                            htmlFor={`addendum-opportunity-${item.id}`}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={`addendum-opportunity-${item.id}`}
+                              checked={item.pemberianKesempatan || false}
+                              onCheckedChange={(checked) =>
+                                updateAddendumItem(
+                                  item.id,
+                                  "pemberianKesempatan",
+                                  checked
+                                )
+                              }
+                            />
+                            <span>Pemberian Kesempatan</span>
+                          </Label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Data Tambahan</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 mb-6">
+                <Label>Hasil Produk Akhir</Label>
+                <Select
+                  defaultValue={form.getValues().hasilProdukAkhir}
+                  onValueChange={(value) =>
+                    form.setValue("hasilProdukAkhir", value)
+                  }
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Pilih hasil produk akhir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Pilih hasil produk akhir</SelectLabel>
+                      <SelectItem value="HRS WC">HRS WC</SelectItem>
+                      <SelectItem value="HRS BASE">HRS BASE</SelectItem>
+                      <SelectItem value="Lapen">Lapen</SelectItem>
+                      <SelectItem value="Rigid">Rigid</SelectItem>
+                      <SelectItem value="Urpil">Urpil</SelectItem>
+                      <SelectItem value="AC WC">AC WC</SelectItem>
+                      <SelectItem value="Talud">Talud</SelectItem>
+                      <SelectItem value="Bronjong">Bronjong</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.hasilProdukAkhir && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.hasilProdukAkhir.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Dimensi</Label>
+                <Input {...form.register("dimensi")} />
+                {form.formState.errors.dimensi && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.dimensi.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 mb-6 flex gap-2">
+                <Checkbox
+                  id="terms"
+                  type="button"
+                  checked={form.watch("kendala")}
+                  onCheckedChange={(checked) =>
+                    form.setValue("kendala", Boolean(checked))
+                  }
+                />{" "}
+                <label
+                  htmlFor="terms"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Kendala
+                </label>
+              </div>
+
+              {form.watch("kendala") && (
+                <div>
+                  <div className="space-y-2 mb-6">
+                    <Label>Permasalahan</Label>
+                    <Textarea
+                      {...form.register("permasalahan")}
+                      className="min-h-32"
+                    />
+                    {form.formState.errors.permasalahan && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.permasalahan.message}
+                      </p>
+                    )}{" "}
+                  </div>
+
+                  <div className="space-y-2 mb-6">
+                    <Label>Keterangan</Label>
+                    <Textarea
+                      {...form.register("keterangan")}
+                      className="min-h-32"
+                    />
+                    {form.formState.errors.keterangan && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.keterangan.message}
+                      </p>
+                    )}{" "}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Pendukung</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 mb-6">
+                <Label>PPK</Label>
+                <Input {...form.register("ppk")} />
+                {form.formState.errors.ppk && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.ppk.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>NIP PPK</Label>
+                <Input {...form.register("nipPPK")} />
+                {form.formState.errors.nipPPK && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.nipPPK.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Korwaslap</Label>
+                <Input {...form.register("korwaslap")} />
+                {form.formState.errors.korwaslap && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.korwaslap.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>NIP Korwaslap</Label>
+                <Input {...form.register("nipKorwaslap")} />
+                {form.formState.errors.nipKorwaslap && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.nipKorwaslap.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Pengawas Lapangan</Label>
+                <Input {...form.register("pengawasLapangan")} />
+                {form.formState.errors.pengawasLapangan && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.pengawasLapangan.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>NIP Pengawas Lapangan</Label>
+                <Input {...form.register("nipPengawasLapangan")} />
+                {form.formState.errors.nipPengawasLapangan && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.nipPengawasLapangan.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Pagu Anggaran</Label>
+                <Input {...form.register("paguAnggaran")} />
+                {form.formState.errors.paguAnggaran && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.paguAnggaran.message}
+                  </p>
+                )}{" "}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Masa Kontrak</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Original Contract End Date */}
+                <div className="grid grid-cols-12 gap-2 items-center text-sm">
+                  <div className="col-span-4 font-medium">
+                    Akhir Kontrak Asli
+                  </div>
+                  <div className="col-span-5">
+                    :{" "}
+                    {form.watch("tanggalKontrak")
+                      ? format(
+                          addDays(
+                            parse(
+                              form.watch("tanggalKontrak"),
+                              "dd-MM-yyyy",
+                              new Date()
+                            ),
+                            form.watch("masaPelaksanaan")
+                          ),
+                          "dd-MM-yyyy"
+                        )
+                      : "-"}
+                  </div>
+                  <div className="col-span-3 text-right">
+                    <span className="px-2 py-1 bg-gray-100 rounded-md">
+                      {form.watch("masaPelaksanaan") || "0"} Hari
+                    </span>
+                  </div>
+                </div>
+
+                {/* Addendum Contract End Date */}
+                <div className="grid grid-cols-12 gap-2 items-center text-sm">
+                  <div className="col-span-4 font-medium">
+                    Akhir Kontrak ADD
+                  </div>
+                  <div className="col-span-5">
+                    :{" "}
+                    {form.watch("tanggalKontrak")
+                      ? format(
+                          addDays(
+                            parse(
+                              form.watch("tanggalKontrak"),
+                              "dd-MM-yyyy",
+                              new Date()
+                            ),
+                            (form.watch("masaPelaksanaan") || 0) +
+                              (form
+                                .watch("addendum")
+                                ?.filter(
+                                  (item) =>
+                                    Number(item.hari) &&
+                                    !item.pemberianKesempatan &&
+                                    item.tipe === "waktu"
+                                )
+                                .reduce(
+                                  (acc, item) => acc + Number(item.hari || 0),
+                                  0
+                                ) || 0)
+                          ),
+                          "dd-MM-yyyy"
+                        )
+                      : "-"}
+                  </div>
+                  <div className="col-span-3 text-right">
+                    <span className="px-2 py-1 bg-gray-100 rounded-md">
+                      {form
+                        .watch("addendum")
+                        ?.filter(
+                          (item) =>
+                            Number(item.hari) &&
+                            !item.pemberianKesempatan &&
+                            item.tipe === "waktu"
+                        )
+                        .reduce(
+                          (acc, item) => acc + Number(item.hari || 0),
+                          0
+                        ) ||
+                        0 ||
+                        "0"}{" "}
+                      Hari
+                    </span>
+                  </div>
+                </div>
+
+                {/* Divider when addendums exist */}
+                {form
+                  .watch("addendum")
+                  ?.some((item) => item.pemberianKesempatan) && (
+                  <div className="border-t border-gray-200 my-2"></div>
+                )}
+
+                {/* Dynamic Addendum Sections */}
+                {form.watch("addendum")?.filter((item) => item.pemberianKesempatan).map((item, index, array) => (
+                    <div
+                      key={item.id}
+                      className="grid grid-cols-12 gap-2 items-center text-sm bg-gray-50 p-2 rounded-md"
+                    >
+                      <div className="col-span-4 font-medium">
+                        Addendum {romanize(index + 1)}
+                      </div>
+                      <div className="col-span-5">
+                        :{" "}
+                        {form.watch("tanggalKontrak")
+                          ? format(
+                              addDays(
+                                parse(
+                                  form.watch("tanggalKontrak"),
+                                  "dd-MM-yyyy",
+                                  new Date()
+                                ),
+                                (form.watch("masaPelaksanaan") || 0) +
+                                  array
+                                    .slice(0, index + 1) // Ambil addendum dari awal hingga yang sekarang
+                                    .filter(
+                                      (item) =>
+                                        Number(item.hari) &&
+                                        item.pemberianKesempatan &&
+                                        item.tipe === "waktu"
+                                    )
+                                    .reduce(
+                                      (acc, item) =>
+                                        acc + Number(item.hari || 0),
+                                      0
+                                    )
+                              ),
+                              "dd-MM-yyyy"
+                            )
+                          : "-"}
+                      </div>
+                      <div className="col-span-3 text-right">
+                        <span className="px-2 py-1 bg-white rounded-md">
+                          {item.hari} Hari
+                        </span>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Supervisi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 mb-6">
+                <Label>Konsultan Supervisi</Label>
+                <Input {...form.register("konsultanSupervisi")} />
+                {form.formState.errors.konsultanSupervisi && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.konsultanSupervisi.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Nomor Kontrak Supervisi</Label>
+                <Input {...form.register("nomorKontrakSupervisi")} />
+                {form.formState.errors.nomorKontrakSupervisi && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.nomorKontrakSupervisi.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="space-y-1">
+                  <Label>Mulai Kontrak</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        {form.watch("tanggalKontrakSupervisi") ? (
+                          form.watch("tanggalKontrakSupervisi")
+                        ) : (
+                          <span className="text-muted-foreground">
+                            DD-MM-YYYY
+                          </span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <CalendarComponent
+                        mode="single"
+                        onSelect={(date) =>
+                          form.setValue(
+                            "tanggalKontrakSupervisi",
+                            date ? format(date, "dd-MM-yyyy") : ""
+                          )
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {form.formState.errors.tanggalKontrakSupervisi && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.tanggalKontrakSupervisi.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <Label>Masa Pelaksanaan ( Hari )</Label>
+                  <Input
+                    {...form.register("masaPelaksanaanSupervisi", {
+                      valueAsNumber: true,
+                    })}
+                    type="number"
+                  />
+                  {form.formState.errors.masaPelaksanaanSupervisi && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.masaPelaksanaanSupervisi.message}
+                    </p>
+                  )}{" "}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Progress Kemajuan</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 mb-4">
+                <Label>Progress Fisik (%)</Label>
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-sm mb-2 mx-5">
+                    <div className="flex flex-col justify-center items-center border rounded px-10 py-5">
+                      <span>Normal</span>
+                      <span>10%</span>
+                    </div>
+                    <div className="flex flex-col justify-center items-center border rounded px-10 py-5">
+                      <span>Realisasi</span>
+                      <span>10%</span>
+                    </div>
+                    <div className="flex flex-col justify-center items-center border rounded px-10 py-5">
+                      <span>Deviasi</span>
+                      <span>10%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <div className="border rounded p-4">
+                  <div className="grid grid-cols-2 gap-8 mb-4 mx-5">
+                    <div className="border rounded p-4 text-center">
+                      <p className="text-sm mb-2">Progress Keuangan</p>
+                      <p className="text-sm mb-2">20%</p>
+                    </div>
+                    <div className="border rounded p-4 text-center">
+                      <p className="text-sm mb-2">Keuangan Terbayar</p>
+                      <p className="text-sm mb-2">100000</p>
+                    </div>
+                  </div>
+                  <div className="mb-3">
+                    <Label className="text-xs" htmlFor="uangMuka">
+                      Uang Muka
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="relative">
+                        <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
+                          <Percent className="h-4 w-4" />
+                        </div>
+                        <Input
+                          id="uangMuka"
+                          className="h-8"
+                          type="number"
+                          {...form.register("uangMuka", {
+                            valueAsNumber: true,
+                          })}
+                        />
+                      </div>
+                      <Input
+                        className="h-8"
+                        disabled
+                        value={
+                          ((form.watch("nilaiKontrak") || 0) *
+                            (form.watch("uangMuka") || 0)) /
+                          100
+                        }
+                      />
+                    </div>
+                    {form.formState.errors.uangMuka && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.uangMuka.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-3">
+                    <Label className="text-xs" htmlFor="termin1">
+                      Termin 1
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="relative">
+                        <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
+                          <Percent className="h-4 w-4" />
+                        </div>
+                        <Input
+                          id="termin1"
+                          className="h-8"
+                          type="number"
+                          {...form.register("termin1", {
+                            valueAsNumber: true,
+                          })}
+                        />
+                      </div>
+                      <Input
+                        className="h-8"
+                        disabled
+                        value={
+                          ((form.watch("nilaiKontrak") || 0) *
+                            (form.watch("termin1") || 0)) /
+                          100
+                        }
+                      />
+                    </div>
+                    {form.formState.errors.termin1 && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.termin1.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-3">
+                    <Label className="text-xs" htmlFor="termin2">
+                      Termin 2
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="relative">
+                        <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
+                          <Percent className="h-4 w-4" />
+                        </div>
+                        <Input
+                          id="termin2"
+                          className="h-8"
+                          type="number"
+                          {...form.register("termin2", {
+                            valueAsNumber: true,
+                          })}
+                        />
+                      </div>
+                      <Input
+                        className="h-8"
+                        disabled
+                        value={
+                          ((form.watch("nilaiKontrak") || 0) *
+                            (form.watch("termin2") || 0)) /
+                          100
+                        }
+                      />
+                    </div>
+                    {form.formState.errors.termin2 && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.termin2.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-3">
+                    <Label className="text-xs" htmlFor="termin3">
+                      Termin 3
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="relative">
+                        <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
+                          <Percent className="h-4 w-4" />
+                        </div>
+                        <Input
+                          id="termin3"
+                          className="h-8"
+                          type="number"
+                          {...form.register("termin3", {
+                            valueAsNumber: true,
+                          })}
+                        />
+                      </div>
+                      <Input
+                        className="h-8"
+                        disabled
+                        value={
+                          ((form.watch("nilaiKontrak") || 0) *
+                            (form.watch("termin3") || 0)) /
+                          100
+                        }
+                      />
+                    </div>
+                    {form.formState.errors.termin3 && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.termin3.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-3">
+                    <Label className="text-xs" htmlFor="termin4">
+                      Termin 4
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="relative">
+                        <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
+                          <Percent className="h-4 w-4" />
+                        </div>
+                        <Input
+                          id="termin4"
+                          className="h-8"
+                          type="number"
+                          {...form.register("termin4", {
+                            valueAsNumber: true,
+                          })}
+                        />
+                      </div>
+                      <Input
+                        className="h-8"
+                        disabled
+                        value={
+                          ((form.watch("nilaiKontrak") || 0) *
+                            (form.watch("termin4") || 0)) /
+                          100
+                        }
+                      />
+                    </div>
+                    {form.formState.errors.termin4 && (
+                      <p className="text-red-500 text-sm">
+                        {form.formState.errors.termin4.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Dokumentasi Kegiatan</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="border rounded p-4 text-center">
+              <p className="text-sm mb-2">Foto Dokumentasi 0%</p>
+              <Button variant="ghost" className="w-full">
+                <Calendar className="h-4 w-4 mr-2" />
+                Upload Foto
+              </Button>
+            </div>
+            <div className="border rounded p-4 text-center">
+              <p className="text-sm mb-2">Foto Dokumentasi 50%</p>
+              <Button variant="ghost" className="w-full">
+                <Calendar className="h-4 w-4 mr-2" />
+                Upload Foto
+              </Button>
+            </div>
+            <div className="border rounded p-4 text-center">
+              <p className="text-sm mb-2">Foto Dokumentasi 100%</p>
+              <Button variant="ghost" className="w-full">
+                <Calendar className="h-4 w-4 mr-2" />
+                Upload Foto
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="mt-6 flex justify-end">
+        <Button type="button" variant="outline" className="mr-4">
+          Cancel
+        </Button>
+        <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
+          Save Contract
+        </Button>
+      </div>
+    </div>
+  );
+}
