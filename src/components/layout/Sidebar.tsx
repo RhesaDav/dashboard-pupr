@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { FiHome, FiFileText, FiUser } from "react-icons/fi";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { FileText, Home, User } from "lucide-react";
+import { Clock, FileText, Home, User } from "lucide-react";
 
 const Sidebar = () => {
   const path = usePathname();
@@ -13,7 +13,8 @@ const Sidebar = () => {
   const menuItems = [
     { label: "Home", icon: Home, href: "/dashboard/home" },
     { label: "Data Kontrak", icon: FileText, href: "/dashboard/contracts" },
-    { label: "Management User", icon: User, href: "/dashboard/user-management"}
+    { label: "Progress", icon: Clock, href: "/dashboard/progress"},
+    { label: "Management User", icon: User, href: "/dashboard/user-management"},
   ];
 
   return (
