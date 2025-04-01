@@ -1,8 +1,12 @@
-"use client";
-
+import { getDashboardReport } from "@/actions/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatRupiah } from "@/lib/utils";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const data = await getDashboardReport();
+  console.log(data);
+
+  if (!data.report) return <div>Data not found</div>;
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Selamat Datang di Dashboard Admin</h1>
@@ -13,7 +17,7 @@ export default function HomePage() {
             <CardTitle>Jumlah Paket</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xl font-bold">120</p>
+            <p className="text-xl font-bold">{data.report.jumlahPaket}</p>
           </CardContent>
         </Card>
 
@@ -22,7 +26,9 @@ export default function HomePage() {
             <CardTitle>Nilai Kontrak</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xl font-bold">Rp 5.000.000.000</p>
+            <p className="text-xl font-bold">
+              {formatRupiah(data.report.nilaiKontrak)}
+            </p>
           </CardContent>
         </Card>
 
@@ -31,7 +37,9 @@ export default function HomePage() {
             <CardTitle>Nilai Anggaran</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xl font-bold">Rp 10.000.000.000</p>
+            <p className="text-xl font-bold">
+              {formatRupiah(data.report.nilaiAnggaran)}
+            </p>
           </CardContent>
         </Card>
 
@@ -40,7 +48,7 @@ export default function HomePage() {
             <CardTitle>Progress Fisik</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xl font-bold">75%</p>
+            <p className="text-xl font-bold">{data.report.progressFisik}%</p>
           </CardContent>
         </Card>
 
@@ -49,7 +57,7 @@ export default function HomePage() {
             <CardTitle>Progress Keuangan</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xl font-bold">60%</p>
+            <p className="text-xl font-bold">{data.report.progressKeuangan}%</p>
           </CardContent>
         </Card>
       </div>

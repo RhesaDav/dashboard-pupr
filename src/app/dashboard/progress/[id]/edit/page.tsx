@@ -1,52 +1,35 @@
 import React from "react";
-import { getContractById } from "../../../../../actions/contract";
 import ProgressDetailPage from "../../_components/detail-progress";
-import { generateWeeks } from "@/lib/utils";
+import { getContractWithProgress } from "@/actions/progress";
+import { format } from "date-fns";
 
-async function page({ params }: { params: Promise<{ id: string }> }) {
-  const id = (await params).id;
+async function ContractProgressPage({ params }: { params: { id: string } }) {
+  const id = params.id;
+
+  // Get contract data
+  const contractData = await getContractWithProgress(id);
   
-  const contractData = {
-    namaPaket: "Pembangunan Jalan Manokwari",
-    nilaiKontrak: 100000000,
-    tanggalKontrak: "15 Jan 2024",
-    masaPelaksanaan: 50,
-    volumeKontrak: 10,
-    satuanKontrak: "KM",
-    endDate: "01 April 2024",
-    progress: [
-      {
-        month: "Januari",
-        items: [
-          { week: 3, rencana: 10, realisasi: 0, deviasi: -10 },
-          { week: 4, rencana: 10, realisasi: 0, deviasi: -10 },
-          { week: 5, rencana: 10, realisasi: 0, deviasi: -10 },
-        ]
-      },
-      {
-        month: "February",
-        items: [
-          { week: 3, rencana: 10, realisasi: 0, deviasi: -10 },
-          { week: 4, rencana: 10, realisasi: 0, deviasi: -10 },
-          { week: 5, rencana: 10, realisasi: 0, deviasi: -10 },
-        ]
-      },
-      {
-        month: "March",
-        items: [
-          { week: 3, rencana: 10, realisasi: 0, deviasi: -10 },
-          { week: 4, rencana: 10, realisasi: 0, deviasi: -10 },
-          { week: 5, rencana: 10, realisasi: 0, deviasi: -10 },
-        ]
-      }
-    ]
+  // Calculate end date (tanggalKontrak + masaPelaksanaan days)
+  const startDate = new Date(contractData.contractDetails.tanggalKontrak);
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + contractData.contractDetails.masaPelaksanaan);
+  
+  // Transform the data structure to match what ProgressDetailPage expects
+  const contract = {
+    id: id,
+    namaPaket: contractData.contractDetails.namaPaket,
+    nilaiKontrak: contractData.contractDetails.nilaiKontrak,
+    tanggalKontrak: format(contractData.contractDetails.tanggalKontrak, "dd-MM-yyyy"),
+    masaPelaksanaan: contractData.contractDetails.masaPelaksanaan,
+    volumeKontrak: contractData.contractDetails.volumeKontrak,
+    satuanKontrak: contractData.contractDetails.satuanKontrak,
+    endDate: format(endDate,"dd-MM-yyyy"),
+    progress: contractData.progressData
   };
-
-  console.log(generateWeeks(contractData.tanggalKontrak, contractData.masaPelaksanaan))
 
   console.log(contractData)
 
-  return <ProgressDetailPage contract={contractData} />;
+  return <ProgressDetailPage contract={contract} />;
 }
 
-export default page;
+export default ContractProgressPage;
