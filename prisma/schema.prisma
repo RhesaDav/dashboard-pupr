@@ -11,125 +11,144 @@ datasource db {
 }
 
 model Contract {
-  id                      String      @id @default(uuid())
-  createdAt               DateTime    @default(now())
-  updatedAt               DateTime    @updatedAt
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Package Information
-  namaPaket               String
-  namaPenyedia            String
-  
+  namaPaket    String
+  namaPenyedia String
+
   // Location details
-  kota                    String
-  distrik                 String
-  kampung                 String
-  koordinatAwal           String
-  koordinatAkhir          String
-  
+  kota           String
+  distrik        String
+  kampung        String
+  koordinatAwal  String
+  koordinatAkhir String
+
   // Officials
-  ppk                     String
-  nipPPK                  String
-  korwaslap               String
-  nipKorwaslap            String
-  pengawasLapangan        String
-  nipPengawasLapangan     String
-  
+  ppk                 String
+  nipPPK              String
+  korwaslap           String
+  nipKorwaslap        String
+  pengawasLapangan    String
+  nipPengawasLapangan String
+
   // Financial details
-  paguAnggaran            String      // Kept as string to preserve formatting
-  nilaiKontrak            Float
-  sumberDana              String
-  
+  paguAnggaran String // Kept as string to preserve formatting
+  nilaiKontrak Float
+  sumberDana   String
+
   // Contract details
-  nomorKontrak            String      @unique
-  tanggalKontrak          DateTime
-  masaPelaksanaan         Int         // In days
-  volumeKontrak           String
-  satuanKontrak           String
-  
+  nomorKontrak    String   @unique
+  tanggalKontrak  DateTime
+  masaPelaksanaan Int // In days
+  volumeKontrak   String
+  satuanKontrak   String
+
   // Supervision details
-  konsultanSupervisi      String
-  nomorKontrakSupervisi   String
-  tanggalKontrakSupervisi DateTime
+  konsultanSupervisi       String
+  nomorKontrakSupervisi    String
+  tanggalKontrakSupervisi  DateTime
   masaPelaksanaanSupervisi Int
-  
+
   // Addendum handling
-  hasAddendum             String      // "ada" or "tidak ada"
-  addendum               Addendum[]
-  
+  hasAddendum String // "ada" or "tidak ada"
+  addendum    Addendum[]
+
   // Project status and completion
-  pemberianKesempatan     Boolean     @default(false)
-  hasilProdukAkhir        String
-  dimensi                 String
-  kendala                 Boolean     @default(false)
-  permasalahan            String?
-  keterangan              String?
-  
+  pemberianKesempatan Boolean @default(false)
+  hasilProdukAkhir    String
+  dimensi             String
+  kendala             Boolean @default(false)
+  permasalahan        String?
+  keterangan          String?
+
   // Payment terms (percentages)
-  uangMuka                Float
-  termin1                 Float
-  termin2                 Float
-  termin3                 Float
-  termin4                 Float
-  
+  uangMuka Float
+  termin1  Float
+  termin2  Float
+  termin3  Float
+  termin4  Float
+
   // Documentation
-  dokumentasiAwal         String?
-  dokumentasiTengah       String?
-  dokumentasiAkhir        String?
-  
+  dokumentasiAwal   String?
+  dokumentasiTengah String?
+  dokumentasiAkhir  String?
+
   // Timestamps for tracking progression  
-  startDate               DateTime?
-  endDate                 DateTime?
+  startDate DateTime?
+  endDate   DateTime?
 
   contractAccess ContractAccess[]
-  
+  progress       Progress[]
+
   @@map("contracts")
 }
 
 model Addendum {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  name        String
-  tipe        String
-  hari        String?
-  volume      String?
-  satuan      String?
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name                String
+  tipe                String
+  hari                String?
+  volume              String?
+  satuan              String?
   pemberianKesempatan Boolean
-  
-  contract    Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  contractId  String
-  
+
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId String
+
   @@map("addendums")
 }
 
+model Progress {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId String
+
+  month     String
+  week      Int
+  rencana   Float
+  realisasi Float
+  deviasi   Float
+
+  @@unique([contractId, month, week])
+  @@map("progress")
+}
+
 model ContractAccess {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
-  
-  contract    Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  contractId  String
-  
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId String
+
   @@unique([userId, contractId])
   @@map("contract_access")
 }
 
 model User {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  name        String
-  email       String    @unique
-  password    String
-  role        Role      @default(SUPERADMIN)
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name     String
+  email    String @unique
+  password String
+  role     Role   @default(SUPERADMIN)
 
   contractAccess ContractAccess[]
-  
+
   @@map("users")
 }
 
