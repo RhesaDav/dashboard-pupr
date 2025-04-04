@@ -13,17 +13,16 @@ import {
 } from "lucide-react";
 import { Contract } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { DeleteContractDialog } from "./delete-contract-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import * as XLSX from "xlsx"
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-interface DataContractTableTypes {
+interface LakipTableTypes {
   contracts?: Contract[];
 }
 
-function DataContractTable({ contracts }: DataContractTableTypes) {
+function LakipTable({ contracts }: LakipTableTypes) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -85,16 +84,6 @@ function DataContractTable({ contracts }: DataContractTableTypes) {
         const contract = row.original;
         return (
           <div className="flex items-center gap-2">
-            <DeleteContractDialog
-              contractId={contract.id}
-              contractName={contract.namaPaket}
-            />
-            <Button
-              onClick={() => router.push(`${pathname}/${contract.id}/edit`)}
-              variant="outline"
-            >
-              <Edit />
-            </Button>
             <Button
               onClick={() => router.push(`${pathname}/${contract.id}/view`)}
               variant="outline"
@@ -138,7 +127,6 @@ function DataContractTable({ contracts }: DataContractTableTypes) {
 
   return (
     <DataTable
-      additionalButton={<Button variant="outline" onClick={() => router.push(`${pathname}/create`)}>Create New Contract</Button>}
       columns={columns}
       data={contracts || []}
       searchKey="name"
@@ -149,4 +137,4 @@ function DataContractTable({ contracts }: DataContractTableTypes) {
   );
 }
 
-export default DataContractTable;
+export default LakipTable;

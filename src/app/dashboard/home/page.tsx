@@ -1,10 +1,10 @@
+import { getCurrentUser } from "@/actions/auth";
 import { getDashboardReport } from "@/actions/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatRupiah } from "@/lib/utils";
 
 export default async function HomePage() {
   const data = await getDashboardReport();
-  console.log(data);
 
   if (!data.report) return <div>Data not found</div>;
   return (

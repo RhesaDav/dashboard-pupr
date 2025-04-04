@@ -1,9 +1,31 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { hashPassword, comparePassword, createToken, refreshToken } from "@/lib/auth";
+import { hashPassword, comparePassword, createToken, refreshToken, verifyToken } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+
+export async function getCurrentUser() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session")?.value;
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const decoded:any = await verifyToken(token);
+    const user = await prisma.user.findUnique({
+      where: { id: decoded?.id },
+    });
+
+    return user;
+  } catch (error) {
+    console.error("Failed to get current user:", error);
+    return null;
+  }
+}
+
 
 export async function registerAction(formData: FormData) {
   const cookiesHeaders = await cookies();

@@ -14,10 +14,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { LuLoader } from "react-icons/lu";
 import { useRouter } from "next/navigation";
 import { loginAction, registerAction } from "@/actions/auth";
 import { toast } from "sonner";
+import { Loader } from "lucide-react";
 
 const SignUpSchema = z.object({
   name: z.string().min(5, "nama minimal 5 karakter"),
@@ -125,7 +125,7 @@ function SignUpForm() {
               className="w-full flex items-center justify-center gap-2"
               disabled={loading}
             >
-              {loading && <LuLoader className="w-4 h-4 animate-spin" />}
+              {loading && <Loader className="w-4 h-4 animate-spin" />}
               Sign Up
             </Button>
           </form>

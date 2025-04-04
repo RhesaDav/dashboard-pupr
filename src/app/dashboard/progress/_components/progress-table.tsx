@@ -12,7 +12,7 @@ import {
   Trash,
 } from "lucide-react";
 import { Contract } from "@prisma/client";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface ProgressTableTypes {
   contracts?: Contract[];
@@ -21,6 +21,7 @@ interface ProgressTableTypes {
 function ProgressTable({ contracts }: ProgressTableTypes) {
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const columns: ColumnDef<Contract>[] = [
     {
       accessorKey: "namaPaket",
@@ -90,11 +91,18 @@ function ProgressTable({ contracts }: ProgressTableTypes) {
     },
   ];
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("search", e.target.value);
+    router.push(`?${params.toString()}`);
+  };
+
   return (
     <DataTable
       columns={columns}
       data={contracts || []}
       searchKey="name"
+      onSearch={handleSearch}
       pageSizeOptions={[5, 10, 20, 50]}
       defaultPageSize={10}
     />

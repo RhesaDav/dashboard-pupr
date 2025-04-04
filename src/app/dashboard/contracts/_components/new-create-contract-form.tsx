@@ -224,7 +224,7 @@ export default function ContractForm({
         }
       } else {
         const createdData = await createContract(formData);
-  
+
         if (createdData.success) {
           toast.success("Contract created successfully");
         } else {
@@ -393,7 +393,7 @@ export default function ContractForm({
                   />
                   <Button
                     onClick={() =>
-                      router.push(
+                      window.open(
                         `https://www.google.com/maps/place/${form.watch(
                           "koordinatAwal"
                         )}`
@@ -419,7 +419,7 @@ export default function ContractForm({
                   />
                   <Button
                     onClick={() =>
-                      router.push(
+                      window.open(
                         `https://www.google.com/maps/place/${form.watch(
                           "koordinatAkhir"
                         )}`
@@ -544,6 +544,7 @@ export default function ContractForm({
                     <Label htmlFor="volumeKontrak">Volume Kontrak</Label>
                     <Input
                       id="volumeKontrak"
+                      type="number"
                       {...form.register("volumeKontrak")}
                     />
                     {form.formState.errors.volumeKontrak && (
@@ -928,14 +929,25 @@ export default function ContractForm({
               </div>
             </CardContent>
           </Card>
-
           <Card className="mt-6">
             <CardHeader>
-              <CardTitle className="text-lg font-bold">Masa Kontrak</CardTitle>
+              <CardTitle className="text-lg font-bold">
+                Masa Kontrak{" "}
+                <span className="bg-gray-100 p-2 rounded-md">
+                  {form.watch("masaPelaksanaan") +
+                    (form
+                      .watch("addendum")
+                      ?.reduce(
+                        (acc, item) => acc + Number(item.hari || 0),
+                        0
+                      ) || 0)}{" "}
+                  Hari
+                </span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {/* Original Contract End Date */}
+                {/* Akhir Kontrak Asli */}
                 <div className="grid grid-cols-12 gap-2 items-center text-sm">
                   <div className="col-span-4 font-medium">
                     Akhir Kontrak Asli
@@ -950,7 +962,7 @@ export default function ContractForm({
                               "dd-MM-yyyy",
                               new Date()
                             ),
-                            form.watch("masaPelaksanaan")
+                            form.watch("masaPelaksanaan") || 0
                           ),
                           "dd-MM-yyyy"
                         )
@@ -963,119 +975,110 @@ export default function ContractForm({
                   </div>
                 </div>
 
-                {/* Addendum Contract End Date */}
-                <div className="grid grid-cols-12 gap-2 items-center text-sm">
-                  <div className="col-span-4 font-medium">
-                    Akhir Kontrak ADD
-                  </div>
-                  <div className="col-span-5">
-                    :{" "}
-                    {form.watch("tanggalKontrak")
-                      ? format(
-                          addDays(
-                            parse(
-                              form.watch("tanggalKontrak"),
-                              "dd-MM-yyyy",
-                              new Date()
-                            ),
-                            (form.watch("masaPelaksanaan") || 0) +
-                              (form
-                                .watch("addendum")
-                                ?.filter(
-                                  (item) =>
-                                    Number(item.hari) &&
-                                    !item.pemberianKesempatan &&
-                                    item.tipe === "waktu"
-                                )
-                                .reduce(
-                                  (acc, item) => acc + Number(item.hari || 0),
-                                  0
-                                ) || 0)
-                          ),
-                          "dd-MM-yyyy"
-                        )
-                      : "-"}
-                  </div>
-                  <div className="col-span-3 text-right">
-                    <span className="px-2 py-1 bg-gray-100 rounded-md">
-                      {form
-                        .watch("addendum")
-                        ?.filter(
-                          (item) =>
-                            Number(item.hari) &&
-                            !item.pemberianKesempatan &&
-                            item.tipe === "waktu"
-                        )
-                        .reduce(
-                          (acc, item) => acc + Number(item.hari || 0),
-                          0
-                        ) ||
-                        0 ||
-                        "0"}{" "}
-                      Hari
-                    </span>
-                  </div>
-                </div>
+                {/* Akhir Kontrak Addendum (Waktu, Non-Kesempatan) */}
+                {form
+                  .watch("addendum")
+                  ?.filter((item) => !item.pemberianKesempatan)
+                  .map((item, index, array) => {
+                    const totalDays =
+                      (form.watch("masaPelaksanaan") || 0) +
+                      array
+                        .slice(0, index + 1)
+                        .reduce((acc, item) => acc + Number(item.hari || 0), 0);
 
-                {/* Divider when addendums exist */}
+                    return (
+                      <div
+                        key={item.id}
+                        className="grid grid-cols-12 gap-2 items-center text-sm"
+                      >
+                        <div className="col-span-4 font-medium">
+                          Akhir Kontrak ADD {romanize(index + 1)}
+                        </div>
+                        <div className="col-span-5">
+                          :{" "}
+                          {form.watch("tanggalKontrak")
+                            ? format(
+                                addDays(
+                                  parse(
+                                    form.watch("tanggalKontrak"),
+                                    "dd-MM-yyyy",
+                                    new Date()
+                                  ),
+                                  totalDays
+                                ),
+                                "dd-MM-yyyy"
+                              )
+                            : "-"}
+                        </div>
+                        <div className="col-span-3 text-right">
+                          <span className="px-2 py-1 bg-gray-100 rounded-md">
+                            {item.hari} Hari
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                {/* Divider ketika ada addendum pemberian kesempatan */}
                 {form
                   .watch("addendum")
                   ?.some((item) => item.pemberianKesempatan) && (
                   <div className="border-t border-gray-200 my-2"></div>
                 )}
 
-                {/* Dynamic Addendum Sections */}
+                {/* Addendum Pemberian Kesempatan */}
                 {form
                   .watch("addendum")
                   ?.filter((item) => item.pemberianKesempatan)
-                  .map((item, index, array) => (
-                    <div
-                      key={item.id}
-                      className="grid grid-cols-12 gap-2 items-center text-sm bg-gray-50 p-2 rounded-md"
-                    >
-                      <div className="col-span-4 font-medium">
-                        Addendum {romanize(index + 1)}
-                      </div>
-                      <div className="col-span-5">
-                        :{" "}
-                        {form.watch("tanggalKontrak")
-                          ? format(
-                              addDays(
-                                parse(
-                                  form.watch("tanggalKontrak"),
-                                  "dd-MM-yyyy",
-                                  new Date()
+                  .map((item, index, array) => {
+                    const totalNonKesempatanDays =
+                      (form.watch("masaPelaksanaan") || 0) +
+                      (form.watch("addendum") ?? [])
+                        .filter((add) => !add.pemberianKesempatan)
+                        .reduce((acc, add) => acc + Number(add.hari || 0), 0);
+
+                    const totalDays =
+                      totalNonKesempatanDays +
+                      array
+                        .slice(0, index + 1)
+                        .reduce((acc, add) => acc + Number(add.hari || 0), 0);
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="grid grid-cols-12 gap-2 items-center text-sm bg-gray-50 p-2 rounded-md"
+                      >
+                        <div className="col-span-4 font-medium">
+                          Addendum {romanize(index + 1)}
+                        </div>
+                        <div className="col-span-5">
+                          :{" "}
+                          {form.watch("tanggalKontrak")
+                            ? format(
+                                addDays(
+                                  parse(
+                                    form.watch("tanggalKontrak"),
+                                    "dd-MM-yyyy",
+                                    new Date()
+                                  ),
+                                  totalDays
                                 ),
-                                (form.watch("masaPelaksanaan") || 0) +
-                                  array
-                                    .slice(0, index + 1) // Ambil addendum dari awal hingga yang sekarang
-                                    .filter(
-                                      (item) =>
-                                        Number(item.hari) &&
-                                        item.pemberianKesempatan &&
-                                        item.tipe === "waktu"
-                                    )
-                                    .reduce(
-                                      (acc, item) =>
-                                        acc + Number(item.hari || 0),
-                                      0
-                                    )
-                              ),
-                              "dd-MM-yyyy"
-                            )
-                          : "-"}
+                                "dd-MM-yyyy"
+                              )
+                            : "-"}
+                        </div>
+                        <div className="col-span-3 text-right">
+                          <span className="px-2 py-1 bg-white rounded-md">
+                            {item.hari} Hari
+                          </span>
+                        </div>
                       </div>
-                      <div className="col-span-3 text-right">
-                        <span className="px-2 py-1 bg-white rounded-md">
-                          {item.hari} Hari
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             </CardContent>
           </Card>
-
+          ;
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Supervisi</CardTitle>
@@ -1155,7 +1158,6 @@ export default function ContractForm({
               </div>
             </CardContent>
           </Card>
-
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Progress Kemajuan</CardTitle>

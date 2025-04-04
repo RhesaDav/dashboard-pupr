@@ -1,15 +1,7 @@
-import DataContractTable from "./_components/data-contract-table";
-import Pagination from "@/components/ui/pagination";
-import SearchInput from "./_components/search-input";
-import { getAllContracts } from "@/actions/contract";
-
-// export default function HomePage() {
-//   return (
-//     <div>
-//       <ContractsPage />
-//     </div>
-//   );
-// }
+import React from 'react'
+import ReportTable from './_components/report-table';
+import Pagination from '@/components/ui/pagination';
+import { getAllContracts } from '@/actions/contract';
 
 export default async function page({
   searchParams,
@@ -22,8 +14,8 @@ export default async function page({
   const contracts = await getAllContracts(page,pageSize,search)
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-5">Data Contract</h1>
-      <DataContractTable contracts={contracts.contracts} />
+      <h1 className="text-2xl font-bold mb-5">Report</h1>
+      <ReportTable contracts={contracts.contracts} />
       <Pagination totalPages={contracts.pagination?.totalPages} />
     </div>
   );

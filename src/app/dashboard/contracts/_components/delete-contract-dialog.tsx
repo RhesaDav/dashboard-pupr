@@ -14,9 +14,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { LuLoader, LuTrash } from "react-icons/lu";
 import { toast } from "sonner";
 import { deleteContract } from "@/actions/contract";
+import { Loader, Trash } from "lucide-react";
 
 interface DeleteContractDialogProps {
   contractId: string;
@@ -42,7 +42,7 @@ export function DeleteContractDialog({ contractId, contractName }: DeleteContrac
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="outline">
-            <LuTrash/>
+            <Trash/>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -56,7 +56,7 @@ export function DeleteContractDialog({ contractId, contractName }: DeleteContrac
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>
           <AlertDialogAction onClick={handleDelete} className="flex items-center gap-2">
-            {loading && <LuLoader className="w-4 h-4 animate-spin" />}
+            {loading && <Loader className="w-4 h-4 animate-spin" />}
             Hapus
           </AlertDialogAction>
         </AlertDialogFooter>

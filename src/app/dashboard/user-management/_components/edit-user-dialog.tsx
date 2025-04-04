@@ -24,10 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LuLoader } from "react-icons/lu";
 import { toast } from "sonner";
 import { User, Role } from "@prisma/client";
-import { LucideEdit } from "lucide-react";
+import { Loader, LucideEdit } from "lucide-react";
 
 interface EditUserDialogProps {
   user: User;
@@ -131,7 +130,7 @@ export default function EditUserDialog({ user }: EditUserDialogProps) {
             <Label htmlFor="role">Role</Label>
             <Select
               onValueChange={form.setValue.bind(null, "role")}
-              defaultValue="USER"
+              defaultValue={user.role}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih role" />
@@ -152,7 +151,7 @@ export default function EditUserDialog({ user }: EditUserDialogProps) {
               className="w-full flex items-center justify-center gap-2"
               disabled={loading}
             >
-              {loading && <LuLoader className="w-4 h-4 animate-spin" />}
+              {loading && <Loader className="w-4 h-4 animate-spin" />}
               Edit User
             </Button>
           </DialogFooter>

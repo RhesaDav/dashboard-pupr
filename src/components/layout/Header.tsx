@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { FiUser, FiLogOut } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logoutAction } from "@/actions/auth";
+import { LogOut, User } from "lucide-react";
 
 const Header = () => {
   return (
@@ -19,13 +19,13 @@ const Header = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2">
-              <FiUser className="w-5 h-5" />
+              <User className="w-5 h-5" />
               <span>Admin</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={async() => await logoutAction()}>
-              <FiLogOut className="mr-2 w-5 h-5" />
+              <LogOut className="mr-2 w-5 h-5" />
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>

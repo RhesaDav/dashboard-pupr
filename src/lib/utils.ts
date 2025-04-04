@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { addDays, endOfMonth, format, isSameMonth, startOfWeek } from "date-fns";
+import { addDays, endOfMonth, format, isSameMonth, parse, startOfWeek } from "date-fns";
 import {id} from "date-fns/locale"
 
 export function cn(...inputs: ClassValue[]) {
@@ -47,7 +47,7 @@ type MonthData = {
 };
 
 export const generateWeeks = (startDateStr: string, durationDays: number): MonthData[] => {
-  const startDate = new Date(startDateStr);
+  const startDate = parse(startDateStr,"dd-MM-yyyy", new Date);
   const endDate = addDays(startDate, durationDays - 1);
 
   let currentDate = startDate;
@@ -76,9 +76,9 @@ export const generateWeeks = (startDateStr: string, durationDays: number): Month
 
     itemsInMonth.push({
       week: weekCounter,
-      rencana: 10,
+      rencana: 0,
       realisasi: 0,
-      deviasi: -10,
+      deviasi: 0,
     });
     weekCounter++;
 

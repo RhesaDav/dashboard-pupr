@@ -17,9 +17,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LuLoader } from "react-icons/lu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
+import { Loader } from "lucide-react";
+import { Role } from "@prisma/client";
 
 export default function CreateUserDialog() {
   const [open, setOpen] = useState(false);
@@ -70,42 +77,73 @@ export default function CreateUserDialog() {
           {/* Email Field */}
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="you@example.com" {...form.register("email")} />
-            {form.formState.errors.email && <p className="text-red-500 text-sm">{form.formState.errors.email.message}</p>}
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              {...form.register("email")}
+            />
+            {form.formState.errors.email && (
+              <p className="text-red-500 text-sm">
+                {form.formState.errors.email.message}
+              </p>
+            )}
           </div>
 
           {/* Password Field */}
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="••••••••" {...form.register("password")} />
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              {...form.register("password")}
+            />
             {form.formState.errors.password && (
-              <p className="text-red-500 text-sm">{form.formState.errors.password.message}</p>
+              <p className="text-red-500 text-sm">
+                {form.formState.errors.password.message}
+              </p>
             )}
           </div>
 
           {/* Name Field */}
           <div className="grid gap-2">
             <Label htmlFor="name">Nama</Label>
-            <Input id="name" type="text" placeholder="Nama lengkap" {...form.register("name")} />
+            <Input
+              id="name"
+              type="text"
+              placeholder="Nama lengkap"
+              {...form.register("name")}
+            />
           </div>
 
           {/* Role Field */}
           <div className="grid gap-2">
             <Label htmlFor="role">Role</Label>
-            <Select onValueChange={form.setValue.bind(null, "role")} defaultValue="USER">
+            <Select
+              onValueChange={form.setValue.bind(null, "role")}
+              defaultValue="ADMIN"
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-                <SelectItem value="USER">User</SelectItem>
+                {Object.values(Role).map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <DialogFooter>
-            <Button type="submit" className="w-full flex items-center justify-center gap-2" disabled={loading}>
-              {loading && <LuLoader className="w-4 h-4 animate-spin" />}
+            <Button
+              type="submit"
+              className="w-full flex items-center justify-center gap-2"
+              disabled={loading}
+            >
+              {loading && <Loader className="w-4 h-4 animate-spin" />}
               Create User
             </Button>
           </DialogFooter>

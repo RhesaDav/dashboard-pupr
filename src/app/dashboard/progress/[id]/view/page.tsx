@@ -1,7 +1,7 @@
 import React from "react";
 import { getContractWithProgress } from "@/actions/progress";
 import { format } from "date-fns";
-import EditProgressPage from "../../_components/edit-progress";
+import ProgressDetailView from "../../_components/detail-progress";
 
 async function ContractProgressPage({ params }: { params: { id: string } }) {
   const id = params.id;
@@ -29,7 +29,7 @@ async function ContractProgressPage({ params }: { params: { id: string } }) {
 
   console.log(contractData)
 
-  return <EditProgressPage contract={contract} />;
+  return <ProgressDetailView contract={contract} />
 }
 
 export default ContractProgressPage;

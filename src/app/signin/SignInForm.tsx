@@ -14,10 +14,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { LuLoader } from "react-icons/lu";
 import { useRouter } from "next/navigation";
 import { loginAction } from "@/actions/auth";
 import { toast } from "sonner";
+import { Loader } from "lucide-react";
 
 const SignInSchema = z.object({
   email: z.string().email("Email tidak valid"),
@@ -113,7 +113,7 @@ function SignInForm() {
               className="w-full flex items-center justify-center gap-2"
               disabled={loading}
             >
-              {loading && <LuLoader className="w-4 h-4 animate-spin" />}
+              {loading && <Loader className="w-4 h-4 animate-spin" />}
               Sign In
             </Button>
           </form>

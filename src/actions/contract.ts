@@ -9,6 +9,7 @@ import {
   UpdateContractType,
 } from "@/schemas/contractSchemas";
 import { Prisma } from "@prisma/client";
+import { getCurrentUser } from "./auth";
 
 export const createContract = async (formData: FormData) => {
   try {
@@ -69,6 +70,7 @@ export const createContract = async (formData: FormData) => {
 
 export const getAllContracts = async (page = 1, limit = 10, search = "") => {
   try {
+    const user = await getCurrentUser()
     const skip = (page - 1) * limit;
 
     const searchCondition: Prisma.ContractWhereInput = search
@@ -95,6 +97,11 @@ export const getAllContracts = async (page = 1, limit = 10, search = "") => {
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
+    });
+
+    const contractByConsultantId = await prisma.contractAccess.findMany({
+      where: { userId: user?.id },
+      include: { contract: true }
     });
 
     const totalContracts = await prisma.contract.count({
