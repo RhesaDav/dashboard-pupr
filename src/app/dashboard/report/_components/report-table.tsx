@@ -43,7 +43,7 @@ function ReportTable({ contracts }: ReportTableTypes) {
       cell: ({ row }) => {
         return (
           <div className="relative max-w-[280px] truncate">
-            <span title={row.original.namaPaket}>{row.original.namaPaket}</span>
+            <span title={row.original.namaPaket || "-"}>{row.original.namaPaket}</span>
           </div>
         );
       },
