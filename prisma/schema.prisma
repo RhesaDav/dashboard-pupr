@@ -16,60 +16,61 @@ model Contract {
   updatedAt DateTime @updatedAt
 
   // Package Information
-  namaPaket    String
-  namaPenyedia String
+  namaPaket    String? @default("")
+  namaPenyedia String? @default("")
 
   // Location details
-  kota           String
-  distrik        String
-  kampung        String
-  koordinatAwal  String
-  koordinatAkhir String
+  kota           String? @default("")
+  distrik        String? @default("")
+  kampung        String? @default("")
+  koordinatAwal  String? @default("")
+  koordinatAkhir String? @default("")
 
   // Officials
-  ppk                 String
-  nipPPK              String
-  korwaslap           String
-  nipKorwaslap        String
-  pengawasLapangan    String
-  nipPengawasLapangan String
+  ppk                 String? @default("")
+  nipPPK              String? @default("")
+  korwaslap           String? @default("")
+  nipKorwaslap        String? @default("")
+  pengawasLapangan    String? @default("")
+  nipPengawasLapangan String? @default("")
 
   // Financial details
-  paguAnggaran String // Kept as string to preserve formatting
-  nilaiKontrak Float
-  sumberDana   String
+  paguAnggaran String? @default("")
+  nilaiKontrak Float?  @default(0.0)
+  sumberDana   String? @default("")
 
   // Contract details
-  nomorKontrak    String   @unique
-  tanggalKontrak  DateTime
-  masaPelaksanaan Int // In days
-  volumeKontrak   String
-  satuanKontrak   String
+  nomorKontrak    String?   @unique
+  tanggalKontrak  DateTime?
+  masaPelaksanaan Int?      @default(0)
+  volumeKontrak   String?   @default("")
+  satuanKontrak   String?   @default("")
 
   // Supervision details
-  konsultanSupervisi       String
-  nomorKontrakSupervisi    String
-  tanggalKontrakSupervisi  DateTime
-  masaPelaksanaanSupervisi Int
+  konsultanSupervisi       String?   @default("")
+  nomorKontrakSupervisi    String?   @default("")
+  nilaiKontrakSupervisi    Float?    @default(0.0)
+  tanggalKontrakSupervisi  DateTime?
+  masaPelaksanaanSupervisi Int?      @default(0)
 
   // Addendum handling
-  hasAddendum String // "ada" or "tidak ada"
+  hasAddendum String?    @default("tidak ada") // Default ke "tidak ada"
   addendum    Addendum[]
 
   // Project status and completion
-  pemberianKesempatan Boolean @default(false)
-  hasilProdukAkhir    String
-  dimensi             String
-  kendala             Boolean @default(false)
+  pemberianKesempatan Boolean? @default(false)
+  hasilProdukAkhir    String?  @default("")
+  dimensi             String?  @default("")
+  kendala             Boolean? @default(false)
   permasalahan        String?
   keterangan          String?
 
   // Payment terms (percentages)
-  uangMuka Float
-  termin1  Float
-  termin2  Float
-  termin3  Float
-  termin4  Float
+  uangMuka Float? @default(0.0)
+  termin1  Float? @default(0.0)
+  termin2  Float? @default(0.0)
+  termin3  Float? @default(0.0)
+  termin4  Float? @default(0.0)
 
   // Documentation
   dokumentasiAwal   String?
@@ -91,8 +92,8 @@ model Addendum {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name                String
-  tipe                String
+  name                String?
+  tipe                String?
   hari                String?
   volume              String?
   satuan              String?

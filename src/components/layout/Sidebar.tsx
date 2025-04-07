@@ -49,28 +49,31 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   );
 
   return (
-    <aside
+<aside
       className={cn(
-        "fixed inset-y-0 left-0 z-30 w-64 bg-background border-r min-h-screen p-4 md:p-6", 
-        "flex flex-col", // Tambahkan flex-col
+        "fixed inset-y-0 left-0 z-30 w-64 bg-background border-r p-4 md:p-6", // Posisi fixed (juga untuk desktop)
+        "flex flex-col",
         "transition-transform duration-300 ease-in-out",
-        isOpen ? "translate-x-0" : "-translate-x-full", 
-        "md:translate-x-0 md:static md:inset-auto md:z-auto" 
+        isOpen ? "translate-x-0" : "-translate-x-full", // Show/hide mobile
+        "md:translate-x-0", // Pastikan selalu terlihat di md+
+        // --- PERUBAHAN KUNCI ---
+        "md:h-screen md:overflow-y-auto" // Buat tinggi penuh layar & scrollable jika perlu di md+
+        // Kita tidak menggunakan md:static lagi
       )}
     >
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-6 flex-shrink-0"> 
         <h1 className="text-xl md:text-2xl font-semibold">Bina Marga</h1>
         {user && (
-          <span className="text-[10px] md:text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full"> 
+          <span className="text-[10px] md:text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
             {user.role.toLowerCase()}
           </span>
         )}
       </div>
 
-      <nav className="flex-grow"> 
+      <nav className="flex-grow overflow-y-auto"> 
         <ul className="space-y-1.5 md:space-y-2">
           {filteredMenuItems.map(({ label, icon: Icon, href }) => {
-            const isActive = path === href || (href !== "/dashboard/home" && path.startsWith(href)) || (href === "/dashboard/home" && (path === "/dashboard" || path === "/dashboard/home")); // Logika active lebih akurat
+            const isActive = path === href || (href !== "/dashboard/home" && path.startsWith(href)) || (href === "/dashboard/home" && (path === "/dashboard" || path === "/dashboard/home"));
 
             return (
               <li key={href}>
@@ -78,11 +81,11 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
                   asChild
                   variant={isActive ? "default" : "ghost"}
                   className={cn(
-                    "w-full justify-start px-3 py-2 md:px-4 md:py-3 flex items-center gap-2 md:gap-3 text-sm md:text-base", 
+                    "w-full justify-start px-3 py-2 md:px-4 md:py-3 flex items-center gap-2 md:gap-3 text-sm md:text-base",
                   )}
                 >
                   <Link href={href}>
-                    <Icon className="w-4 h-4 md:w-5 md:h-5" /> 
+                    <Icon className="w-4 h-4 md:w-5 md:h-5" />
                     {label}
                   </Link>
                 </Button>
@@ -93,7 +96,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
       </nav>
 
       {user && (
-        <div className="mt-auto pt-4 border-t">
+        <div className="mt-4 pt-4 border-t flex-shrink-0"> 
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
               <User className="w-4 h-4 text-primary" />
@@ -105,8 +108,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
           </div>
         </div>
       )}
-    </aside>
-  );
+    </aside>  );
 };
 
 export default Sidebar;

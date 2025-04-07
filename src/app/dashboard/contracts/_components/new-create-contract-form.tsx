@@ -43,6 +43,7 @@ import {
 } from "@/schemas/contractSchemas";
 import { createContract, editContract } from "@/actions/contract";
 import { Addendum, Contract } from "@prisma/client";
+import { InputCurrency } from "@/components/input-currency";
 
 type ContactFormType = {
   id?: string;
@@ -69,7 +70,24 @@ export default function ContractForm({
   };
   const router = useRouter();
   const form = useForm<CreateContractType>({
-    resolver: zodResolver(CreateContractSchema),
+    resolver: zodResolver(
+      CreateContractSchema.refine(
+        (data) => {
+          const totalPercentage =
+            (data.uangMuka || 0) +
+            (data.termin1 || 0) +
+            (data.termin2 || 0) +
+            (data.termin3 || 0) +
+            (data.termin4 || 0);
+          return totalPercentage <= 100;
+        },
+        {
+          message:
+            "Total persentase Uang Muka dan Termin 1-4 tidak boleh melebihi 100%",
+          path: ["termin4"],
+        }
+      )
+    ),
     defaultValues: {
       distrik: initialData?.distrik || "",
       dokumentasiAkhir: initialData?.dokumentasiAkhir || "",
@@ -94,6 +112,7 @@ export default function ContractForm({
       kendala: initialData?.kendala ?? false, // Boolean pakai `??`
       keterangan: initialData?.keterangan || "",
       konsultanSupervisi: initialData?.konsultanSupervisi || "",
+      nilaiKontrakSupervisi: initialData?.nilaiKontrakSupervisi || 0,
       masaPelaksanaan: initialData?.masaPelaksanaan ?? 0, // Number pakai `??`
       masaPelaksanaanSupervisi: initialData?.masaPelaksanaanSupervisi ?? 0,
       nilaiKontrak: initialData?.nilaiKontrak ?? 0,
@@ -118,102 +137,15 @@ export default function ContractForm({
       hasAddendum:
         (initialData?.hasAddendum as "ada" | "tidak ada") || "tidak ada",
     },
-    mode: "onBlur",
+    // mode: "onBlur",
     disabled: type === "detail",
   });
 
-  // Get values from form
   const hasAddendum = form.watch("hasAddendum");
   const addendumItems = form.watch("addendum");
 
   const onSubmit = async (data: CreateContractType) => {
     try {
-      const formData = new FormData();
-
-      // Append basic text fields one by one
-      formData.append("namaPaket", data.namaPaket);
-      formData.append("namaPenyedia", data.namaPenyedia);
-      formData.append("kota", data.kota);
-      formData.append("distrik", data.distrik);
-      formData.append("kampung", data.kampung);
-      formData.append("koordinatAwal", data.koordinatAwal);
-      formData.append("koordinatAkhir", data.koordinatAkhir);
-
-      // Officials
-      formData.append("ppk", data.ppk);
-      formData.append("nipPPK", data.nipPPK);
-      formData.append("korwaslap", data.korwaslap);
-      formData.append("nipKorwaslap", data.nipKorwaslap);
-      formData.append("pengawasLapangan", data.pengawasLapangan);
-      formData.append("nipPengawasLapangan", data.nipPengawasLapangan);
-
-      // Financial details
-      formData.append("paguAnggaran", data.paguAnggaran);
-      formData.append("nilaiKontrak", data.nilaiKontrak.toString());
-      formData.append("sumberDana", data.sumberDana);
-
-      // Contract details
-      formData.append("nomorKontrak", data.nomorKontrak);
-      formData.append("tanggalKontrak", data.tanggalKontrak);
-      formData.append("masaPelaksanaan", data.masaPelaksanaan.toString());
-      formData.append("volumeKontrak", data.volumeKontrak);
-      formData.append("satuanKontrak", data.satuanKontrak);
-
-      // Supervision details
-      formData.append("konsultanSupervisi", data.konsultanSupervisi);
-      formData.append("nomorKontrakSupervisi", data.nomorKontrakSupervisi);
-      formData.append("tanggalKontrakSupervisi", data.tanggalKontrakSupervisi);
-      formData.append(
-        "masaPelaksanaanSupervisi",
-        data.masaPelaksanaanSupervisi.toString()
-      );
-
-      // Addendum handling
-      formData.append("hasAddendum", data.hasAddendum);
-
-      // If addendum exists, stringify it
-      if (data.addendum && data.addendum.length > 0) {
-        formData.append("addendum", JSON.stringify(data.addendum));
-      }
-
-      // Project status
-      formData.append(
-        "pemberianKesempatan",
-        data.pemberianKesempatan.toString()
-      );
-      formData.append("hasilProdukAkhir", data.hasilProdukAkhir);
-      formData.append("dimensi", data.dimensi);
-      formData.append("kendala", data.kendala.toString());
-
-      // Optional fields
-      if (data.permasalahan) {
-        formData.append("permasalahan", data.permasalahan);
-      }
-
-      if (data.keterangan) {
-        formData.append("keterangan", data.keterangan);
-      }
-
-      // Payment terms
-      formData.append("uangMuka", data.uangMuka.toString());
-      formData.append("termin1", data.termin1.toString());
-      formData.append("termin2", data.termin2.toString());
-      formData.append("termin3", data.termin3.toString());
-      formData.append("termin4", data.termin4.toString());
-
-      // Documentation fields (if they exist)
-      if (data.dokumentasiAwal) {
-        formData.append("dokumentasiAwal", data.dokumentasiAwal);
-      }
-
-      if (data.dokumentasiTengah) {
-        formData.append("dokumentasiTengah", data.dokumentasiTengah);
-      }
-
-      if (data.dokumentasiAkhir) {
-        formData.append("dokumentasiAkhir", data.dokumentasiAkhir);
-      }
-
       if (type === "update" && id) {
         const updatedData = await editContract(id, data);
 
@@ -223,7 +155,7 @@ export default function ContractForm({
           toast.error(updatedData.error || "failed");
         }
       } else {
-        const createdData = await createContract(formData);
+        const createdData = await createContract(data);
 
         if (createdData.success) {
           toast.success("Contract created successfully");
@@ -299,7 +231,6 @@ export default function ContractForm({
     form.setValue("addendum", updatedItems);
   };
 
-  // Reset addendum items when hasAddendum changes
   useEffect(() => {
     if (hasAddendum === "tidak ada") {
       form.setValue("addendum", []);
@@ -320,6 +251,17 @@ export default function ContractForm({
       );
     }
   }, [hasAddendum, form]);
+
+  const totalPercentage = () => {
+    const values = form.getValues();
+    return (
+      (values.uangMuka || 0) +
+      (values.termin1 || 0) +
+      (values.termin2 || 0) +
+      (values.termin3 || 0) +
+      (values.termin4 || 0)
+    );
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -449,11 +391,14 @@ export default function ContractForm({
               >
                 <div className="space-y-2">
                   <Label htmlFor="nilaiKontrak">Nilai Kontrak</Label>
-                  <Input
+                  <InputCurrency
                     id="nilaiKontrak"
-                    type="number"
-                    {...form.register("nilaiKontrak", { valueAsNumber: true })}
+                    value={form.watch("nilaiKontrak")}
+                    onValueChange={(value) =>
+                      form.setValue("nilaiKontrak", value)
+                    }
                   />
+                  <input type="hidden" {...form.register("nilaiKontrak")} />
                   {form.formState.errors.nilaiKontrak && (
                     <p className="text-red-500 text-sm">
                       {form.formState.errors.nilaiKontrak.message}
@@ -615,7 +560,7 @@ export default function ContractForm({
                           onClick={() => {
                             if (addendumItems) {
                               removeAddendumItem(
-                                addendumItems[addendumItems.length - 1].id
+                                addendumItems[addendumItems.length - 1].id || ""
                               );
                             }
                           }}
@@ -633,14 +578,14 @@ export default function ContractForm({
                       >
                         <div className="space-y-2">
                           <Label htmlFor={`addendum-text-${item.id}`}>
-                            Deskripsi Addendum
+                            Nomor Addendum
                           </Label>
                           <Input
                             id={`addendum-text-${item.id}`}
-                            value={item.name}
+                            value={item.name || ""}
                             onChange={(e) =>
                               updateAddendumItem(
-                                item.id,
+                                item.id || "",
                                 "name",
                                 e.target.value
                               )
@@ -653,9 +598,9 @@ export default function ContractForm({
                             Tipe Addendum
                           </Label>
                           <Select
-                            value={item.tipe}
+                            value={item.tipe || ""}
                             onValueChange={(value: "waktu" | "volume") =>
-                              updateAddendumType(item.id, value)
+                              updateAddendumType(item.id || "", value)
                             }
                           >
                             <SelectTrigger id={`addendum-type-${item.id}`}>
@@ -678,7 +623,7 @@ export default function ContractForm({
                               value={item.hari || ""}
                               onChange={(e) =>
                                 updateAddendumItem(
-                                  item.id,
+                                  item.id || "",
                                   "hari",
                                   e.target.value
                                 )
@@ -699,7 +644,7 @@ export default function ContractForm({
                                 value={item.volume || ""}
                                 onChange={(e) =>
                                   updateAddendumItem(
-                                    item.id,
+                                    item.id || "",
                                     "volume",
                                     e.target.value
                                   )
@@ -716,7 +661,7 @@ export default function ContractForm({
                                 value={item.satuan || ""}
                                 onChange={(e) =>
                                   updateAddendumItem(
-                                    item.id,
+                                    item.id || "",
                                     "satuan",
                                     e.target.value
                                   )
@@ -737,7 +682,7 @@ export default function ContractForm({
                               checked={item.pemberianKesempatan || false}
                               onCheckedChange={(checked) =>
                                 updateAddendumItem(
-                                  item.id,
+                                  item.id || "",
                                   "pemberianKesempatan",
                                   checked
                                 )
@@ -958,7 +903,8 @@ export default function ContractForm({
                       ? format(
                           addDays(
                             parse(
-                              form.watch("tanggalKontrak"),
+                              form.watch("tanggalKontrak") ||
+                                format(new Date(), "dd-MM-yyyy"),
                               "dd-MM-yyyy",
                               new Date()
                             ),
@@ -970,7 +916,7 @@ export default function ContractForm({
                   </div>
                   <div className="col-span-3 text-right">
                     <span className="px-2 py-1 bg-gray-100 rounded-md">
-                      {form.watch("masaPelaksanaan") || "0"} Hari
+                      {1 + form.watch("masaPelaksanaan") || "0"} Hari
                     </span>
                   </div>
                 </div>
@@ -1000,7 +946,8 @@ export default function ContractForm({
                             ? format(
                                 addDays(
                                   parse(
-                                    form.watch("tanggalKontrak"),
+                                    form.watch("tanggalKontrak") ||
+                                      format(new Date(), "dd-MM-yyyy"),
                                     "dd-MM-yyyy",
                                     new Date()
                                   ),
@@ -1049,7 +996,7 @@ export default function ContractForm({
                         className="grid grid-cols-12 gap-2 items-center text-sm bg-gray-50 p-2 rounded-md"
                       >
                         <div className="col-span-4 font-medium">
-                          Addendum {romanize(index + 1)}
+                          Pemberian Kesempatan {romanize(index + 1)}
                         </div>
                         <div className="col-span-5">
                           :{" "}
@@ -1057,7 +1004,8 @@ export default function ContractForm({
                             ? format(
                                 addDays(
                                   parse(
-                                    form.watch("tanggalKontrak"),
+                                    form.watch("tanggalKontrak") ||
+                                      format(new Date(), "dd-MM-yyyy"),
                                     "dd-MM-yyyy",
                                     new Date()
                                   ),
@@ -1078,7 +1026,6 @@ export default function ContractForm({
               </div>
             </CardContent>
           </Card>
-          ;
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Supervisi</CardTitle>
@@ -1100,6 +1047,21 @@ export default function ContractForm({
                 {form.formState.errors.nomorKontrakSupervisi && (
                   <p className="text-red-500 text-sm">
                     {form.formState.errors.nomorKontrakSupervisi.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <Label>Nilai Kontrak Supervisi</Label>
+                <Input
+                  type="number"
+                  {...form.register("nilaiKontrakSupervisi", {
+                    valueAsNumber: true,
+                  })}
+                />
+                {form.formState.errors.nilaiKontrakSupervisi && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.nilaiKontrakSupervisi.message}
                   </p>
                 )}{" "}
               </div>
@@ -1168,7 +1130,7 @@ export default function ContractForm({
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm mb-2 mx-5">
                     <div className="flex flex-col justify-center items-center border rounded px-10 py-5">
-                      <span>Normal</span>
+                      <span>Rencana</span>
                       <span>10%</span>
                     </div>
                     <div className="flex flex-col justify-center items-center border rounded px-10 py-5">
@@ -1188,11 +1150,42 @@ export default function ContractForm({
                   <div className="grid grid-cols-2 gap-8 mb-4 mx-5">
                     <div className="border rounded p-4 text-center">
                       <p className="text-sm mb-2">Progress Keuangan</p>
-                      <p className="text-sm mb-2">20%</p>
+                      <p className="text-sm mb-2">
+                        {form.watch("termin1") +
+                          form.watch("uangMuka") +
+                          form.watch("termin2") +
+                          form.watch("termin3") +
+                          form.watch("termin4") || 0}{" "}
+                        %
+                      </p>
                     </div>
                     <div className="border rounded p-4 text-center">
                       <p className="text-sm mb-2">Keuangan Terbayar</p>
-                      <p className="text-sm mb-2">100000</p>
+                      <p className="text-sm mb-2">
+                        {new Intl.NumberFormat("id-ID", {
+                          style: "currency",
+                          currency: "IDR",
+                        }).format(
+                          Math.round(
+                            (((form.watch("nilaiKontrak") || 0) *
+                              (form.watch("uangMuka") || 0)) /
+                              100 +
+                              ((form.watch("nilaiKontrak") || 0) *
+                                (form.watch("termin1") || 0)) /
+                                100 +
+                              ((form.watch("nilaiKontrak") || 0) *
+                                (form.watch("termin2") || 0)) /
+                                100 +
+                              ((form.watch("nilaiKontrak") || 0) *
+                                (form.watch("termin3") || 0)) /
+                                100 +
+                              ((form.watch("nilaiKontrak") || 0) *
+                                (form.watch("termin4") || 0)) /
+                                100) *
+                              100
+                          ) / 100
+                        )}
+                      </p>
                     </div>
                   </div>
                   <div className="mb-3">
@@ -1407,14 +1400,16 @@ export default function ContractForm({
         </CardContent>
       </Card>
 
-      <div className="mt-6 flex justify-end">
-        <Button type="button" variant="outline" className="mr-4">
-          Cancel
-        </Button>
-        <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
-          Save Contract
-        </Button>
-      </div>
+      {type !== "detail" && (
+        <div className="mt-6 flex justify-end">
+          <Button type="button" variant="outline" className="mr-4">
+            Cancel
+          </Button>
+          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
+            Save Contract
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

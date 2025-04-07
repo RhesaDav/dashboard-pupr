@@ -10,47 +10,55 @@ import {
 } from "@/schemas/contractSchemas";
 import { Prisma } from "@prisma/client";
 import { getCurrentUser } from "./auth";
+import { parse } from "date-fns";
 
-export const createContract = async (formData: FormData) => {
+export const createContract = async (data: CreateContractType) => {
   try {
-    const data = Object.fromEntries(formData.entries());
+    console.log(data);
+    // const data = Object.fromEntries(formData.entries());
 
-    const submitData = {
-      ...data,
-      masaPelaksanaan: Number(data.masaPelaksanaan),
-      nilaiKontrak: Number(data.nilaiKontrak),
-      masaPelaksanaanSupervisi: Number(data.masaPelaksanaanSupervisi),
-      pemberianKesempatan: Boolean(data.pemberianKesempatan),
-      kendala: Boolean(data.kendala),
-      uangMuka: Number(data.uangMuka),
-      termin1: Number(data.termin1),
-      termin2: Number(data.termin2),
-      termin3: Number(data.termin3),
-      termin4: Number(data.termin4),
-      volumeKontrak: String(data.volumeKontrak || ""),
-      addendum: data.addendum ? JSON.parse(data.addendum as string) : [],
-    };
+    // const submitData = {
+    //   ...data,
+    //   masaPelaksanaan: Number(data.masaPelaksanaan),
+    //   nilaiKontrak: Number(data.nilaiKontrak),
+    //   masaPelaksanaanSupervisi: Number(data.masaPelaksanaanSupervisi),
+    //   pemberianKesempatan: Boolean(data.pemberianKesempatan),
+    //   kendala: Boolean(data.kendala),
+    //   uangMuka: Number(data.uangMuka),
+    //   termin1: Number(data.termin1),
+    //   termin2: Number(data.termin2),
+    //   termin3: Number(data.termin3),
+    //   termin4: Number(data.termin4),
+    //   volumeKontrak: String(data.volumeKontrak || ""),
+    //   addendum: data.addendum ? JSON.parse(data.addendum as string) : [],
+    // };
 
-    console.log(submitData);
+    // console.log(submitData);
 
-    const validatedData = CreateContractSchema.parse(submitData);
+    const validatedData = CreateContractSchema.parse(data);
 
     const newContract = await prisma.contract.create({
       data: {
         ...validatedData,
-        tanggalKontrak: new Date(validatedData.tanggalKontrak),
-        tanggalKontrakSupervisi: new Date(
-          validatedData.tanggalKontrakSupervisi
+        tanggalKontrak: parse(
+          validatedData.tanggalKontrak || "",
+          "dd-MM-yyyy",
+          new Date()
+        ),
+        tanggalKontrakSupervisi: parse(
+          validatedData.tanggalKontrakSupervisi || "",
+          "dd-MM-yyyy",
+          new Date()
         ),
         addendum: {
-          create: validatedData.addendum,
+          create: validatedData.addendum
         },
       },
     });
 
     revalidatePath("/dashboard/contracts", "page");
 
-    return { success: true, contract: newContract };
+    return { success: true, contract: "newContract" };
   } catch (error) {
     if (error instanceof ZodError) {
       console.log(error.errors);
@@ -70,7 +78,7 @@ export const createContract = async (formData: FormData) => {
 
 export const getAllContracts = async (page = 1, limit = 10, search = "") => {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser();
     const skip = (page - 1) * limit;
 
     const searchCondition: Prisma.ContractWhereInput = search
@@ -101,7 +109,7 @@ export const getAllContracts = async (page = 1, limit = 10, search = "") => {
 
     const contractByConsultantId = await prisma.contractAccess.findMany({
       where: { userId: user?.id },
-      include: { contract: true }
+      include: { contract: true },
     });
 
     const totalContracts = await prisma.contract.count({
@@ -155,8 +163,10 @@ export async function editContract(
     // Create a Prisma-compatible update object
     const prismaUpdateData: any = {
       ...validatedData,
-      tanggalKontrak: new Date(validatedData.tanggalKontrak || new Date),
-      tanggalKontrakSupervisi: new Date(validatedData.tanggalKontrakSupervisi || new Date),
+      tanggalKontrak: new Date(validatedData.tanggalKontrak || new Date()),
+      tanggalKontrakSupervisi: new Date(
+        validatedData.tanggalKontrakSupervisi || new Date()
+      ),
     };
 
     // Handle the addendum relationship properly if it exists

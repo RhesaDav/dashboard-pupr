@@ -45,7 +45,7 @@ function DataContractTable({ contracts }: DataContractTableTypes) {
       cell: ({ row }) => {
         return (
           <div className="relative max-w-[280px] truncate">
-            <span title={row.original.namaPaket}>{row.original.namaPaket}</span>
+            <span title={row.original.namaPaket || "-"}>{row.original.namaPaket}</span>
           </div>
         );
       },
@@ -87,7 +87,7 @@ function DataContractTable({ contracts }: DataContractTableTypes) {
           <div className="flex items-center gap-2">
             <DeleteContractDialog
               contractId={contract.id}
-              contractName={contract.namaPaket}
+              contractName={contract.namaPaket || "-"}
             />
             <Button
               onClick={() => router.push(`${pathname}/${contract.id}/edit`)}

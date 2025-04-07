@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Contract } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { format } from "date-fns";
 
 interface ProgressTableTypes {
   contracts?: Contract[];
@@ -39,7 +40,7 @@ function ProgressTable({ contracts }: ProgressTableTypes) {
       cell: ({ row }) => {
         return (
           <div className="relative max-w-[280px] truncate">
-            <span title={row.original.namaPaket}>{row.original.namaPaket}</span>
+            <span title={row.original.namaPaket  || "-"}>{row.original.namaPaket}</span>
           </div>
         );
       },
@@ -69,6 +70,19 @@ function ProgressTable({ contracts }: ProgressTableTypes) {
         return (
           <div className="relative max-w-[120px] truncate">
             <span title={formatted}>{formatted}</span>
+          </div>
+        );
+      },
+    },    
+    {
+      accessorKey: "tanggalKontrak",
+      header: "Tanggal Kontrak",
+      cell: ({ row }) => {
+        const tanggalKontrak = format(row.getValue("tanggalKontrak"), "dd MMM yyyy") as string
+    
+        return (
+          <div className="relative max-w-[120px] truncate">
+            <span title={tanggalKontrak}>{tanggalKontrak}</span>
           </div>
         );
       },
