@@ -12,6 +12,7 @@ import { LocationDistributionChart } from "./LocationDistributionChart";
 import { RecentContractsTable } from "./RecentContractsTable";
 import { ProblemContractsList } from "./ProblemContractsList";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { getDistrik, getDistrikDetail } from "@/actions/wilayah";
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardReport | null>(null);
@@ -27,7 +28,6 @@ export default function DashboardPage() {
       try {
         setLoading(true);
         const report = await getDashboardReport();
-        console.log(report)
         setData(report);
         
         const now = new Date();

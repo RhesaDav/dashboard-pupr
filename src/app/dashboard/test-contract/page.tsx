@@ -17,6 +17,7 @@ import {
   Filter,
   Calendar as CalendarIcon,
   Loader2,
+  X,
 } from "lucide-react";
 
 import { exportToExcel, exportToPDF } from "./export-utils";
@@ -100,7 +101,11 @@ export default function ContractExportPage() {
     const fetchDataContracts = async () => {
       setIsLoading(true);
       try {
-        const result = await getAllContracts(pageParam, pageSizeParam, searchQuery);
+        const result = await getAllContracts(
+          pageParam,
+          pageSizeParam,
+          searchQuery
+        );
         if (result.contracts) {
           // Calculate additional fields
           const contractsWithCalculatedFields = result.contracts.map(
@@ -124,7 +129,7 @@ export default function ContractExportPage() {
 
           setContracts(contractsWithCalculatedFields);
           setTotalContracts(result.contracts.length || 0);
-          
+
           // Reset row selection when data changes
           setRowSelection({});
         }
@@ -173,6 +178,24 @@ export default function ContractExportPage() {
       (contract) => contract.status && statusFilter.includes(contract.status)
     );
   }, [contracts, statusFilter]);
+
+  const filterContractsByWeekRange = useMemo(() => {
+    if (!selectedWeekRange) return filteredContracts;
+
+    return filteredContracts.filter((contract) => {
+      if (!contract.progress || contract.progress.length === 0) return false;
+
+      return contract.progress.some((week) => {
+        const weekStart = week.startDate ? new Date(week.startDate) : null;
+        if (!weekStart || !isValid(weekStart)) return false;
+
+        return isWithinInterval(weekStart, {
+          start: selectedWeekRange.start,
+          end: selectedWeekRange.end,
+        });
+      });
+    });
+  }, [filteredContracts, selectedWeekRange]);
 
   const columns: ColumnDef<ContractWithProgress>[] = [
     {
@@ -253,7 +276,7 @@ export default function ContractExportPage() {
   ];
 
   const table = useReactTable({
-    data: filteredContracts,
+    data: filterContractsByWeekRange,
     columns,
     state: {
       rowSelection,
@@ -296,7 +319,7 @@ export default function ContractExportPage() {
       setSelectedWeekRange(undefined);
     }
   };
-  
+
   const handleExport = async (formatType: "excel" | "pdf") => {
     if (selectedRows.length === 0) {
       toast.error("Pilih setidaknya satu kontrak untuk diekspor.");
@@ -325,7 +348,9 @@ export default function ContractExportPage() {
 
           const filteredWeeks = contract.progress
             .filter((week) => {
-              const weekStart = week.startDate ? new Date(week.startDate) : null;
+              const weekStart = week.startDate
+                ? new Date(week.startDate)
+                : null;
 
               if (!weekStart || !isValid(weekStart)) return false;
 
@@ -407,29 +432,30 @@ export default function ContractExportPage() {
           data: pdfData,
           fileName: `${fileNameBase}.pdf`,
         });
-        
+
         toast.success("Berhasil mengekspor ke PDF");
       } else {
         // Excel export implementation
-        const excelData = contractsWithFilteredProgress.flatMap((contract: any) =>
-          contract.progressData.map((p: any) => ({
-            "Nama Paket": contract.namaPaket,
-            "Bulan": p.bulan,
-            "Minggu": p.minggu,
-            "Periode": p.periode,
-            "Rencana": p.rencana,
-            "Realisasi": p.realisasi,
-            "Deviasi": p.deviasi
-          }))
+        const excelData = contractsWithFilteredProgress.flatMap(
+          (contract: any) =>
+            contract.progressData.map((p: any) => ({
+              "Nama Paket": contract.namaPaket,
+              Bulan: p.bulan,
+              Minggu: p.minggu,
+              Periode: p.periode,
+              Rencana: p.rencana,
+              Realisasi: p.realisasi,
+              Deviasi: p.deviasi,
+            }))
         );
-        
+
         await exportToExcel(
           // title,
           excelData,
-          `${fileNameBase}.xlsx`,
+          `${fileNameBase}.xlsx`
           // sheetName: "Progress Mingguan"
         );
-        
+
         toast.success("Berhasil mengekspor ke Excel");
       }
     } catch (error) {
@@ -442,7 +468,7 @@ export default function ContractExportPage() {
 
   const updateURLParams = (params: Record<string, string | null>) => {
     const urlParams = new URLSearchParams(searchParams.toString());
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value === null) {
         urlParams.delete(key);
@@ -450,12 +476,12 @@ export default function ContractExportPage() {
         urlParams.set(key, value);
       }
     });
-    
+
     // Reset to page 1 when filters change
-    if ('search' in params || 'status' in params) {
-      urlParams.set('page', '1');
+    if ("search" in params || "status" in params) {
+      urlParams.set("page", "1");
     }
-    
+
     router.replace(`?${urlParams.toString()}`, { scroll: false });
   };
 
@@ -510,9 +536,9 @@ export default function ContractExportPage() {
                     const newStatus = checked
                       ? [...statusFilter, status]
                       : statusFilter.filter((s) => s !== status);
-                    
-                    updateURLParams({ 
-                      status: newStatus.length > 0 ? newStatus.join(",") : null 
+
+                    updateURLParams({
+                      status: newStatus.length > 0 ? newStatus.join(",") : null,
                     });
                   }}
                 >
@@ -598,6 +624,19 @@ export default function ContractExportPage() {
                   />
                 </PopoverContent>
               </Popover>
+              {selectedWeekRange && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedDateForWeek(undefined);
+                    setSelectedWeekRange(undefined);
+                  }}
+                  className="text-muted-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
             <div className="flex gap-2">
@@ -644,10 +683,7 @@ export default function ContractExportPage() {
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="py-3"
-                  >
+                  <TableHead key={header.id} className="py-3">
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()
@@ -703,7 +739,7 @@ export default function ContractExportPage() {
                           updateURLParams({
                             search: null,
                             status: null,
-                            page: "1"
+                            page: "1",
                           });
                         }}
                       >
@@ -724,9 +760,12 @@ export default function ContractExportPage() {
       {!isLoading && totalContracts > 0 && (
         <div className="flex items-center justify-between space-x-2 py-4">
           <div className="text-sm text-muted-foreground">
-            Menampilkan {(pagination.pageIndex * pagination.pageSize) + 1} hingga{" "}
-            {Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalContracts)} dari{" "}
-            {totalContracts} kontrak
+            Menampilkan {pagination.pageIndex * pagination.pageSize + 1} hingga{" "}
+            {Math.min(
+              (pagination.pageIndex + 1) * pagination.pageSize,
+              totalContracts
+            )}{" "}
+            dari {totalContracts} kontrak
           </div>
           <div className="flex items-center space-x-2">
             <Button
