@@ -16,39 +16,40 @@ model Contract {
   updatedAt DateTime @updatedAt
 
   // Package Information
-  namaPaket    String? @default("")
-  namaPenyedia String? @default("")
+  namaPaket    String
+  namaPenyedia String?
 
   // Location details
-  kota           String? @default("")
-  distrik        String? @default("")
-  kampung        String? @default("")
-  koordinatAwal  String? @default("")
-  koordinatAkhir String? @default("")
+  kota           String?
+  distrik        String?
+  kampung        String?
+  koordinatAwal  String?
+  koordinatAkhir String?
 
   // Officials
-  ppk                 String? @default("")
-  nipPPK              String? @default("")
-  korwaslap           String? @default("")
-  nipKorwaslap        String? @default("")
-  pengawasLapangan    String? @default("")
-  nipPengawasLapangan String? @default("")
+  ppk                 String?
+  nipPPK              String?
+  korwaslap           String?
+  nipKorwaslap        String?
+  pengawasLapangan    String?
+  nipPengawasLapangan String?
 
   // Financial details
-  paguAnggaran String? @default("")
+  paguAnggaran String?
   nilaiKontrak Float?  @default(0.0)
-  sumberDana   String? @default("")
+  sumberDana   String?
 
   // Contract details
-  nomorKontrak    String?   @unique
+  nomorKontrak    String?
   tanggalKontrak  DateTime?
   masaPelaksanaan Int?      @default(0)
-  volumeKontrak   String?   @default("")
-  satuanKontrak   String?   @default("")
+  subKegiatan     String?
+  volumeKontrak   String?
+  satuanKontrak   String?
 
   // Supervision details
-  konsultanSupervisi       String?   @default("")
-  nomorKontrakSupervisi    String?   @default("")
+  konsultanSupervisi       String?
+  nomorKontrakSupervisi    String?
   nilaiKontrakSupervisi    Float?    @default(0.0)
   tanggalKontrakSupervisi  DateTime?
   masaPelaksanaanSupervisi Int?      @default(0)
@@ -59,8 +60,8 @@ model Contract {
 
   // Project status and completion
   pemberianKesempatan Boolean? @default(false)
-  hasilProdukAkhir    String?  @default("")
-  dimensi             String?  @default("")
+  hasilProdukAkhir    String?
+  dimensi             String?
   kendala             Boolean? @default(false)
   permasalahan        String?
   keterangan          String?
@@ -115,6 +116,8 @@ model Progress {
 
   month     String
   week      Int
+  startDate DateTime?
+  endDate   DateTime?
   rencana   Float
   realisasi Float
   deviasi   Float

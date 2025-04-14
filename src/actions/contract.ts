@@ -51,7 +51,7 @@ export const createContract = async (data: CreateContractType) => {
           new Date()
         ),
         addendum: {
-          create: validatedData.addendum
+          create: validatedData.addendum,
         },
       },
     });
@@ -105,6 +105,9 @@ export const getAllContracts = async (page = 1, limit = 10, search = "") => {
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
+      include: {
+        progress: true
+      }
     });
 
     const contractByConsultantId = await prisma.contractAccess.findMany({
@@ -163,9 +166,15 @@ export async function editContract(
     // Create a Prisma-compatible update object
     const prismaUpdateData: any = {
       ...validatedData,
-      tanggalKontrak: new Date(validatedData.tanggalKontrak || new Date()),
-      tanggalKontrakSupervisi: new Date(
-        validatedData.tanggalKontrakSupervisi || new Date()
+      tanggalKontrak: parse(
+        validatedData.tanggalKontrak || "",
+        "dd-MM-yyyy",
+        new Date()
+      ),
+      tanggalKontrakSupervisi: parse(
+        validatedData.tanggalKontrakSupervisi || "",
+        "dd-MM-yyyy",
+        new Date()
       ),
     };
 
@@ -267,6 +276,7 @@ export async function getContractById(id: string) {
       where: { id },
       include: {
         addendum: true,
+        progress: true,
       },
     });
 
@@ -277,9 +287,25 @@ export async function getContractById(id: string) {
       };
     }
 
+    const progress = await prisma.progress.findMany({
+      where: { contractId: id },
+    });
+    const total = progress.reduce(
+      (acc, item) => {
+        acc.rencana += item.rencana;
+        acc.realisasi += item.realisasi;
+        acc.deviasi += item.deviasi;
+        return acc;
+      },
+      { rencana: 0, realisasi: 0, deviasi: 0 }
+    );
+
     return {
       success: true,
-      data: contract,
+      data: {
+        contract,
+        progressTotal: total,
+      },
     };
   } catch (error) {
     console.error("Error fetching contract:", error);

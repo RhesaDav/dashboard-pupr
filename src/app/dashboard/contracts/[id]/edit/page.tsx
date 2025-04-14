@@ -8,8 +8,9 @@ async function page({ params }: { params: Promise<{ id: string }> }) {
   return (
     <ContractForm
     id={id}
-      initialData={contract.data}
+      initialData={contract.data?.contract}
       type="update"
+      progressTotal={contract.data?.progressTotal}
     />
   );
 }

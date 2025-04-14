@@ -44,30 +44,25 @@ import {
 import { createContract, editContract } from "@/actions/contract";
 import { Addendum, Contract } from "@prisma/client";
 import { InputCurrency } from "@/components/input-currency";
+import { LocationCombobox } from "@/components/location-combobox";
 
 type ContactFormType = {
   id?: string;
   type?: "create" | "update" | "detail";
   initialData?: Contract & { addendum: Addendum[] };
+  progressTotal?: {
+    rencana: number;
+    realisasi: number;
+    deviasi: number;
+  };
 };
 
 export default function ContractForm({
   id,
   type = "create",
   initialData,
+  progressTotal,
 }: ContactFormType) {
-  const newInitialData = {
-    ...initialData,
-    tanggalKontrak: format(
-      initialData?.tanggalKontrak || new Date(),
-      "dd-MM-yyyy"
-    ),
-    tanggalKontrakSupervisi: format(
-      initialData?.tanggalKontrak || new Date(),
-      "dd-MM-yyyy"
-    ),
-    hasAddendum: (initialData?.hasAddendum as "ada") || "tidak ada",
-  };
   const router = useRouter();
   const form = useForm<CreateContractType>({
     resolver: zodResolver(
@@ -99,6 +94,7 @@ export default function ContractForm({
       korwaslap: initialData?.korwaslap || "",
       kota: initialData?.kota || "",
       namaPaket: initialData?.namaPaket || "",
+      subKegiatan: initialData?.subKegiatan || "",
       namaPenyedia: initialData?.namaPenyedia || "",
       nipKorwaslap: initialData?.nipKorwaslap || "",
       nipPengawasLapangan: initialData?.nipPengawasLapangan || "",
@@ -150,7 +146,7 @@ export default function ContractForm({
         const updatedData = await editContract(id, data);
 
         if (updatedData.success) {
-          toast.success("Contract created successfully");
+          toast.success("Contract updated successfully");
         } else {
           toast.error(updatedData.error || "failed");
         }
@@ -265,8 +261,8 @@ export default function ContractForm({
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-xl font-bold mb-6">Buat Data Kontrak Baru</h1>
-      <Progress value={(1 / 6) * 100} className="mb-6" />
+      <h1 className="text-xl font-bold mb-6">{type === "create" ? "Buat Data Kontrak Baru" : type === "update" ? "Edit Data Kontrak" : "Detail Data Kontrak"}</h1>
+      {/* <Progress value={(1 / 6) * 100} className="mb-6" /> */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Column */}
@@ -297,6 +293,20 @@ export default function ContractForm({
               </div>
 
               <div className="space-y-2 mb-6">
+                <LocationCombobox
+                  layout="vertical"
+                  onSelectionChange={(data) => {
+                    form.setValue("distrik", data.distrik);
+                    form.setValue("kota", data.kota);
+                  }}
+                  defaultValue={{
+                    distrik: form.watch("distrik"),
+                    kota: form.watch("kota"),
+                  }}
+                />
+              </div>
+
+              {/* <div className="space-y-2 mb-6">
                 <Label>Kabupaten / Kota</Label>
                 <Input {...form.register("kota")} />
                 {form.formState.errors.kota && (
@@ -314,7 +324,7 @@ export default function ContractForm({
                     {form.formState.errors.distrik.message}
                   </p>
                 )}{" "}
-              </div>
+              </div> */}
 
               <div className="space-y-2 mb-6">
                 <Label>Kampung</Label>
@@ -402,6 +412,57 @@ export default function ContractForm({
                   {form.formState.errors.nilaiKontrak && (
                     <p className="text-red-500 text-sm">
                       {form.formState.errors.nilaiKontrak.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nilaiKontrak">Sub Kegiatan</Label>
+                  <Select
+                    defaultValue={form.watch("subKegiatan")}
+                    onValueChange={(value: string) =>
+                      form.setValue("subKegiatan", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Subkegiatan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pengawasan Penyelenggaraan Jalan Kewenangan Provinsi">
+                        Pengawasan Penyelenggaraan Jalan Kewenangan Provinsi
+                      </SelectItem>
+                      <SelectItem value="Pemantauan dan Evaluasi Penyelenggaraan Jalan/Jembatan">
+                        Pemantauan dan Evaluasi Penyelenggaraan Jalan/Jembatan
+                      </SelectItem>
+                      <SelectItem value="Rehabilitasi Jalan">
+                        Rehabilitasi Jalan
+                      </SelectItem>
+                      <SelectItem value="Rekonstruksi Jalan">
+                        Rekonstruksi Jalan
+                      </SelectItem>
+                      <SelectItem value="Pembangunan Jembatan">
+                        Pembangunan Jembatan
+                      </SelectItem>
+                      <SelectItem value="Pemeliharaan Berkala Jalan">
+                        Pemeliharaan Berkala Jalan
+                      </SelectItem>
+                      <SelectItem value="Penyusunan Rencana, Kebijakan, Strategi dan Teknis Pengembangan Jaringan Jalan serta Perencanaan Teknis Penyelenggaraan Jalan dan Jembatan">
+                        Penyusunan Rencana, Kebijakan, Strategi dan Teknis
+                        Pengembangan Jaringan Jalan serta Perencanaan Teknis
+                        Penyelenggaraan Jalan dan Jembatan
+                      </SelectItem>
+                      <SelectItem value="Pembangunan Jalan">
+                        Pembangunan Jalan
+                      </SelectItem>
+                      <SelectItem value="Survey Kondisi Jalan/Jembatan">
+                        Survey Kondisi Jalan/Jembatan
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <input type="hidden" {...form.register("subKegiatan")} />
+                  {form.formState.errors.subKegiatan && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.subKegiatan.message}
                     </p>
                   )}
                 </div>
@@ -717,7 +778,6 @@ export default function ContractForm({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectLabel>Pilih hasil produk akhir</SelectLabel>
                       <SelectItem value="HRS WC">HRS WC</SelectItem>
                       <SelectItem value="HRS BASE">HRS BASE</SelectItem>
                       <SelectItem value="Lapen">Lapen</SelectItem>
@@ -1125,243 +1185,249 @@ export default function ContractForm({
               <CardTitle>Progress Kemajuan</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 mb-4">
-                <Label>Progress Fisik (%)</Label>
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm mb-2 mx-5">
-                    <div className="flex flex-col justify-center items-center border rounded px-10 py-5">
-                      <span>Rencana</span>
-                      <span>10%</span>
-                    </div>
-                    <div className="flex flex-col justify-center items-center border rounded px-10 py-5">
-                      <span>Realisasi</span>
-                      <span>10%</span>
-                    </div>
-                    <div className="flex flex-col justify-center items-center border rounded px-10 py-5">
-                      <span>Deviasi</span>
-                      <span>10%</span>
-                    </div>
-                  </div>
+              <div className="space-y-4 mb-6">
+                <Label className="block">Progress Fisik (%)</Label>
+                <div className="flex flex-wrap gap-4 justify-between">
+                  {["Rencana", "Realisasi", "Deviasi"].map((label, i) => {
+                    const value = [
+                      progressTotal?.rencana,
+                      progressTotal?.realisasi,
+                      progressTotal?.deviasi,
+                    ][i];
+                    return (
+                      <div
+                        key={label}
+                        className="flex-1 min-w-[100px] flex flex-col items-center justify-center border rounded px-6 py-4"
+                      >
+                        <span className="font-medium">{label}</span>
+                        <span className={`text-lg ${(value && value < 0) ? "text-red-500 font-bold" : "font-semibold"}`}>
+                          {value ?? 0} %
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="mt-6">
-                <div className="border rounded p-4">
-                  <div className="grid grid-cols-2 gap-8 mb-4 mx-5">
-                    <div className="border rounded p-4 text-center">
-                      <p className="text-sm mb-2">Progress Keuangan</p>
-                      <p className="text-sm mb-2">
-                        {form.watch("termin1") +
-                          form.watch("uangMuka") +
-                          form.watch("termin2") +
-                          form.watch("termin3") +
-                          form.watch("termin4") || 0}{" "}
-                        %
-                      </p>
-                    </div>
-                    <div className="border rounded p-4 text-center">
-                      <p className="text-sm mb-2">Keuangan Terbayar</p>
-                      <p className="text-sm mb-2">
-                        {new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                        }).format(
-                          Math.round(
-                            (((form.watch("nilaiKontrak") || 0) *
-                              (form.watch("uangMuka") || 0)) /
-                              100 +
-                              ((form.watch("nilaiKontrak") || 0) *
-                                (form.watch("termin1") || 0)) /
-                                100 +
-                              ((form.watch("nilaiKontrak") || 0) *
-                                (form.watch("termin2") || 0)) /
-                                100 +
-                              ((form.watch("nilaiKontrak") || 0) *
-                                (form.watch("termin3") || 0)) /
-                                100 +
-                              ((form.watch("nilaiKontrak") || 0) *
-                                (form.watch("termin4") || 0)) /
-                                100) *
-                              100
-                          ) / 100
-                        )}
-                      </p>
-                    </div>
+              <div className="border rounded p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="border rounded p-4 text-center">
+                    <p className="text-sm mb-2 font-medium">
+                      Progress Keuangan
+                    </p>
+                    <p className="text-lg font-semibold">
+                      {form.watch("termin1") +
+                        form.watch("uangMuka") +
+                        form.watch("termin2") +
+                        form.watch("termin3") +
+                        form.watch("termin4") || 0}{" "}
+                      %
+                    </p>
                   </div>
-                  <div className="mb-3">
-                    <Label className="text-xs" htmlFor="uangMuka">
-                      Uang Muka
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="relative">
-                        <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
-                          <Percent className="h-4 w-4" />
-                        </div>
-                        <Input
-                          id="uangMuka"
-                          className="h-8"
-                          type="number"
-                          {...form.register("uangMuka", {
-                            valueAsNumber: true,
-                          })}
-                        />
-                      </div>
-                      <Input
-                        className="h-8"
-                        disabled
-                        value={
-                          ((form.watch("nilaiKontrak") || 0) *
+                  <div className="border rounded p-4 text-center">
+                    <p className="text-sm mb-2 font-medium">
+                      Keuangan Terbayar
+                    </p>
+                    <p className="text-lg font-semibold">
+                      {new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                      }).format(
+                        Math.round(
+                          (((form.watch("nilaiKontrak") || 0) *
                             (form.watch("uangMuka") || 0)) /
-                          100
-                        }
-                      />
-                    </div>
-                    {form.formState.errors.uangMuka && (
-                      <p className="text-red-500 text-sm">
-                        {form.formState.errors.uangMuka.message}
-                      </p>
-                    )}
+                            100 +
+                            ((form.watch("nilaiKontrak") || 0) *
+                              (form.watch("termin1") || 0)) /
+                              100 +
+                            ((form.watch("nilaiKontrak") || 0) *
+                              (form.watch("termin2") || 0)) /
+                              100 +
+                            ((form.watch("nilaiKontrak") || 0) *
+                              (form.watch("termin3") || 0)) /
+                              100 +
+                            ((form.watch("nilaiKontrak") || 0) *
+                              (form.watch("termin4") || 0)) /
+                              100) *
+                            100
+                        ) / 100
+                      )}
+                    </p>
                   </div>
-
-                  <div className="mb-3">
-                    <Label className="text-xs" htmlFor="termin1">
-                      Termin 1
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="relative">
-                        <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
-                          <Percent className="h-4 w-4" />
-                        </div>
-                        <Input
-                          id="termin1"
-                          className="h-8"
-                          type="number"
-                          {...form.register("termin1", {
-                            valueAsNumber: true,
-                          })}
-                        />
+                </div>
+                <div className="mb-3">
+                  <Label className="text-xs" htmlFor="uangMuka">
+                    Uang Muka
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
+                        <Percent className="h-4 w-4" />
                       </div>
                       <Input
+                        id="uangMuka"
                         className="h-8"
-                        disabled
-                        value={
-                          ((form.watch("nilaiKontrak") || 0) *
-                            (form.watch("termin1") || 0)) /
-                          100
-                        }
+                        type="number"
+                        {...form.register("uangMuka", {
+                          valueAsNumber: true,
+                        })}
                       />
                     </div>
-                    {form.formState.errors.termin1 && (
-                      <p className="text-red-500 text-sm">
-                        {form.formState.errors.termin1.message}
-                      </p>
-                    )}
+                    <Input
+                      className="h-8"
+                      disabled
+                      value={
+                        ((form.watch("nilaiKontrak") || 0) *
+                          (form.watch("uangMuka") || 0)) /
+                        100
+                      }
+                    />
                   </div>
+                  {form.formState.errors.uangMuka && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.uangMuka.message}
+                    </p>
+                  )}
+                </div>
 
-                  <div className="mb-3">
-                    <Label className="text-xs" htmlFor="termin2">
-                      Termin 2
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="relative">
-                        <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
-                          <Percent className="h-4 w-4" />
-                        </div>
-                        <Input
-                          id="termin2"
-                          className="h-8"
-                          type="number"
-                          {...form.register("termin2", {
-                            valueAsNumber: true,
-                          })}
-                        />
+                <div className="mb-3">
+                  <Label className="text-xs" htmlFor="termin1">
+                    Termin 1
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
+                        <Percent className="h-4 w-4" />
                       </div>
                       <Input
+                        id="termin1"
                         className="h-8"
-                        disabled
-                        value={
-                          ((form.watch("nilaiKontrak") || 0) *
-                            (form.watch("termin2") || 0)) /
-                          100
-                        }
+                        type="number"
+                        {...form.register("termin1", {
+                          valueAsNumber: true,
+                        })}
                       />
                     </div>
-                    {form.formState.errors.termin2 && (
-                      <p className="text-red-500 text-sm">
-                        {form.formState.errors.termin2.message}
-                      </p>
-                    )}
+                    <Input
+                      className="h-8"
+                      disabled
+                      value={
+                        ((form.watch("nilaiKontrak") || 0) *
+                          (form.watch("termin1") || 0)) /
+                        100
+                      }
+                    />
                   </div>
+                  {form.formState.errors.termin1 && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.termin1.message}
+                    </p>
+                  )}
+                </div>
 
-                  <div className="mb-3">
-                    <Label className="text-xs" htmlFor="termin3">
-                      Termin 3
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="relative">
-                        <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
-                          <Percent className="h-4 w-4" />
-                        </div>
-                        <Input
-                          id="termin3"
-                          className="h-8"
-                          type="number"
-                          {...form.register("termin3", {
-                            valueAsNumber: true,
-                          })}
-                        />
+                <div className="mb-3">
+                  <Label className="text-xs" htmlFor="termin2">
+                    Termin 2
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
+                        <Percent className="h-4 w-4" />
                       </div>
                       <Input
+                        id="termin2"
                         className="h-8"
-                        disabled
-                        value={
-                          ((form.watch("nilaiKontrak") || 0) *
-                            (form.watch("termin3") || 0)) /
-                          100
-                        }
+                        type="number"
+                        {...form.register("termin2", {
+                          valueAsNumber: true,
+                        })}
                       />
                     </div>
-                    {form.formState.errors.termin3 && (
-                      <p className="text-red-500 text-sm">
-                        {form.formState.errors.termin3.message}
-                      </p>
-                    )}
+                    <Input
+                      className="h-8"
+                      disabled
+                      value={
+                        ((form.watch("nilaiKontrak") || 0) *
+                          (form.watch("termin2") || 0)) /
+                        100
+                      }
+                    />
                   </div>
+                  {form.formState.errors.termin2 && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.termin2.message}
+                    </p>
+                  )}
+                </div>
 
-                  <div className="mb-3">
-                    <Label className="text-xs" htmlFor="termin4">
-                      Termin 4
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="relative">
-                        <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
-                          <Percent className="h-4 w-4" />
-                        </div>
-                        <Input
-                          id="termin4"
-                          className="h-8"
-                          type="number"
-                          {...form.register("termin4", {
-                            valueAsNumber: true,
-                          })}
-                        />
+                <div className="mb-3">
+                  <Label className="text-xs" htmlFor="termin3">
+                    Termin 3
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
+                        <Percent className="h-4 w-4" />
                       </div>
                       <Input
+                        id="termin3"
                         className="h-8"
-                        disabled
-                        value={
-                          ((form.watch("nilaiKontrak") || 0) *
-                            (form.watch("termin4") || 0)) /
-                          100
-                        }
+                        type="number"
+                        {...form.register("termin3", {
+                          valueAsNumber: true,
+                        })}
                       />
                     </div>
-                    {form.formState.errors.termin4 && (
-                      <p className="text-red-500 text-sm">
-                        {form.formState.errors.termin4.message}
-                      </p>
-                    )}
+                    <Input
+                      className="h-8"
+                      disabled
+                      value={
+                        ((form.watch("nilaiKontrak") || 0) *
+                          (form.watch("termin3") || 0)) /
+                        100
+                      }
+                    />
                   </div>
+                  {form.formState.errors.termin3 && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.termin3.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <Label className="text-xs" htmlFor="termin4">
+                    Termin 4
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <div className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground">
+                        <Percent className="h-4 w-4" />
+                      </div>
+                      <Input
+                        id="termin4"
+                        className="h-8"
+                        type="number"
+                        {...form.register("termin4", {
+                          valueAsNumber: true,
+                        })}
+                      />
+                    </div>
+                    <Input
+                      className="h-8"
+                      disabled
+                      value={
+                        ((form.watch("nilaiKontrak") || 0) *
+                          (form.watch("termin4") || 0)) /
+                        100
+                      }
+                    />
+                  </div>
+                  {form.formState.errors.termin4 && (
+                    <p className="text-red-500 text-sm">
+                      {form.formState.errors.termin4.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>

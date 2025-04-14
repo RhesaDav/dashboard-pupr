@@ -1,12 +1,13 @@
-"use server"
-import { prisma } from "@/lib/prisma"; // Adjust import path as needed
+"use server";
+import { prisma } from "@/lib/prisma"; 
+import { format, parse } from "date-fns";
 
 /**
  * Fetches contract details and progress data for display in the UI
  */
 export async function getContractWithProgress(contractId: string) {
   try {
-    // 1. Fetch contract details
+    
     const contract = await prisma.contract.findUnique({
       where: {
         id: contractId,
@@ -25,53 +26,67 @@ export async function getContractWithProgress(contractId: string) {
       throw new Error("Contract not found");
     }
 
-    // 2. Fetch progress data
+    
     const progressEntries = await prisma.progress.findMany({
       where: {
         contractId: contractId,
       },
-      orderBy: [
-        { month: 'asc' },
-        { week: 'asc' }
-      ],
+      orderBy: [{ month: "asc" }, { week: "asc" }],
     });
 
-    // 3. Group progress entries by month
-    const groupedProgress = progressEntries.reduce((acc, entry) => {
-      // Find if month already exists in accumulator
-      const monthEntry = acc.find(item => item.month === entry.month);
-      
-      if (monthEntry) {
-        // Add to existing month
-        monthEntry.items.push({
-          week: entry.week,
-          rencana: entry.rencana,
-          realisasi: entry.realisasi,
-          deviasi: entry.deviasi,
-        });
-      } else {
-        // Create new month entry
-        acc.push({
-          month: entry.month,
-          items: [{
+    
+    const groupedProgress = progressEntries.reduce(
+      (acc, entry) => {
+        
+        const monthEntry = acc.find((item) => item.month === entry.month);
+
+        if (monthEntry) {
+          
+          monthEntry.items.push({
             week: entry.week,
             rencana: entry.rencana,
             realisasi: entry.realisasi,
             deviasi: entry.deviasi,
-          }]
-        });
-      }
-      
-      return acc;
-    }, [] as Array<{
-      month: string;
-      items: Array<{
-        week: number;
-        rencana: number;
-        realisasi: number;
-        deviasi: number;
+            startDate: entry.startDate
+              ? format(entry.startDate, "dd MMM yyyy")
+              : null,
+            endDate: entry.endDate ? format(entry.endDate, "dd MMM yyyy") : null,
+          });
+        } else {
+          
+          acc.push({
+            month: entry.month,
+            items: [
+              {
+                week: entry.week,
+                rencana: entry.rencana,
+                realisasi: entry.realisasi,
+                deviasi: entry.deviasi,
+                startDate: entry.startDate
+                  ? format(entry.startDate, "dd MMM yyyy")
+                  : null,
+                endDate: entry.endDate
+                  ? format(entry.endDate, "dd MMM yyyy")
+                  : null,
+              },
+            ],
+          });
+        }
+
+        return acc;
+      },
+      [] as Array<{
+        month: string;
+        items: Array<{
+          week: number;
+          rencana: number;
+          realisasi: number;
+          deviasi: number;
+          startDate: string | null;
+          endDate: string | null;
+        }>;
       }>
-    }>);
+    );
 
     return {
       contractDetails: {
@@ -82,7 +97,7 @@ export async function getContractWithProgress(contractId: string) {
         volumeKontrak: contract.volumeKontrak,
         satuanKontrak: contract.satuanKontrak,
       },
-      progressData: groupedProgress
+      progressData: groupedProgress,
     };
   } catch (error) {
     console.error("Error fetching contract with progress:", error);
@@ -104,13 +119,13 @@ export async function updateProgressEntry(
   }
 ) {
   try {
-    // Calculate deviasi automatically
+    
     const deviasi = data.realisasi - data.rencana;
 
-    // Use upsert to either update an existing entry or create a new one
+    
     const progressEntry = await prisma.progress.upsert({
       where: {
-        // Using the unique constraint on contractId, month, week
+        
         contractId_month_week: {
           contractId,
           month,
@@ -149,18 +164,20 @@ export async function updateMonthlyProgress(
     week: number;
     rencana: number;
     realisasi: number;
+    startDate: string;
+    endDate: string;
   }>
 ) {
   try {
-    // Begin a transaction to ensure all updates succeed or fail together
+    
     const result = await prisma.$transaction(async (tx) => {
       const updatedEntries = [];
       
       for (const entry of entries) {
-        // Calculate deviasi automatically
-        const deviasi = entry.realisasi - entry.rencana;
         
-        // Use upsert for each entry
+        const deviasi = entry.realisasi - entry.rencana;
+
+        
         const updatedEntry = await tx.progress.upsert({
           where: {
             contractId_month_week: {
@@ -173,6 +190,8 @@ export async function updateMonthlyProgress(
             rencana: entry.rencana,
             realisasi: entry.realisasi,
             deviasi: deviasi,
+            startDate: entry.startDate ? parse(entry.startDate, "dd MMM yyyy", new Date) : null,
+            endDate: entry.endDate ? parse(entry.endDate, "dd MMM yyyy", new Date) : null,
           },
           create: {
             contractId,
@@ -181,15 +200,17 @@ export async function updateMonthlyProgress(
             rencana: entry.rencana,
             realisasi: entry.realisasi,
             deviasi: deviasi,
+            startDate: entry.startDate ? parse(entry.startDate, "dd MMM yyyy", new Date) : null,
+            endDate: entry.endDate ? parse(entry.endDate, "dd MMM yyyy", new Date) : null,
           },
         });
-        
+
         updatedEntries.push(updatedEntry);
       }
-      
+
       return updatedEntries;
     });
-    
+
     return result;
   } catch (error) {
     console.error("Error updating monthly progress:", error);

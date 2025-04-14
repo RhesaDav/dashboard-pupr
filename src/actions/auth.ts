@@ -95,7 +95,7 @@ export async function loginAction(formData: FormData) {
     console.log(error);
     return { error: "Login failed" };
   } finally {
-    redirect("/dashboard/home");
+    // redirect("/dashboard/home");
   }
 }
 

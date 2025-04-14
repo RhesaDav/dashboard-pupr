@@ -1,7 +1,7 @@
 {
-    "name": "Nama Aplikasi Next.js Anda",
-    "short_name": "Nama Pendek",
-    "description": "Deskripsi Aplikasi PWA Anda",
+    "name": "Bina Marga",
+    "short_name": "Bina Marga",
+    "description": "Bina Marga ini deskripsi ya cuy",
     "icons": [
       {
         "src": "/icons/icon-192x192.png", 

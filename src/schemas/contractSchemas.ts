@@ -117,6 +117,7 @@ export const CreateContractSchema = z.object({
   // dokumentasiAkhir: z.string().optional(),
   namaPaket: z.string().min(1, { message: "Nama paket tidak boleh kosong" }),
   namaPenyedia: z.string().optional(),
+  subKegiatan: z.string().optional(),
   kota: z.string().optional(),
   distrik: z.string().optional(),
   kampung: z.string().optional(),

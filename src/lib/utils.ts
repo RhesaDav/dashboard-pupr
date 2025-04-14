@@ -34,20 +34,22 @@ export function romanize(num:number) {
   return result;
 }
 
-type WeekItem = {
+interface WeekItem {
   week: number;
   rencana: number;
   realisasi: number;
   deviasi: number;
-};
+  startDate: string;  // Format: dd-MM-yyyy
+  endDate: string;    // Format: dd-MM-yyyy
+}
 
-type MonthData = {
+interface MonthData {
   month: string;
   items: WeekItem[];
-};
+}
 
 export const generateWeeks = (startDateStr: string, durationDays: number): MonthData[] => {
-  const startDate = parse(startDateStr,"dd-MM-yyyy", new Date);
+  const startDate = parse(startDateStr, "dd-MM-yyyy", new Date());
   const endDate = addDays(startDate, durationDays - 1);
 
   let currentDate = startDate;
@@ -70,19 +72,24 @@ export const generateWeeks = (startDateStr: string, durationDays: number): Month
 
     const startOfWeekDate = startOfWeek(currentDate, { weekStartsOn: 1 });
     const endOfWeekDate = addDays(startOfWeekDate, 6);
-    const endOfMonthDate = endOfMonth(currentDate);
-
-    const lastDateInWeek = endOfWeekDate <= endOfMonthDate ? endOfWeekDate : endOfMonthDate;
+    
+    const adjustedEndDate = new Date(Math.min(
+      endOfWeekDate.getTime(),
+      endOfMonth(currentDate).getTime(),
+      endDate.getTime()
+    ));
 
     itemsInMonth.push({
       week: weekCounter,
       rencana: 0,
       realisasi: 0,
       deviasi: 0,
+      startDate: format(startOfWeekDate, "dd MMM yyyy"),
+      endDate: format(adjustedEndDate, "dd MMM yyyy")
     });
-    weekCounter++;
 
-    currentDate = addDays(lastDateInWeek, 1);
+    weekCounter++;
+    currentDate = addDays(adjustedEndDate, 1);
   }
 
   if (currentMonth) {
