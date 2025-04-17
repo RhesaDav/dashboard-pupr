@@ -81,24 +81,33 @@ export const getAllContracts = async (page = 1, limit = 10, search = "") => {
     const user = await getCurrentUser();
     const skip = (page - 1) * limit;
 
-    const searchCondition: Prisma.ContractWhereInput = search
-      ? {
-          OR: [
-            {
-              namaPaket: {
-                contains: search,
-                mode: "insensitive" as Prisma.QueryMode,
-              },
+    const isConsultant = user?.role === "CONSULTANT";
+
+    const searchCondition: Prisma.ContractWhereInput = {
+      ...(search && {
+        OR: [
+          {
+            namaPaket: {
+              contains: search,
+              mode: "insensitive" as Prisma.QueryMode,
             },
-            {
-              nomorKontrak: {
-                contains: search,
-                mode: "insensitive" as Prisma.QueryMode,
-              },
+          },
+          {
+            nomorKontrak: {
+              contains: search,
+              mode: "insensitive" as Prisma.QueryMode,
             },
-          ],
-        }
-      : {};
+          },
+        ],
+      }),
+      ...(isConsultant && {
+        contractAccess: {
+          some: {
+            userId: user?.id,
+          },
+        },
+      }),
+    };
 
     const contracts = await prisma.contract.findMany({
       where: searchCondition,
@@ -106,13 +115,8 @@ export const getAllContracts = async (page = 1, limit = 10, search = "") => {
       take: limit,
       orderBy: { createdAt: "desc" },
       include: {
-        progress: true
-      }
-    });
-
-    const contractByConsultantId = await prisma.contractAccess.findMany({
-      where: { userId: user?.id },
-      include: { contract: true },
+        progress: true,
+      },
     });
 
     const totalContracts = await prisma.contract.count({

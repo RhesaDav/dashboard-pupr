@@ -129,7 +129,7 @@ export const CreateContractSchema = z.object({
   nipKorwaslap: z.string().optional(),
   pengawasLapangan: z.string().optional(),
   nipPengawasLapangan: z.string().optional(),
-  paguAnggaran: z.string().optional(),
+  paguAnggaran: z.string().min(1, { message: "Pagu anggaran tidak boleh kosong" }),
   sumberDana: z.string().optional(),
   nomorKontrak: z.string().optional(),
   tanggalKontrak: z.string().optional(),

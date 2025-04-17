@@ -57,7 +57,11 @@ function SignInForm() {
         toast.success("Login berhasil!", {
           description: "Selamat datang di Sistem Bina Marga",
         });
-        router.push("/dashboard/home");
+        if (res.role === "CONSULTANT") {
+          router.push("/dashboard/contracts");
+        } else {
+          router.push("/dashboard/home");
+        }
       } else {
         setErrorMessage(res.error);
         toast.error("Login gagal", {

@@ -16,11 +16,11 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   const { user, loading, error } = useCurrentUser();
 
   const menuItems = [
-    { label: "Home", icon: Home, href: "/dashboard/home", roles: ["ADMIN", "SUPERADMIN", "CONSULTANT"] },
+    { label: "Home", icon: Home, href: "/dashboard/home", roles: ["ADMIN", "SUPERADMIN"] },
     { label: "Data Kontrak", icon: FileText, href: "/dashboard/contracts", roles: ["ADMIN", "SUPERADMIN", "CONSULTANT"] },
     { label: "Progress", icon: GanttChart, href: "/dashboard/progress", roles: ["ADMIN", "SUPERADMIN", "CONSULTANT"] },
-    { label: "Laporan", icon: FileBarChart2, href: "/dashboard/report", roles: ["ADMIN", "SUPERADMIN", "CONSULTANT"] },
-    { label: "Lakip", icon: ClipboardList, href: "/dashboard/lakip", roles: ["ADMIN", "SUPERADMIN", "CONSULTANT"] },
+    { label: "Laporan", icon: FileBarChart2, href: "/dashboard/report", roles: ["ADMIN", "SUPERADMIN"] },
+    { label: "Lakip", icon: ClipboardList, href: "/dashboard/lakip", roles: ["ADMIN", "SUPERADMIN"] },
     { label: "Management User", icon: Users, href: "/dashboard/user-management", roles: ["ADMIN", "SUPERADMIN"] },
   ];
 
