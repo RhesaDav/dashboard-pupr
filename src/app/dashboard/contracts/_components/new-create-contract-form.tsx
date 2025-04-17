@@ -146,6 +146,7 @@ export default function ContractForm({
         const updatedData = await editContract(id, data);
 
         if (updatedData.success) {
+          router.push("/dashboard/contracts")
           toast.success("Contract updated successfully");
         } else {
           toast.error(updatedData.error || "failed");
@@ -154,6 +155,7 @@ export default function ContractForm({
         const createdData = await createContract(data);
 
         if (createdData.success) {
+          router.push("/dashboard/contracts")
           toast.success("Contract created successfully");
         } else {
           toast.error(createdData.error || "failed");
@@ -925,7 +927,14 @@ export default function ContractForm({
 
               <div className="space-y-2 mb-6">
                 <Label>Pagu Anggaran</Label>
-                <Input {...form.register("paguAnggaran")} />
+                {/* <Input {...form.register("paguAnggaran")} /> */}
+                <InputCurrency
+                    id="paguAnggaran"
+                    value={form.watch("paguAnggaran")}
+                    onValueChange={(value) =>
+                      form.setValue("paguAnggaran", String(value))
+                    }
+                  />
                 {form.formState.errors.paguAnggaran && (
                   <p className="text-red-500 text-sm">
                     {form.formState.errors.paguAnggaran.message}
