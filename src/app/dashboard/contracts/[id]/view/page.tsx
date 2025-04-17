@@ -1,10 +1,11 @@
-import React from 'react'
-import ContactForm from '../../_components/ContractForm'
-import { ContractFormData } from '@/schemas/contractSchemas';
-import { getContractById } from '../../actions/contract';
+import React from "react";
+import { getContractById } from "../../../../../actions/contract";
+import ContractForm from "../../_components/new-create-contract-form";
 
-async function page({ params }: { params: { id: string } }) {
-  return <ContactForm type="detail" id={params.id} initialData={(await getContractById(params.id)).data} />;
+async function page({ params }: { params: Promise<{ id: string }> }) {
+  const id = (await params).id;
+  const contract = await getContractById(id);
+  return <ContractForm id={id} initialData={contract.data?.contract} type="detail" />;
 }
 
 export default page;

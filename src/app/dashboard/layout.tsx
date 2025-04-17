@@ -1,20 +1,41 @@
 import { ReactNode } from "react";
-import Sidebar from "@/components/layout/Sidebar";
-import Header from "@/components/layout/Header";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { verifyToken } from "@/lib/auth"; // Sesuaikan path
+import { TokenRefreshProvider } from "@/components/auth/TokenRefreshProvider"; // Sesuaikan path
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = async ({ children }: LayoutProps) => {
+  const cookiesHeaders = await cookies()
+  const token = cookiesHeaders.get("session")?.value;
+
+  if (!token) {
+    redirect("/signin");
+  }
+
+  try {
+      const payload = await verifyToken(token);
+      if (!payload) {
+         throw new Error("Invalid token payload");
+      }
+  } catch (error) {
+      console.error("Token verification failed:", error);
+      redirect("/signin");
+  }
+
+
   return (
-    <div className="flex min-h-screen bg-muted/30">
-      <Sidebar />
-      <div className="flex flex-col flex-1">
-        <Header />
-        <main className="p-6">{children}</main>
-      </div>
-    </div>
+    <>
+       <TokenRefreshProvider />
+       <DashboardLayout>
+           {children}
+       </DashboardLayout>
+    </>
+
   );
 };
 

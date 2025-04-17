@@ -1,128 +1,163 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" // You can change to mysql, sqlite, etc. as needed
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String          @id @default(cuid())
-  name          String?
-  email         String          @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  // Optional for WebAuthn support
-  Authenticator Authenticator[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Account {
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([provider, providerAccountId])
-}
-
-model Session {
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
-
-  @@id([identifier, token])
-}
-
-// Optional for WebAuthn support
-model Authenticator {
-  credentialID         String  @unique
-  userId               String
-  providerAccountId    String
-  credentialPublicKey  String
-  counter              Int
-  credentialDeviceType String
-  credentialBackedUp   Boolean
-  transports           String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([userId, credentialID])
-}
-
 model Contract {
-  id                         String       @id @default(uuid())
-  namaPaket                  String
-  kabupatenKota              String
-  distrik                    String
-  kampung                    String
-  titikKoordinat             String?
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  pejabatPembuatKomitmen     String
-  nipPejabatPembuatKomitmen  String
+  // Package Information
+  namaPaket    String
+  namaPenyedia String?
 
-  nomorKontrak               String
-  namaPenyedia               String
+  // Location details
+  kota           String?
+  distrik        String?
+  kampung        String?
+  koordinatAwal  String?
+  koordinatAkhir String?
 
-  nilaiKontrak               Float
-  nilaiAnggaran              Float
-  sumberDana                 String
+  // Officials
+  ppk                 String?
+  nipPPK              String?
+  korwaslap           String?
+  nipKorwaslap        String?
+  pengawasLapangan    String?
+  nipPengawasLapangan String?
 
-  tanggalKontrak             DateTime
+  // Financial details
+  paguAnggaran String?
+  nilaiKontrak Float?  @default(0.0)
+  sumberDana   String?
 
-  volumeKontrak              Float
-  satuanKontrak              String
+  // Contract details
+  nomorKontrak    String?
+  tanggalKontrak  DateTime?
+  masaPelaksanaan Int?      @default(0)
+  subKegiatan     String?
+  volumeKontrak   String?
+  satuanKontrak   String?
 
-  korwaslap                  String
-  nipKorwaslap               String
+  // Supervision details
+  konsultanSupervisi       String?
+  nomorKontrakSupervisi    String?
+  nilaiKontrakSupervisi    Float?    @default(0.0)
+  tanggalKontrakSupervisi  DateTime?
+  masaPelaksanaanSupervisi Int?      @default(0)
 
-  pengawasLapangan           String
-  nipPengawasLapangan        String
+  // Addendum handling
+  hasAddendum String?    @default("tidak ada") // Default ke "tidak ada"
+  addendum    Addendum[]
 
-  hasilProdukAkhir           String?
-  progresFisik               Float?
-  progresKeuangan            Float?
+  // Project status and completion
+  pemberianKesempatan Boolean? @default(false)
+  hasilProdukAkhir    String?
+  dimensi             String?
+  kendala             Boolean? @default(false)
+  permasalahan        String?
+  keterangan          String?
 
-  keuanganTerbayar           Float?
-  volumeCapaian              Float?
-  satuanCapaian              String?
+  // Payment terms (percentages)
+  uangMuka Float? @default(0.0)
+  termin1  Float? @default(0.0)
+  termin2  Float? @default(0.0)
+  termin3  Float? @default(0.0)
+  termin4  Float? @default(0.0)
 
-  createdAt                  DateTime  @default(now())
-  updatedAt                  DateTime  @updatedAt
+  // Documentation
+  dokumentasiAwal   String?
+  dokumentasiTengah String?
+  dokumentasiAkhir  String?
+
+  // Timestamps for tracking progression  
+  startDate DateTime?
+  endDate   DateTime?
+
+  contractAccess ContractAccess[]
+  progress       Progress[]
+
+  @@map("contracts")
 }
 
+model Addendum {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  name                String?
+  tipe                String?
+  hari                String?
+  volume              String?
+  satuan              String?
+  pemberianKesempatan Boolean
+
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId String
+
+  @@map("addendums")
+}
+
+model Progress {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId String
+
+  month     String
+  week      Int
+  startDate DateTime?
+  endDate   DateTime?
+  rencana   Float
+  realisasi Float
+  deviasi   Float
+
+  @@unique([contractId, month, week])
+  @@map("progress")
+}
+
+model ContractAccess {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId String
+
+  @@unique([userId, contractId])
+  @@map("contract_access")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name     String
+  email    String @unique
+  password String
+  role     Role   @default(SUPERADMIN)
+
+  contractAccess ContractAccess[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  SUPERADMIN
+  CONSULTANT
+}
