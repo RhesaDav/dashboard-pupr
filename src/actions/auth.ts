@@ -90,7 +90,7 @@ export async function loginAction(formData: FormData) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     });
-    return { message: "Login success" };
+    return { message: "Login success", role: user.role };
   } catch (error) {
     console.log(error);
     return { error: "Login failed" };

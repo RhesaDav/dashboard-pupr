@@ -18,12 +18,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import * as XLSX from "xlsx"
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
 interface DataContractTableTypes {
   contracts?: Contract[];
 }
 
 function DataContractTable({ contracts }: DataContractTableTypes) {
+  const {user} = useCurrentUser()
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -85,10 +87,12 @@ function DataContractTable({ contracts }: DataContractTableTypes) {
         const contract = row.original;
         return (
           <div className="flex items-center gap-2">
+            {user?.role !== "CONSULTANT" && (
             <DeleteContractDialog
               contractId={contract.id}
               contractName={contract.namaPaket || "-"}
             />
+            )}
             <Button
               onClick={() => router.push(`${pathname}/${contract.id}/edit`)}
               variant="outline"
@@ -138,7 +142,7 @@ function DataContractTable({ contracts }: DataContractTableTypes) {
 
   return (
     <DataTable
-      additionalButton={<Button variant="outline" onClick={() => router.push(`${pathname}/create`)}>Create New Contract</Button>}
+      additionalButton={user?.role !== "CONSULTANT" ? <Button variant="outline" onClick={() => router.push(`${pathname}/create`)}>Create New Contract</Button> : undefined}
       columns={columns}
       data={contracts || []}
       searchKey="name"
