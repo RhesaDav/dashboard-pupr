@@ -18,7 +18,9 @@ export function StatsCard({ title, value, icon, footer }: StatsCardProps) {
         {icon}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-2xl font-bold truncate hover:text-clip hover:overflow-visible" title={value.toString()}>
+          {value}
+        </div>
         {footer}
       </CardContent>
     </Card>
