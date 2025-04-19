@@ -5,7 +5,6 @@ import { DashboardReport, getDashboardReport } from "../../../../actions/dashboa
 import { DashboardSkeleton } from "./DashboardSkeleton";
 import { DashboardError } from "./DashboardError";
 import { DashboardHeader } from "./DashboardHeader";
-import { LocationCombobox } from "../../../../components/location-combobox";
 import { StatsGrid } from "./StatsGrid";
 import { ProgressTrendChart } from "./ProgressTrendChart";
 import { LocationDistributionChart } from "./LocationDistributionChart";
@@ -13,6 +12,7 @@ import { RecentContractsTable } from "./RecentContractsTable";
 import { ProblemContractsList } from "./ProblemContractsList";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { getDistrik } from "@/actions/wilayah";
+import { SubkegiatanDistribution } from "./SubkegiatanDistribution";
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardReport | null>(null);
@@ -28,6 +28,7 @@ export default function DashboardPage() {
       try {
         setLoading(true);
         const report = await getDashboardReport();
+        console.log(report)
         setData(report);
         
         const now = new Date();
@@ -66,9 +67,9 @@ export default function DashboardPage() {
         user={user}
       />
 
-      {/* <LocationCombobox onSelectionChange={(data) => console.log(data)}/> */}
-
       <StatsGrid data={data} />
+
+      <SubkegiatanDistribution data={data.subkegiatanDistribution} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ProgressTrendChart data={data.physicalProgressTrend} />

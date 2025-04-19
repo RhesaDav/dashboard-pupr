@@ -31,7 +31,7 @@ export interface DashboardReport {
     status: string;
     updatedAt: Date;
   }[];
-  
+
   // Kontrak Bermasalah
   problemContracts: {
     id: string;
@@ -51,11 +51,52 @@ export interface DashboardReport {
     contractValue: number;
     vendor: string;
   }[];
+  subkegiatanDistribution: {
+    subkegiatan: string;
+    totalContracts: number;
+    completedContracts: number;
+    ongoingContracts: number;
+    problemContracts: number;
+    totalPaguAnggaran: number;       // New field
+    totalNilaiKontrak: number;       // New field
+    totalRealisasiKeuangan: number;  // New field
+    avgProgressFisik: number;        // New field
+    avgProgressKeuangan: number;     // New field
+    contractValue: number;
+    contracts: {
+      id: string;
+      packageName: string;
+      status: string;
+      progress: number | null;
+      financialProgress: number | null; // New field for individual contract financial progress
+    }[];
+  }[];
 }
 
 export async function getDashboardReport(userId?: string, userRole?: Role): Promise<DashboardReport> {
   const now = new Date();
   const sixMonthsAgo = subMonths(now, 6);
+
+  const subkegiatanData: Record<string, {
+    totalContracts: number;
+    completedContracts: number;
+    ongoingContracts: number;
+    problemContracts: number;
+    totalPaguAnggaran: number;
+    totalNilaiKontrak: number;
+    totalRealisasiKeuangan: number;
+    totalProgressFisik: number;
+    totalProgressKeuangan: number;
+    contractsWithProgress: number;
+    contractValue: number;
+    contracts: {
+      id: string;
+      packageName: string;
+      status: string;
+      progress: number | null;
+      financialProgress: number | null;
+    }[];
+  }> = {};
 
   try {
     // Base query filter based on user role
@@ -128,7 +169,8 @@ export async function getDashboardReport(userId?: string, userRole?: Role): Prom
         (contract.termin2 || 0) + 
         (contract.termin3 || 0) + 
         (contract.termin4 || 0);
-      totalFinancialProgress += contractValue * (Math.min(paymentProgress, 100) / 100);
+      const financialProgressValue = contractValue * (Math.min(paymentProgress, 100) / 100);
+      totalFinancialProgress += financialProgressValue;
 
       // Physical progress
       const latestProgress = contract.progress[0]?.realisasi ?? null;
@@ -164,11 +206,63 @@ export async function getDashboardReport(userId?: string, userRole?: Role): Prom
       const location = contract.distrik || 'Lokasi Lain';
       locationCounts[location] = (locationCounts[location] || 0) + 1;
 
+      // Track subkegiatan information
+      const subkegiatan = contract.subKegiatan || 'Lainnya';
+      if (!subkegiatanData[subkegiatan]) {
+        subkegiatanData[subkegiatan] = {
+          totalContracts: 0,
+          completedContracts: 0,
+          ongoingContracts: 0,
+          problemContracts: 0,
+          totalPaguAnggaran: 0,
+          totalNilaiKontrak: 0,
+          totalRealisasiKeuangan: 0,
+          totalProgressFisik: 0,
+          totalProgressKeuangan: 0,
+          contractsWithProgress: 0,
+          contractValue: 0,
+          contracts: []
+        };
+      }
+
+      subkegiatanData[subkegiatan].totalContracts++;
+      subkegiatanData[subkegiatan].totalPaguAnggaran += budgetAmount;
+      subkegiatanData[subkegiatan].totalNilaiKontrak += contractValue;
+      subkegiatanData[subkegiatan].totalRealisasiKeuangan += financialProgressValue;
+      subkegiatanData[subkegiatan].contractValue += contractValue;
+      if (latestProgress !== null) {
+        subkegiatanData[subkegiatan].totalProgressFisik += latestProgress;
+        subkegiatanData[subkegiatan].contractsWithProgress++;
+      }
+
+      if (paymentProgress > 0) {
+        subkegiatanData[subkegiatan].totalProgressKeuangan += paymentProgress;
+      }
+
+      // Update counts based on status
+      if (status === 'Selesai') {
+        subkegiatanData[subkegiatan].completedContracts++;
+      } else if (status === 'Berjalan') {
+        subkegiatanData[subkegiatan].ongoingContracts++;
+      } else if (status === 'Bermasalah' || status === 'Terlambat' || status === 'Dalam Perpanjangan') {
+        subkegiatanData[subkegiatan].problemContracts++;
+      }
+
+      // Add contract to subkegiatan
+      subkegiatanData[subkegiatan].contracts.push({
+        id: contract.id,
+        packageName: contract.namaPaket || 'N/A',
+        status,
+        progress: latestProgress,
+        financialProgress: paymentProgress
+      });
+
       return {
         ...contract,
         status,
         endDate,
         latestProgress,
+        financialProgress: paymentProgress,
       };
     });
 
@@ -304,6 +398,24 @@ export async function getDashboardReport(userId?: string, userRole?: Role): Prom
       })),
       recentContracts,
       problemContracts: problemContractsData,
+      subkegiatanDistribution: Object.entries(subkegiatanData).map(([subkegiatan, data]) => ({
+        subkegiatan,
+        totalContracts: data.totalContracts,
+        completedContracts: data.completedContracts,
+        ongoingContracts: data.ongoingContracts,
+        problemContracts: data.problemContracts,
+        totalPaguAnggaran: data.totalPaguAnggaran,
+        totalNilaiKontrak: data.totalNilaiKontrak,
+        totalRealisasiKeuangan: data.totalRealisasiKeuangan,
+        avgProgressFisik: data.contractsWithProgress > 0 
+          ? parseFloat((data.totalProgressFisik / data.contractsWithProgress).toFixed(1))
+          : 0,
+        avgProgressKeuangan: data.totalNilaiKontrak > 0
+          ? parseFloat(((data.totalRealisasiKeuangan / data.totalNilaiKontrak) * 100).toFixed(1))
+          : 0,
+        contractValue: data.contractValue,
+        contracts: data.contracts
+      })),
     };
   } catch (error) {
     console.error("Error in getDashboardReport:", error);

@@ -12,7 +12,7 @@ interface StatsGridProps {
 
 export function StatsGrid({ data }: StatsGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       <StatsCard
         title="Total Kontrak"
         value={data.totalContracts}
@@ -31,6 +31,13 @@ export function StatsGrid({ data }: StatsGridProps) {
         value={formatRupiah(data.totalContractValue)}
         icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
         footer={<p className="text-xs text-muted-foreground mt-2">Total nilai semua kontrak</p>}
+      />
+
+      <StatsCard
+        title="Pagu Anggaran"
+        value={formatRupiah(data.totalBudget)}
+        icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
+        footer={<p className="text-xs text-muted-foreground mt-2">Total pagu anggaran</p>}
       />
 
       <StatsCard
