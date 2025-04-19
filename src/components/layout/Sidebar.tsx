@@ -4,21 +4,73 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, Clock, FileBarChart2, FileText, GanttChart, Home, NotepadText, User, Users } from "lucide-react";
+import { 
+  Home, 
+  FileText, 
+  GanttChartSquare, 
+  BarChart2, 
+  ClipboardList, 
+  Users,
+  Clock,
+  FileBarChart2,
+  NotebookText,
+  User,
+  CircleDollarSign,
+  Construction,
+  GanttChart,
+  LineChart,
+  BarChart3,
+  ChevronDown
+} from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { Role } from "@prisma/client";
+import { useState } from "react";
 
 interface SidebarProps {
-    isOpen: boolean;
+  isOpen: boolean;
+}
+
+interface MenuItem {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href?: string;
+  roles: Role[];
+  children?: {
+    label: string;
+    href: string;
+    icon?: React.ComponentType<{ className?: string }>;
+  }[];
 }
 
 const Sidebar = ({ isOpen }: SidebarProps) => { 
   const path = usePathname();
   const { user, loading, error } = useCurrentUser();
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
-  const menuItems = [
+  const toggleSubmenu = (label: string) => {
+    setOpenSubmenu(openSubmenu === label ? null : label);
+  };
+
+  const menuItems: MenuItem[] = [
     { label: "Home", icon: Home, href: "/dashboard/home", roles: ["ADMIN", "SUPERADMIN"] },
     { label: "Data Kontrak", icon: FileText, href: "/dashboard/contracts", roles: ["ADMIN", "SUPERADMIN", "CONSULTANT"] },
-    { label: "Progress", icon: GanttChart, href: "/dashboard/progress", roles: ["ADMIN", "SUPERADMIN", "CONSULTANT"] },
+    { 
+      label: "Progress", 
+      icon: GanttChart, 
+      roles: ["ADMIN", "SUPERADMIN", "CONSULTANT"], 
+      children: [
+        {
+          label: "Progress Keuangan",
+          href: "/dashboard/financial-progress",
+          icon: LineChart
+        },
+        {
+          label: "Progress Fisik",
+          href: "/dashboard/progress",
+          icon: BarChart3
+        },
+      ] 
+    },
     { label: "Laporan", icon: FileBarChart2, href: "/dashboard/report", roles: ["ADMIN", "SUPERADMIN"] },
     { label: "Lakip", icon: ClipboardList, href: "/dashboard/lakip", roles: ["ADMIN", "SUPERADMIN"] },
     { label: "Management User", icon: Users, href: "/dashboard/user-management", roles: ["ADMIN", "SUPERADMIN"] },
@@ -49,22 +101,20 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   );
 
   return (
-<aside
+    <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-30 w-64 bg-background border-r p-4 md:p-6", // Posisi fixed (juga untuk desktop)
+        "fixed inset-y-0 left-0 z-30 w-64 bg-background border-r p-4 md:p-6",
         "flex flex-col",
         "transition-transform duration-300 ease-in-out",
-        isOpen ? "translate-x-0" : "-translate-x-full", // Show/hide mobile
-        "md:translate-x-0", // Pastikan selalu terlihat di md+
-        // --- PERUBAHAN KUNCI ---
-        "md:h-screen md:overflow-y-auto" // Buat tinggi penuh layar & scrollable jika perlu di md+
-        // Kita tidak menggunakan md:static lagi
+        isOpen ? "translate-x-0" : "-translate-x-full",
+        "md:translate-x-0",
+        "md:h-screen md:overflow-y-auto"
       )}
     >
       <div className="flex items-center gap-2 mb-6 flex-shrink-0"> 
         <h1 className="text-xl md:text-2xl font-semibold">Bina Marga</h1>
         {user && (
-          <span className="text-[10px] md:text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
+          <span className="text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
             {user.role.toLowerCase()}
           </span>
         )}
@@ -72,23 +122,76 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
 
       <nav className="flex-grow overflow-y-auto"> 
         <ul className="space-y-1.5 md:space-y-2">
-          {filteredMenuItems.map(({ label, icon: Icon, href }) => {
-            const isActive = path === href || (href !== "/dashboard/home" && path.startsWith(href)) || (href === "/dashboard/home" && (path === "/dashboard" || path === "/dashboard/home"));
+          {filteredMenuItems.map((item) => {
+            const isActive = 
+              item.href && (
+                path === item.href || 
+                (item.href !== "/dashboard/home" && path.startsWith(item.href)) || 
+                (item.href === "/dashboard/home" && (path === "/dashboard" || path === "/dashboard/home"))
+              );
+
+            const isSubmenuActive = item.children?.some(child => path === child.href || path.startsWith(child.href));
+            const isExpanded = openSubmenu === item.label;
+            
+            const Icon = item.icon;
 
             return (
-              <li key={href}>
-                <Button
-                  asChild
-                  variant={isActive ? "default" : "ghost"}
-                  className={cn(
-                    "w-full justify-start px-3 py-2 md:px-4 md:py-3 flex items-center gap-2 md:gap-3 text-sm md:text-base",
-                  )}
-                >
-                  <Link href={href}>
-                    <Icon className="w-4 h-4 md:w-5 md:h-5" />
-                    {label}
-                  </Link>
-                </Button>
+              <li key={item.label}>
+                {item.children ? (
+                  <div>
+                    <Button
+                      variant={isSubmenuActive ? "default" : "ghost"}
+                      className={cn(
+                        "w-full justify-between px-3 py-2 md:px-4 md:py-3 flex items-center gap-2 md:gap-3 text-sm md:text-base",
+                      )}
+                      onClick={() => toggleSubmenu(item.label)}
+                    >
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Icon className="w-4 h-4 md:w-5 md:h-5" />
+                        {item.label}
+                      </div>
+                      <ChevronDown className={cn(
+                        "w-4 h-4 transition-transform",
+                        isExpanded ? "transform rotate-180" : ""
+                      )} />
+                    </Button>
+                    
+                    {isExpanded && (
+                      <ul className="ml-6 mt-1 space-y-1">
+                        {item.children.map((child) => {
+                          const isChildActive = path === child.href || path.startsWith(child.href);
+                          const ChildIcon = child.icon;
+                          
+                          return (
+                            <li key={child.href}>
+                              <Button
+                                asChild
+                                variant={isChildActive ? "default" : "ghost"}
+                                className="w-full justify-start px-3 py-2 text-sm"
+                              >
+                                <Link href={child.href}>
+                                  {ChildIcon && <ChildIcon className="w-4 h-4 mr-2" />}
+                                  {child.label}
+                                </Link>
+                              </Button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                ) : (
+                  <Button
+                    asChild
+                    variant={isActive ? "default" : "ghost"}
+                    className="w-full justify-start px-3 py-2 md:px-4 md:py-3 flex items-center gap-2 md:gap-3 text-sm md:text-base"
+                  >
+                    <Link href={item.href!}>
+                      <Icon className="w-4 h-4 md:w-5 md:h-5" />
+                      {item.label}
+                    </Link>
+                  </Button>
+                )}
               </li>
             );
           })}
@@ -108,7 +211,8 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
           </div>
         </div>
       )}
-    </aside>  );
+    </aside>
+  );
 };
 
 export default Sidebar;

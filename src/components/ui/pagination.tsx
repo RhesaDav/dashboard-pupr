@@ -71,10 +71,10 @@ export default function Pagination({
   return (
     <div className="flex flex-col gap-4 mt-4 sm:mt-6">
       {/* Item count and info - Always visible */}
-      {/* <div className="text-sm text-gray-500 text-center sm:text-left">
+      <div className="text-sm text-gray-500 text-center sm:text-left">
         Showing {totalItems > 0 ? `${startItem}-${endItem} of ` : ""}
         {totalItems} items
-      </div> */}
+      </div>
 
       {/* Pagination controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

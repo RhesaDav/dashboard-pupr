@@ -42,14 +42,29 @@ import {
   CreateContractType,
 } from "@/schemas/contractSchemas";
 import { createContract, editContract } from "@/actions/contract";
-import { Addendum, Contract } from "@prisma/client";
+import {
+  Addendum,
+  Contract,
+  FinancialProgress,
+  Location,
+  PhysicalProgress,
+} from "@prisma/client";
 import { InputCurrency } from "@/components/input-currency";
 import { LocationCombobox } from "@/components/location-combobox";
+
+interface ExtendedContract extends Omit<Contract, 'tanggalKontrak' | 'tanggalKontrakSupervisi'>   {
+  tanggalKontrak: string | null;
+  tanggalKontrakSupervisi: string | null;
+  addendum: Addendum[];
+  location: Location;
+  physicalProgress: PhysicalProgress[];
+  financialProgress: FinancialProgress;
+}
 
 type ContactFormType = {
   id?: string;
   type?: "create" | "update" | "detail";
-  initialData?: Contract & { addendum: Addendum[] };
+  initialData?: ExtendedContract;
   progressTotal?: {
     rencana: number;
     realisasi: number;
@@ -69,11 +84,11 @@ export default function ContractForm({
       CreateContractSchema.refine(
         (data) => {
           const totalPercentage =
-            (data.uangMuka || 0) +
-            (data.termin1 || 0) +
-            (data.termin2 || 0) +
-            (data.termin3 || 0) +
-            (data.termin4 || 0);
+            (data.financialProgress?.uangMuka || 0) +
+            (data.financialProgress?.termin1 || 0) +
+            (data.financialProgress?.termin2 || 0) +
+            (data.financialProgress?.termin3 || 0) +
+            (data.financialProgress?.termin4 || 0);
           return totalPercentage <= 100;
         },
         {
@@ -84,15 +99,10 @@ export default function ContractForm({
       )
     ),
     defaultValues: {
-      distrik: initialData?.distrik || "",
       dokumentasiAkhir: initialData?.dokumentasiAkhir || "",
       dokumentasiAwal: initialData?.dokumentasiAwal || "",
       dokumentasiTengah: initialData?.dokumentasiTengah || "",
-      kampung: initialData?.kampung || "",
-      koordinatAkhir: initialData?.koordinatAkhir || "",
-      koordinatAwal: initialData?.koordinatAwal || "",
       korwaslap: initialData?.korwaslap || "",
-      kota: initialData?.kota || "",
       namaPaket: initialData?.namaPaket || "",
       subKegiatan: initialData?.subKegiatan || "",
       namaPenyedia: initialData?.namaPenyedia || "",
@@ -118,20 +128,17 @@ export default function ContractForm({
       permasalahan: initialData?.permasalahan || "",
       satuanKontrak: initialData?.satuanKontrak || "",
       sumberDana: initialData?.sumberDana || "",
-      tanggalKontrak: initialData?.tanggalKontrak
-        ? format(new Date(initialData.tanggalKontrak), "dd-MM-yyyy")
-        : format(new Date(), "dd-MM-yyyy"),
-      tanggalKontrakSupervisi: initialData?.tanggalKontrakSupervisi
-        ? format(new Date(initialData.tanggalKontrakSupervisi), "dd-MM-yyyy")
-        : format(new Date(), "dd-MM-yyyy"),
-      termin1: initialData?.termin1 ?? 0,
-      termin2: initialData?.termin2 ?? 0,
-      termin3: initialData?.termin3 ?? 0,
-      termin4: initialData?.termin4 ?? 0,
-      uangMuka: initialData?.uangMuka ?? 0,
+      tanggalKontrak: initialData?.tanggalKontrak || null,
+      tanggalKontrakSupervisi: initialData?.tanggalKontrakSupervisi || null,
+      financialProgress: {
+        termin1: initialData?.financialProgress.termin1 ?? 0,
+        termin2: initialData?.financialProgress.termin2 ?? 0,
+        termin3: initialData?.financialProgress.termin3 ?? 0,
+        termin4: initialData?.financialProgress.termin4 ?? 0,
+        uangMuka: initialData?.financialProgress.uangMuka ?? 0,
+      },
       volumeKontrak: initialData?.volumeKontrak || "",
-      hasAddendum:
-        (initialData?.hasAddendum as "ada" | "tidak ada") || "tidak ada",
+      hasAddendum: initialData?.hasAddendum || false,
     },
     // mode: "onBlur",
     disabled: type === "detail",
@@ -146,7 +153,7 @@ export default function ContractForm({
         const updatedData = await editContract(id, data);
 
         if (updatedData.success) {
-          router.push("/dashboard/contracts")
+          router.push("/dashboard/contracts");
           toast.success("Contract updated successfully");
         } else {
           toast.error(updatedData.error || "failed");
@@ -155,7 +162,7 @@ export default function ContractForm({
         const createdData = await createContract(data);
 
         if (createdData.success) {
-          router.push("/dashboard/contracts")
+          router.push("/dashboard/contracts");
           toast.success("Contract created successfully");
         } else {
           toast.error(createdData.error || "failed");
@@ -230,7 +237,7 @@ export default function ContractForm({
   };
 
   useEffect(() => {
-    if (hasAddendum === "tidak ada") {
+    if (!hasAddendum) {
       form.setValue("addendum", []);
     } else {
       form.setValue(
@@ -253,17 +260,23 @@ export default function ContractForm({
   const totalPercentage = () => {
     const values = form.getValues();
     return (
-      (values.uangMuka || 0) +
-      (values.termin1 || 0) +
-      (values.termin2 || 0) +
-      (values.termin3 || 0) +
-      (values.termin4 || 0)
+      (values.financialProgress?.uangMuka || 0) +
+      (values.financialProgress?.termin1 || 0) +
+      (values.financialProgress?.termin2 || 0) +
+      (values.financialProgress?.termin3 || 0) +
+      (values.financialProgress?.termin4 || 0)
     );
   };
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-xl font-bold mb-6">{type === "create" ? "Buat Data Kontrak Baru" : type === "update" ? "Edit Data Kontrak" : "Detail Data Kontrak"}</h1>
+      <h1 className="text-xl font-bold mb-6">
+        {type === "create"
+          ? "Buat Data Kontrak Baru"
+          : type === "update"
+          ? "Edit Data Kontrak"
+          : "Detail Data Kontrak"}
+      </h1>
       {/* <Progress value={(1 / 6) * 100} className="mb-6" /> */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -298,12 +311,12 @@ export default function ContractForm({
                 <LocationCombobox
                   layout="vertical"
                   onSelectionChange={(data) => {
-                    form.setValue("distrik", data.distrik);
-                    form.setValue("kota", data.kota);
+                    form.setValue("location.distrik", data.distrik);
+                    form.setValue("location.kota", data.kota);
                   }}
                   defaultValue={{
-                    distrik: form.watch("distrik"),
-                    kota: form.watch("kota"),
+                    distrik: form.watch("location.distrik") as string,
+                    kota: form.watch("location.kota") as string,
                   }}
                 />
               </div>
@@ -330,10 +343,10 @@ export default function ContractForm({
 
               <div className="space-y-2 mb-6">
                 <Label>Kampung</Label>
-                <Input {...form.register("kampung")} />
-                {form.formState.errors.kampung && (
+                <Input {...form.register("location.kampung")} />
+                {form.formState.errors.location?.kampung && (
                   <p className="text-red-500 text-sm">
-                    {form.formState.errors.kampung.message}
+                    {form.formState.errors.location.kampung.message}
                   </p>
                 )}{" "}
               </div>
@@ -343,13 +356,13 @@ export default function ContractForm({
                 <div className="grid grid-cols-10 gap-2">
                   <Input
                     className="col-span-9"
-                    {...form.register("koordinatAwal")}
+                    {...form.register("location.koordinatAwal")}
                   />
                   <Button
                     onClick={() =>
                       window.open(
                         `https://www.google.com/maps/place/${form.watch(
-                          "koordinatAwal"
+                          "location.koordinatAwal"
                         )}`
                       )
                     }
@@ -357,9 +370,9 @@ export default function ContractForm({
                     <Map />
                   </Button>
                 </div>
-                {form.formState.errors.koordinatAwal && (
+                {form.formState.errors.location?.koordinatAwal && (
                   <p className="text-red-500 text-sm">
-                    {form.formState.errors.koordinatAwal.message}
+                    {form.formState.errors.location?.koordinatAwal.message}
                   </p>
                 )}{" "}
               </div>
@@ -369,13 +382,13 @@ export default function ContractForm({
                 <div className="grid grid-cols-10 gap-2">
                   <Input
                     className="col-span-9"
-                    {...form.register("koordinatAkhir")}
+                    {...form.register("location.koordinatAkhir")}
                   />
                   <Button
                     onClick={() =>
                       window.open(
                         `https://www.google.com/maps/place/${form.watch(
-                          "koordinatAkhir"
+                          "location.koordinatAkhir"
                         )}`
                       )
                     }
@@ -383,9 +396,9 @@ export default function ContractForm({
                     <Map />
                   </Button>
                 </div>
-                {form.formState.errors.koordinatAkhir && (
+                {form.formState.errors.location?.koordinatAkhir && (
                   <p className="text-red-500 text-sm">
-                    {form.formState.errors.koordinatAkhir.message}
+                    {form.formState.errors.location?.koordinatAkhir.message}
                   </p>
                 )}{" "}
               </div>
@@ -421,7 +434,7 @@ export default function ContractForm({
                 <div className="space-y-2">
                   <Label htmlFor="nilaiKontrak">Sub Kegiatan</Label>
                   <Select
-                    defaultValue={form.watch("subKegiatan")}
+                    defaultValue={form.watch("subKegiatan") as string}
                     onValueChange={(value: string) =>
                       form.setValue("subKegiatan", value)
                     }
@@ -518,6 +531,7 @@ export default function ContractForm({
                                 date ? format(date, "dd-MM-yyyy") : ""
                               )
                             }
+                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>
@@ -588,9 +602,14 @@ export default function ContractForm({
                 <div className="space-y-2">
                   <Label>Status Addendum</Label>
                   <Select
-                    defaultValue={form.watch("hasAddendum")}
+                    defaultValue={
+                      form.watch("hasAddendum") ? "ada" : "tidak ada"
+                    }
                     onValueChange={(value: "ada" | "tidak ada") =>
-                      form.setValue("hasAddendum", value)
+                      form.setValue(
+                        "hasAddendum",
+                        value === "ada" ? true : false
+                      )
                     }
                   >
                     <SelectTrigger>
@@ -603,7 +622,7 @@ export default function ContractForm({
                   </Select>
                 </div>
 
-                {hasAddendum === "ada" && (
+                {hasAddendum && (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <Label>Total Item: {addendumItems?.length}</Label>
@@ -770,7 +789,7 @@ export default function ContractForm({
               <div className="space-y-2 mb-6">
                 <Label>Hasil Produk Akhir</Label>
                 <Select
-                  defaultValue={form.getValues().hasilProdukAkhir}
+                  defaultValue={form.getValues().hasilProdukAkhir as string}
                   onValueChange={(value) =>
                     form.setValue("hasilProdukAkhir", value)
                   }
@@ -929,12 +948,12 @@ export default function ContractForm({
                 <Label>Pagu Anggaran</Label>
                 {/* <Input {...form.register("paguAnggaran")} /> */}
                 <InputCurrency
-                    id="paguAnggaran"
-                    value={form.watch("paguAnggaran")}
-                    onValueChange={(value) =>
-                      form.setValue("paguAnggaran", String(value))
-                    }
-                  />
+                  id="paguAnggaran"
+                  value={form.watch("paguAnggaran") as string}
+                  onValueChange={(value) =>
+                    form.setValue("paguAnggaran", String(value))
+                  }
+                />
                 {form.formState.errors.paguAnggaran && (
                   <p className="text-red-500 text-sm">
                     {form.formState.errors.paguAnggaran.message}
@@ -1209,7 +1228,13 @@ export default function ContractForm({
                         className="flex-1 min-w-[100px] flex flex-col items-center justify-center border rounded px-6 py-4"
                       >
                         <span className="font-medium">{label}</span>
-                        <span className={`text-lg ${(value && value < 0) ? "text-red-500 font-bold" : "font-semibold"}`}>
+                        <span
+                          className={`text-lg ${
+                            value && value < 0
+                              ? "text-red-500 font-bold"
+                              : "font-semibold"
+                          }`}
+                        >
                           {value ?? 0} %
                         </span>
                       </div>
@@ -1225,11 +1250,11 @@ export default function ContractForm({
                       Progress Keuangan
                     </p>
                     <p className="text-lg font-semibold">
-                      {form.watch("termin1") +
-                        form.watch("uangMuka") +
-                        form.watch("termin2") +
-                        form.watch("termin3") +
-                        form.watch("termin4") || 0}{" "}
+                      {form.watch("financialProgress.termin1") +
+                        form.watch("financialProgress.uangMuka") +
+                        form.watch("financialProgress.termin2") +
+                        form.watch("financialProgress.termin3") +
+                        form.watch("financialProgress.termin4") || 0}{" "}
                       %
                     </p>
                   </div>
@@ -1244,19 +1269,19 @@ export default function ContractForm({
                       }).format(
                         Math.round(
                           (((form.watch("nilaiKontrak") || 0) *
-                            (form.watch("uangMuka") || 0)) /
+                            (form.watch("financialProgress.uangMuka") || 0)) /
                             100 +
                             ((form.watch("nilaiKontrak") || 0) *
-                              (form.watch("termin1") || 0)) /
+                              (form.watch("financialProgress.termin1") || 0)) /
                               100 +
                             ((form.watch("nilaiKontrak") || 0) *
-                              (form.watch("termin2") || 0)) /
+                              (form.watch("financialProgress.termin2") || 0)) /
                               100 +
                             ((form.watch("nilaiKontrak") || 0) *
-                              (form.watch("termin3") || 0)) /
+                              (form.watch("financialProgress.termin3") || 0)) /
                               100 +
                             ((form.watch("nilaiKontrak") || 0) *
-                              (form.watch("termin4") || 0)) /
+                              (form.watch("financialProgress.termin4") || 0)) /
                               100) *
                             100
                         ) / 100
@@ -1277,7 +1302,7 @@ export default function ContractForm({
                         id="uangMuka"
                         className="h-8"
                         type="number"
-                        {...form.register("uangMuka", {
+                        {...form.register("financialProgress.uangMuka", {
                           valueAsNumber: true,
                         })}
                       />
@@ -1287,14 +1312,14 @@ export default function ContractForm({
                       disabled
                       value={
                         ((form.watch("nilaiKontrak") || 0) *
-                          (form.watch("uangMuka") || 0)) /
+                          (form.watch("financialProgress.uangMuka") || 0)) /
                         100
                       }
                     />
                   </div>
-                  {form.formState.errors.uangMuka && (
+                  {form.formState.errors.financialProgress?.uangMuka && (
                     <p className="text-red-500 text-sm">
-                      {form.formState.errors.uangMuka.message}
+                      {form.formState.errors.financialProgress.uangMuka.message}
                     </p>
                   )}
                 </div>
@@ -1312,7 +1337,7 @@ export default function ContractForm({
                         id="termin1"
                         className="h-8"
                         type="number"
-                        {...form.register("termin1", {
+                        {...form.register("financialProgress.termin1", {
                           valueAsNumber: true,
                         })}
                       />
@@ -1322,14 +1347,14 @@ export default function ContractForm({
                       disabled
                       value={
                         ((form.watch("nilaiKontrak") || 0) *
-                          (form.watch("termin1") || 0)) /
+                          (form.watch("financialProgress.termin1") || 0)) /
                         100
                       }
                     />
                   </div>
-                  {form.formState.errors.termin1 && (
+                  {form.formState.errors.financialProgress?.termin1 && (
                     <p className="text-red-500 text-sm">
-                      {form.formState.errors.termin1.message}
+                      {form.formState.errors.financialProgress.termin1.message}
                     </p>
                   )}
                 </div>
@@ -1347,7 +1372,7 @@ export default function ContractForm({
                         id="termin2"
                         className="h-8"
                         type="number"
-                        {...form.register("termin2", {
+                        {...form.register("financialProgress.termin2", {
                           valueAsNumber: true,
                         })}
                       />
@@ -1357,14 +1382,14 @@ export default function ContractForm({
                       disabled
                       value={
                         ((form.watch("nilaiKontrak") || 0) *
-                          (form.watch("termin2") || 0)) /
+                          (form.watch("financialProgress.termin2") || 0)) /
                         100
                       }
                     />
                   </div>
-                  {form.formState.errors.termin2 && (
+                  {form.formState.errors.financialProgress?.termin2 && (
                     <p className="text-red-500 text-sm">
-                      {form.formState.errors.termin2.message}
+                      {form.formState.errors.financialProgress.termin2.message}
                     </p>
                   )}
                 </div>
@@ -1382,7 +1407,7 @@ export default function ContractForm({
                         id="termin3"
                         className="h-8"
                         type="number"
-                        {...form.register("termin3", {
+                        {...form.register("financialProgress.termin3", {
                           valueAsNumber: true,
                         })}
                       />
@@ -1392,14 +1417,14 @@ export default function ContractForm({
                       disabled
                       value={
                         ((form.watch("nilaiKontrak") || 0) *
-                          (form.watch("termin3") || 0)) /
+                          (form.watch("financialProgress.termin3") || 0)) /
                         100
                       }
                     />
                   </div>
-                  {form.formState.errors.termin3 && (
+                  {form.formState.errors.financialProgress?.termin3 && (
                     <p className="text-red-500 text-sm">
-                      {form.formState.errors.termin3.message}
+                      {form.formState.errors.financialProgress.termin3.message}
                     </p>
                   )}
                 </div>
@@ -1417,7 +1442,7 @@ export default function ContractForm({
                         id="termin4"
                         className="h-8"
                         type="number"
-                        {...form.register("termin4", {
+                        {...form.register("financialProgress.termin4", {
                           valueAsNumber: true,
                         })}
                       />
@@ -1427,14 +1452,14 @@ export default function ContractForm({
                       disabled
                       value={
                         ((form.watch("nilaiKontrak") || 0) *
-                          (form.watch("termin4") || 0)) /
+                          (form.watch("financialProgress.termin4") || 0)) /
                         100
                       }
                     />
                   </div>
-                  {form.formState.errors.termin4 && (
+                  {form.formState.errors.financialProgress?.termin4 && (
                     <p className="text-red-500 text-sm">
-                      {form.formState.errors.termin4.message}
+                      {form.formState.errors.financialProgress.termin4.message}
                     </p>
                   )}
                 </div>

@@ -15,7 +15,7 @@ export default async function page({
     <div className="">
       <h1 className="text-2xl font-bold mb-5">Data Contract</h1>
       <DataContractTable contracts={contracts.contracts} />
-      <Pagination totalPages={contracts.pagination?.totalPages} />
+      <Pagination totalPages={contracts.pagination?.totalPages} totalItems={contracts.pagination?.total} />
     </div>
   );
 }

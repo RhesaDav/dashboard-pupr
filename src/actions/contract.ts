@@ -15,45 +15,69 @@ import { parse } from "date-fns";
 export const createContract = async (data: CreateContractType) => {
   try {
     console.log(data);
-    // const data = Object.fromEntries(formData.entries());
-
-    // const submitData = {
-    //   ...data,
-    //   masaPelaksanaan: Number(data.masaPelaksanaan),
-    //   nilaiKontrak: Number(data.nilaiKontrak),
-    //   masaPelaksanaanSupervisi: Number(data.masaPelaksanaanSupervisi),
-    //   pemberianKesempatan: Boolean(data.pemberianKesempatan),
-    //   kendala: Boolean(data.kendala),
-    //   uangMuka: Number(data.uangMuka),
-    //   termin1: Number(data.termin1),
-    //   termin2: Number(data.termin2),
-    //   termin3: Number(data.termin3),
-    //   termin4: Number(data.termin4),
-    //   volumeKontrak: String(data.volumeKontrak || ""),
-    //   addendum: data.addendum ? JSON.parse(data.addendum as string) : [],
-    // };
-
-    // console.log(submitData);
 
     const validatedData = CreateContractSchema.parse(data);
 
+    const { 
+      location, 
+      financialProgress, 
+      physicalProgress, 
+      addendum, 
+      contractAccess,
+      ...contractData 
+    } = validatedData;
+
+
     const newContract = await prisma.contract.create({
       data: {
-        ...validatedData,
-        tanggalKontrak: parse(
-          validatedData.tanggalKontrak || "",
-          "dd-MM-yyyy",
-          new Date()
-        ),
-        tanggalKontrakSupervisi: parse(
-          validatedData.tanggalKontrakSupervisi || "",
-          "dd-MM-yyyy",
-          new Date()
-        ),
-        addendum: {
-          create: validatedData.addendum,
-        },
+        ...contractData,
+        tanggalKontrak: parse(contractData.tanggalKontrak || "", "dd-MM-yyyy", new Date) || null,
+        tanggalKontrakSupervisi: parse(contractData.tanggalKontrak || "", "dd-MM-yyyy", new Date) || null,
+        // Create location if provided
+        ...(location ? {
+          location: {
+            create: location
+          }
+        } : {}),
+        
+        // Create financialProgress if provided
+        ...(financialProgress ? {
+          financialProgress: {
+            create: financialProgress
+          }
+        } : {}),
+        
+        // Create physicalProgress entries if provided
+        ...(physicalProgress && physicalProgress.length > 0 ? {
+          physicalProgress: {
+            create: physicalProgress
+          }
+        } : {}),
+        
+        // Create addendum entries if provided
+        ...(addendum && addendum.length > 0 ? {
+          addendum: {
+            create: addendum
+          }
+        } : {}),
+        
+        // Create contract access entries if provided
+        // ...(contractAccess && contractAccess.length > 0 ? {
+        //   contractAccess: {
+        //     create: contractAccess
+        //   }
+        // } : {
+        //   // Always give access to the current user
+        //   contractAccess: {
+        //     create: {
+        //       userId: session.user.id
+        //     }
+        //   }
+        // })
       },
+      include: {
+        addendum: true // Optional: include addendums in the response
+      }
     });
 
     revalidatePath("/dashboard/contracts", "page");
@@ -115,7 +139,9 @@ export const getAllContracts = async (page = 1, limit = 10, search = "") => {
       take: limit,
       orderBy: { createdAt: "desc" },
       include: {
-        progress: true,
+        physicalProgress: true,
+        financialProgress: true,
+        location: true
       },
     });
 
@@ -280,7 +306,9 @@ export async function getContractById(id: string) {
       where: { id },
       include: {
         addendum: true,
-        progress: true,
+        physicalProgress: true,
+        financialProgress: true,
+        location: true
       },
     });
 
@@ -291,7 +319,7 @@ export async function getContractById(id: string) {
       };
     }
 
-    const progress = await prisma.progress.findMany({
+    const progress = await prisma.physicalProgress.findMany({
       where: { contractId: id },
     });
     const total = progress.reduce(

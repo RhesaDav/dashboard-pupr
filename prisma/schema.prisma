@@ -1,12 +1,9 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" // You can change to mysql, sqlite, etc. as needed
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -18,13 +15,6 @@ model Contract {
   // Package Information
   namaPaket    String
   namaPenyedia String?
-
-  // Location details
-  kota           String?
-  distrik        String?
-  kampung        String?
-  koordinatAwal  String?
-  koordinatAkhir String?
 
   // Officials
   ppk                 String?
@@ -54,10 +44,6 @@ model Contract {
   tanggalKontrakSupervisi  DateTime?
   masaPelaksanaanSupervisi Int?      @default(0)
 
-  // Addendum handling
-  hasAddendum String?    @default("tidak ada") // Default ke "tidak ada"
-  addendum    Addendum[]
-
   // Project status and completion
   pemberianKesempatan Boolean? @default(false)
   hasilProdukAkhir    String?
@@ -65,13 +51,6 @@ model Contract {
   kendala             Boolean? @default(false)
   permasalahan        String?
   keterangan          String?
-
-  // Payment terms (percentages)
-  uangMuka Float? @default(0.0)
-  termin1  Float? @default(0.0)
-  termin2  Float? @default(0.0)
-  termin3  Float? @default(0.0)
-  termin4  Float? @default(0.0)
 
   // Documentation
   dokumentasiAwal   String?
@@ -82,10 +61,67 @@ model Contract {
   startDate DateTime?
   endDate   DateTime?
 
-  contractAccess ContractAccess[]
-  progress       Progress[]
+  // Addendum handling
+  hasAddendum Boolean? @default(false)
+
+  addendum          Addendum[]
+  financialProgress FinancialProgress?
+  physicalProgress  PhysicalProgress[]
+  location          Location?
+  contractAccess    ContractAccess[]
 
   @@map("contracts")
+}
+
+model PhysicalProgress {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId String
+
+  month     String
+  week      Int
+  startDate DateTime?
+  endDate   DateTime?
+  rencana   Float
+  realisasi Float
+  deviasi   Float
+
+  @@unique([contractId, month, week])
+  @@map("progress")
+}
+
+model FinancialProgress {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  totalProgress Float? @default(0.0)
+  totalPayment  Float? @default(0.0)
+  uangMuka      Float? @default(0.0)
+  termin1       Float? @default(0.0)
+  termin2       Float? @default(0.0)
+  termin3       Float? @default(0.0)
+  termin4       Float? @default(0.0)
+
+  contractId String   @unique
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+}
+
+model Location {
+  id             String   @id @default(uuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  kota           String?
+  distrik        String?
+  kampung        String?
+  koordinatAwal  String?
+  koordinatAkhir String?
+
+  contractId String   @unique
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
 }
 
 model Addendum {
@@ -104,26 +140,6 @@ model Addendum {
   contractId String
 
   @@map("addendums")
-}
-
-model Progress {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  contractId String
-
-  month     String
-  week      Int
-  startDate DateTime?
-  endDate   DateTime?
-  rencana   Float
-  realisasi Float
-  deviasi   Float
-
-  @@unique([contractId, month, week])
-  @@map("progress")
 }
 
 model ContractAccess {
@@ -146,10 +162,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name     String
-  email    String @unique
-  password String
-  role     Role   @default(SUPERADMIN)
+  name         String
+  email        String    @unique
+  password     String
+  role         Role      @default(SUPERADMIN)
+  lastLoggedIn DateTime?
 
   contractAccess ContractAccess[]
 
