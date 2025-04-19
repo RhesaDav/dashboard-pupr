@@ -10,7 +10,7 @@ async function page({ params }: { params: Promise<{ id: string }> }) {
   const newContractData = {
     ...contract.data?.contract,
     tanggalKontrak: contract.data?.contract.tanggalKontrak ? format(contract.data?.contract.tanggalKontrak, "dd-MM-yyyy") : null,
-    tanggalKontrakSupervisi: contract.data?.contract.tanggalKontrakSupervisi ? format(contract.data?.contract.tanggalKontrak, "dd-MM-yyyy") : null,
+    tanggalKontrakSupervisi: contract.data?.contract.tanggalKontrakSupervisi ? format(contract.data?.contract.tanggalKontrakSupervisi, "dd-MM-yyyy") : null,
   }
   return (
     <ContractForm

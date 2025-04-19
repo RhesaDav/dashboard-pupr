@@ -12,7 +12,7 @@ import { LocationDistributionChart } from "./LocationDistributionChart";
 import { RecentContractsTable } from "./RecentContractsTable";
 import { ProblemContractsList } from "./ProblemContractsList";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { getDistrik, getDistrikDetail } from "@/actions/wilayah";
+import { getDistrik } from "@/actions/wilayah";
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardReport | null>(null);

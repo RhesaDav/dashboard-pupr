@@ -10,12 +10,10 @@ import {
 } from "@/schemas/contractSchemas";
 import { Prisma } from "@prisma/client";
 import { getCurrentUser } from "./auth";
-import { parse } from "date-fns";
+import { addDays, parse } from "date-fns";
 
 export const createContract = async (data: CreateContractType) => {
   try {
-    console.log(data);
-
     const validatedData = CreateContractSchema.parse(data);
 
     const { 
@@ -27,12 +25,15 @@ export const createContract = async (data: CreateContractType) => {
       ...contractData 
     } = validatedData;
 
+    const totalAddendumDays = addendum?.map((item) => item.hari).reduce((acc, add) => acc + Number(add), 1)
 
     const newContract = await prisma.contract.create({
       data: {
         ...contractData,
         tanggalKontrak: parse(contractData.tanggalKontrak || "", "dd-MM-yyyy", new Date) || null,
         tanggalKontrakSupervisi: parse(contractData.tanggalKontrak || "", "dd-MM-yyyy", new Date) || null,
+        startDate: parse(contractData.tanggalKontrak || "", "dd-MM-yyyy", new Date) || null,
+        endDate: contractData.tanggalKontrak && totalAddendumDays ? addDays(parse(contractData.tanggalKontrak, "dd-MM-yyyy", new Date),totalAddendumDays + contractData.masaPelaksanaan) : null, 
         // Create location if provided
         ...(location ? {
           location: {
@@ -194,61 +195,110 @@ export async function editContract(
     const validatedData = UpdateContractSchema.partial().parse(rawData);
 
     // Create a Prisma-compatible update object
-    const prismaUpdateData: any = {
-      ...validatedData,
-      tanggalKontrak: parse(
-        validatedData.tanggalKontrak || "",
-        "dd-MM-yyyy",
-        new Date()
-      ),
-      tanggalKontrakSupervisi: parse(
-        validatedData.tanggalKontrakSupervisi || "",
-        "dd-MM-yyyy",
-        new Date()
-      ),
-    };
+    // const prismaUpdateData: any = {
+    //   ...validatedData,
+    //   tanggalKontrak: parse(
+    //     validatedData.tanggalKontrak || "",
+    //     "dd-MM-yyyy",
+    //     new Date()
+    //   ),
+    //   tanggalKontrakSupervisi: parse(
+    //     validatedData.tanggalKontrakSupervisi || "",
+    //     "dd-MM-yyyy",
+    //     new Date()
+    //   ),
+    // };
 
-    // Handle the addendum relationship properly if it exists
-    if (validatedData.addendum) {
-      // Transform the addendum array into Prisma's expected format
-      prismaUpdateData.addendum = {
-        // This will delete any removed addendums and update existing ones
-        deleteMany: {
-          contractId: id,
-          // Only delete items that aren't in the updated list
-          NOT: validatedData.addendum.map((item) => ({ id: item.id })),
-        },
-        // Update existing items or create new ones
-        upsert: validatedData.addendum.map((item) => ({
-          where: { id: item.id },
-          update: {
-            name: item.name,
-            tipe: item.tipe,
-            hari: item.hari,
-            volume: item.volume,
-            satuan: item.satuan,
-          },
-          create: {
-            id: item.id,
-            name: item.name,
-            tipe: item.tipe,
-            hari: item.hari,
-            volume: item.volume,
-            satuan: item.satuan,
-          },
-        })),
-      };
-    }
+    // // Handle the addendum relationship properly if it exists
+    // if (validatedData.addendum) {
+    //   // Transform the addendum array into Prisma's expected format
+    //   prismaUpdateData.addendum = {
+    //     // This will delete any removed addendums and update existing ones
+    //     deleteMany: {
+    //       contractId: id,
+    //       // Only delete items that aren't in the updated list
+    //       NOT: validatedData.addendum.map((item) => ({ id: item.id })),
+    //     },
+    //     // Update existing items or create new ones
+    //     upsert: validatedData.addendum.map((item) => ({
+    //       where: { id: item.id },
+    //       update: {
+    //         name: item.name,
+    //         tipe: item.tipe,
+    //         hari: item.hari,
+    //         volume: item.volume,
+    //         satuan: item.satuan,
+    //       },
+    //       create: {
+    //         id: item.id,
+    //         name: item.name,
+    //         tipe: item.tipe,
+    //         hari: item.hari,
+    //         volume: item.volume,
+    //         satuan: item.satuan,
+    //       },
+    //     })),
+    //   };
+    // }
 
-    // Remove addendum from the root object since it's now handled in the nested structure
-    delete prismaUpdateData.addendum;
+    // // Remove addendum from the root object since it's now handled in the nested structure
+    // delete prismaUpdateData.addendum;
 
+    const {location, financialProgress, physicalProgress, addendum, contractAccess, ...newData} = validatedData
+
+    const totalAddendumDays = addendum?.map((item) => item.hari).reduce((acc, add) => acc + Number(add), 1)
     // Perform the update with the transformed data
     const updatedContract = await prisma.contract.update({
       where: { id },
-      data: prismaUpdateData,
+      data: {
+        ...newData,
+        tanggalKontrak: newData.tanggalKontrak ? parse(newData.tanggalKontrak, "dd-MM-yyyy", new Date) : undefined,
+        tanggalKontrakSupervisi: newData.tanggalKontrakSupervisi ? parse(newData.tanggalKontrakSupervisi, "dd-MM-yyyy", new Date) : undefined,
+        startDate: parse(newData.tanggalKontrak || "", "dd-MM-yyyy", new Date) || null,
+        endDate: newData.tanggalKontrak && totalAddendumDays ? addDays(parse(newData.tanggalKontrak, "dd-MM-yyyy", new Date),totalAddendumDays + (newData.masaPelaksanaan || 0)) : null, 
+        location: location ? {
+          upsert: {
+            create: location,
+            update: location,
+          }
+        } : undefined,
+        financialProgress: financialProgress ? {
+          upsert: {
+            create: financialProgress,
+            update: financialProgress,
+          }
+        } : undefined,
+        addendum: {
+          deleteMany: {
+            contractId: id,
+            // Only delete items that aren't in the updated list
+            NOT: validatedData.addendum?.map((item) => ({ id: item.id })),
+          },
+          // Update existing items or create new ones
+          upsert: validatedData.addendum?.map((item) => ({
+            where: { id: item.id },
+            update: {
+              name: item.name,
+              tipe: item.tipe,
+              hari: item.hari,
+              volume: item.volume,
+              satuan: item.satuan,
+              pemberianKesempatan: item.pemberianKesempatan
+            },
+            create: {
+              id: item.id,
+              name: item.name,
+              tipe: item.tipe,
+              hari: item.hari,
+              volume: item.volume,
+              satuan: item.satuan,
+              pemberianKesempatan: item.pemberianKesempatan
+            },
+          })),
+        }
+      },
       include: {
-        addendum: true, // Include the updated addendum in the response
+        addendum: true,
       },
     });
 

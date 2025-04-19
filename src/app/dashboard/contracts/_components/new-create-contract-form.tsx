@@ -55,16 +55,16 @@ import { LocationCombobox } from "@/components/location-combobox";
 interface ExtendedContract extends Omit<Contract, 'tanggalKontrak' | 'tanggalKontrakSupervisi'>   {
   tanggalKontrak: string | null;
   tanggalKontrakSupervisi: string | null;
-  addendum: Addendum[];
-  location: Location;
-  physicalProgress: PhysicalProgress[];
-  financialProgress: FinancialProgress;
+  addendum?: Addendum[];
+  location?: Location | null;
+  physicalProgress?: PhysicalProgress[];
+  financialProgress?: FinancialProgress | null;
 }
 
 type ContactFormType = {
   id?: string;
   type?: "create" | "update" | "detail";
-  initialData?: ExtendedContract;
+  initialData?: Partial<ExtendedContract>;
   progressTotal?: {
     rencana: number;
     realisasi: number;
@@ -131,11 +131,11 @@ export default function ContractForm({
       tanggalKontrak: initialData?.tanggalKontrak || null,
       tanggalKontrakSupervisi: initialData?.tanggalKontrakSupervisi || null,
       financialProgress: {
-        termin1: initialData?.financialProgress.termin1 ?? 0,
-        termin2: initialData?.financialProgress.termin2 ?? 0,
-        termin3: initialData?.financialProgress.termin3 ?? 0,
-        termin4: initialData?.financialProgress.termin4 ?? 0,
-        uangMuka: initialData?.financialProgress.uangMuka ?? 0,
+        termin1: initialData?.financialProgress?.termin1 ?? 0,
+        termin2: initialData?.financialProgress?.termin2 ?? 0,
+        termin3: initialData?.financialProgress?.termin3 ?? 0,
+        termin4: initialData?.financialProgress?.termin4 ?? 0,
+        uangMuka: initialData?.financialProgress?.uangMuka ?? 0,
       },
       volumeKontrak: initialData?.volumeKontrak || "",
       hasAddendum: initialData?.hasAddendum || false,

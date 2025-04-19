@@ -27,7 +27,7 @@ export async function getContractWithProgress(contractId: string) {
     }
 
     
-    const progressEntries = await prisma.progress.findMany({
+    const progressEntries = await prisma.physicalProgress.findMany({
       where: {
         contractId: contractId,
       },
@@ -123,7 +123,7 @@ export async function updateProgressEntry(
     const deviasi = data.realisasi - data.rencana;
 
     
-    const progressEntry = await prisma.progress.upsert({
+    const progressEntry = await prisma.physicalProgress.upsert({
       where: {
         
         contractId_month_week: {
@@ -178,7 +178,7 @@ export async function updateMonthlyProgress(
         const deviasi = entry.realisasi - entry.rencana;
 
         
-        const updatedEntry = await tx.progress.upsert({
+        const updatedEntry = await tx.physicalProgress.upsert({
           where: {
             contractId_month_week: {
               contractId,
