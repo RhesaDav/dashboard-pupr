@@ -66,8 +66,6 @@ export default function DashboardPage() {
         user={user}
       />
 
-      {/* <LocationCombobox onSelectionChange={(data) => console.log(data)}/> */}
-
       <StatsGrid data={data} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

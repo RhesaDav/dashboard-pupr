@@ -1,5 +1,5 @@
 import { getContractById } from "@/actions/contract";
-import { FinancialProgressForm } from "../financial-progress";
+import { FinancialProgressForm } from "../../_components/financial-progress-form";
 
 export default async function FinancialProgressPage({
   params

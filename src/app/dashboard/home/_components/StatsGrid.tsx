@@ -35,7 +35,7 @@ export function StatsGrid({ data }: StatsGridProps) {
 
       <StatsCard
         title="Progress Fisik"
-        value={`${data.avgPhysicalProgress}%`}
+        value={`${data.avgPhysicalProgress.toFixed(2)}%`}
         icon={<Activity className="h-4 w-4 text-muted-foreground" />}
         footer={
           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
@@ -49,7 +49,7 @@ export function StatsGrid({ data }: StatsGridProps) {
 
       <StatsCard
         title="Progress Keuangan"
-        value={`${data.avgFinancialProgress}%`}
+        value={`${data.avgFinancialProgress.toFixed(2)}%`}
         icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
         footer={
           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">

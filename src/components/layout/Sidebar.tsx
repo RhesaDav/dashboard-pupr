@@ -61,7 +61,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
       children: [
         {
           label: "Progress Keuangan",
-          href: "/dashboard/financial-progress/4707297b-8e96-4407-8956-ad968514d8dd",
+          href: "/dashboard/financial-progress",
           icon: LineChart
         },
         {

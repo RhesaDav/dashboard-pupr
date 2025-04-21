@@ -149,14 +149,17 @@ export function FinancialProgressForm({
               </div>
 
               {/* Termin 1-4 */}
-              {[1, 2, 3, 4].map((termin) => (
+              {[1, 2, 3, 4].map((termin) => {
+                const fieldName = `termin${termin}` as const;
+
+                return(
                 <div key={termin} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                   <div className="space-y-2">
                     <Label>Termin {termin}</Label>
                     <div className="relative">
                       <Input
                         type="number"
-                        {...form.register(`termin${termin}` as const, { 
+                        {...form.register(fieldName as any, { 
                           valueAsNumber: true 
                         })}
                       />
@@ -173,19 +176,19 @@ export function FinancialProgressForm({
                         currency: "IDR"
                       }).format(
                         (contract.nilaiKontrak * 
-                         form.watch(`termin${termin}` as const)) / 100
+                         form.watch(fieldName as any)) / 100
                       )}
                     </p>
                   </div>
                   <div className="space-y-2">
                     <Label>Progress</Label>
                     <Progress 
-                      value={form.watch(`termin${termin}` as const)} 
+                      value={form.watch(fieldName as any)} 
                       className="h-2" 
                     />
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
 
             <div className="flex justify-end">

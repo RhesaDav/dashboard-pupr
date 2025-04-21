@@ -9,6 +9,7 @@ import {
   ArrowUpDown,
   Edit,
   Eye,
+  MoreHorizontal,
   Trash,
 } from "lucide-react";
 import { Contract } from "@prisma/client";
@@ -19,6 +20,12 @@ import * as XLSX from "xlsx"
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DataContractTableTypes {
   contracts?: Contract[];
@@ -86,26 +93,41 @@ function DataContractTable({ contracts }: DataContractTableTypes) {
       cell: ({ row }) => {
         const contract = row.original;
         return (
-          <div className="flex items-center gap-2">
-            {user?.role !== "CONSULTANT" && (
-            <DeleteContractDialog
-              contractId={contract.id}
-              contractName={contract.namaPaket || "-"}
-            />
-            )}
-            <Button
-              onClick={() => router.push(`${pathname}/${contract.id}/edit`)}
-              variant="outline"
-            >
-              <Edit />
-            </Button>
-            <Button
-              onClick={() => router.push(`${pathname}/${contract.id}/view`)}
-              variant="outline"
-            >
-              <Eye />
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => router.push(`${pathname}/${contract.id}/view`)}>
+                <Eye className="mr-2 h-4 w-4" />
+                <span>View</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push(`${pathname}/${contract.id}/edit`)}>
+                <Edit className="mr-2 h-4 w-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              {user?.role !== "CONSULTANT" && (
+                <DropdownMenuItem 
+                  className="text-red-600 focus:text-red-600" 
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <DeleteContractDialog
+                    contractId={contract.id}
+                    contractName={contract.namaPaket || "-"}
+                    trigger={
+                      <div className="flex items-center w-full">
+                        <Trash className="mr-2 h-4 w-4" />
+                        <span>Delete</span>
+                      </div>
+                    }
+                  />
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         );
       },
     },
@@ -136,8 +158,6 @@ function DataContractTable({ contracts }: DataContractTableTypes) {
 
   const handleExportPDF = (filteredData: Record<string, any>[]) => {
     console.log("Filtered data for pdf:", filteredData);
-
-    
   };
 
   return (

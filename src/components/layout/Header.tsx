@@ -21,7 +21,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
     const { user } = useCurrentUser(); 
 
   return (
-    <header className="bg-background shadow-sm p-3 md:p-4 flex justify-between items-center border-b sticky top-0 z-10"> {/* Buat sticky */}
+    <header className="bg-background shadow-sm p-3 md:p-4 flex justify-between items-center border-b sticky top-0 z-20"> {/* Buat sticky */}
       <Button
         variant="ghost"
         size="icon"

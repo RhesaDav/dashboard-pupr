@@ -355,6 +355,7 @@ export async function getContractById(id: string) {
     const contract = await prisma.contract.findUnique({
       where: { id },
       include: {
+        contractAccess: true,
         addendum: true,
         physicalProgress: true,
         financialProgress: true,
