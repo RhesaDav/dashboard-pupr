@@ -57,10 +57,6 @@ model Contract {
   dokumentasiTengah String?
   dokumentasiAkhir  String?
 
-  // Timestamps for tracking progression  
-  startDate DateTime?
-  endDate   DateTime?
-
   // Addendum handling
   hasAddendum Boolean? @default(false)
 

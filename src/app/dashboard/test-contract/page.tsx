@@ -47,13 +47,14 @@ import {
   endOfWeek,
   isWithinInterval,
   isValid,
+  addDays,
 } from "date-fns";
 import { id as indonesiaLocale } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { getAllContracts } from "@/actions/contract";
-import { Contract, Progress as ProgressType } from "@prisma/client";
+import { Contract, PhysicalProgress as ProgressType } from "@prisma/client";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -162,7 +163,8 @@ export default function ContractExportPage() {
     progress: number
   ): string => {
     const today = new Date();
-    const endDate = contract.endDate ? new Date(contract.endDate) : null;
+    const endDate = contract.tanggalKontrak ? addDays(contract.tanggalKontrak, contract.masaPelaksanaan || 0) : null
+    // const endDate = contract.endDate ? new Date(contract.endDate) : null;
 
     if (progress >= 100) return "Selesai";
     if (contract.kendala) return "Bermasalah";

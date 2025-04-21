@@ -63,7 +63,7 @@ interface ExtendedContract extends Omit<Contract, 'tanggalKontrak' | 'tanggalKon
 
 type ContactFormType = {
   id?: string;
-  type?: "create" | "update" | "detail";
+  type?: "create" | "update";
   initialData?: Partial<ExtendedContract>;
   progressTotal?: {
     rencana: number;
@@ -141,7 +141,6 @@ export default function ContractForm({
       hasAddendum: initialData?.hasAddendum || false,
     },
     // mode: "onBlur",
-    disabled: type === "detail",
   });
 
   const hasAddendum = form.watch("hasAddendum");
@@ -1500,7 +1499,6 @@ export default function ContractForm({
         </CardContent>
       </Card>
 
-      {type !== "detail" && (
         <div className="mt-6 flex justify-end">
           <Button type="button" variant="outline" className="mr-4">
             Cancel
@@ -1509,7 +1507,6 @@ export default function ContractForm({
             Save Contract
           </Button>
         </div>
-      )}
     </div>
   );
 }

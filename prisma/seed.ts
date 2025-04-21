@@ -110,8 +110,6 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
       dokumentasiAwal: 'https://storage.example.com/docs/jalan-sari-awal.jpg',
       dokumentasiTengah: 'https://storage.example.com/docs/jalan-sari-tengah.jpg',
       dokumentasiAkhir: null,
-      startDate: new Date('2023-04-01'),
-      endDate: new Date('2023-09-28'),
       hasAddendum: true,
       location: {
         create: {
@@ -146,7 +144,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
       physicalProgress: {
         create: [
           {
-            month: 'April',
+            month: 'April 2023',
             week: 1,
             startDate: new Date('2023-04-01'),
             endDate: new Date('2023-04-07'),
@@ -155,7 +153,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -0.8,
           },
           {
-            month: 'April',
+            month: 'April 2023',
             week: 2,
             startDate: new Date('2023-04-08'),
             endDate: new Date('2023-04-14'),
@@ -164,7 +162,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.5,
           },
           {
-            month: 'April',
+            month: 'April 2023',
             week: 3,
             startDate: new Date('2023-04-15'),
             endDate: new Date('2023-04-21'),
@@ -173,7 +171,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.0,
           },
           {
-            month: 'April',
+            month: 'April 2023',
             week: 4,
             startDate: new Date('2023-04-22'),
             endDate: new Date('2023-04-30'),
@@ -182,7 +180,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.2,
           },
           {
-            month: 'May',
+            month: 'May 2023',
             week: 1,
             startDate: new Date('2023-05-01'),
             endDate: new Date('2023-05-07'),
@@ -191,7 +189,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.5,
           },
           {
-            month: 'May',
+            month: 'May 2023',
             week: 2,
             startDate: new Date('2023-05-08'),
             endDate: new Date('2023-05-14'),
@@ -200,7 +198,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -0.8,
           },
           {
-            month: 'May',
+            month: 'May 2023',
             week: 3,
             startDate: new Date('2023-05-15'),
             endDate: new Date('2023-05-21'),
@@ -209,7 +207,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -0.4,
           },
           {
-            month: 'May',
+            month: 'May 2023',
             week: 4,
             startDate: new Date('2023-05-22'),
             endDate: new Date('2023-05-31'),
@@ -218,7 +216,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: 0.2,
           },
           {
-            month: 'June',
+            month: 'June 2023',
             week: 1,
             startDate: new Date('2023-06-01'),
             endDate: new Date('2023-06-07'),
@@ -265,8 +263,6 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
       hasilProdukAkhir: 'Saluran drainase beton bertulang',
       dimensi: 'Lebar 1 meter, kedalaman 1.5 meter',
       kendala: false,
-      startDate: new Date('2023-02-20'),
-      endDate: new Date('2023-06-20'),
       hasAddendum: false,
       location: {
         create: {
@@ -291,7 +287,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
       physicalProgress: {
         create: [
           {
-            month: 'February',
+            month: 'February 2023',
             week: 4,
             startDate: new Date('2023-02-20'),
             endDate: new Date('2023-02-28'),
@@ -300,7 +296,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -0.5,
           },
           {
-            month: 'March',
+            month: 'March 2023',
             week: 1,
             startDate: new Date('2023-03-01'),
             endDate: new Date('2023-03-07'),
@@ -309,7 +305,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.0,
           },
           {
-            month: 'March',
+            month: 'March 2023',
             week: 2,
             startDate: new Date('2023-03-08'),
             endDate: new Date('2023-03-14'),
@@ -318,7 +314,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.0,
           },
           {
-            month: 'March',
+            month: 'March 2023',
             week: 3,
             startDate: new Date('2023-03-15'),
             endDate: new Date('2023-03-21'),
@@ -327,7 +323,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -0.5,
           },
           {
-            month: 'March',
+            month: 'March 2023',
             week: 4,
             startDate: new Date('2023-03-22'),
             endDate: new Date('2023-03-31'),
@@ -336,7 +332,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.0,
           },
           {
-            month: 'April',
+            month: 'April 2023',
             week: 1,
             startDate: new Date('2023-04-01'),
             endDate: new Date('2023-04-07'),
@@ -345,7 +341,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.0,
           },
           {
-            month: 'April',
+            month: 'April 2023',
             week: 2,
             startDate: new Date('2023-04-08'),
             endDate: new Date('2023-04-14'),
@@ -354,7 +350,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -0.5,
           },
           {
-            month: 'April',
+            month: 'April 2023',
             week: 3,
             startDate: new Date('2023-04-15'),
             endDate: new Date('2023-04-21'),
@@ -363,7 +359,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.0,
           },
           {
-            month: 'April',
+            month: 'April 2023',
             week: 4,
             startDate: new Date('2023-04-22'),
             endDate: new Date('2023-04-30'),
@@ -372,7 +368,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.0,
           },
           {
-            month: 'May',
+            month: 'May 2023',
             week: 1,
             startDate: new Date('2023-05-01'),
             endDate: new Date('2023-05-07'),
@@ -424,8 +420,6 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
       hasilProdukAkhir: 'Gedung kantor yang telah direnovasi',
       dimensi: 'Luas bangunan 450 M²',
       kendala: false,
-      startDate: new Date('2023-05-10'),
-      endDate: new Date('2023-08-08'),
       hasAddendum: true,
       location: {
         create: {
@@ -461,7 +455,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
       physicalProgress: {
         create: [
           {
-            month: 'May',
+            month: 'May 2023',
             week: 2,
             startDate: new Date('2023-05-10'),
             endDate: new Date('2023-05-14'),
@@ -470,7 +464,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -0.5,
           },
           {
-            month: 'May',
+            month: 'May 2023',
             week: 3,
             startDate: new Date('2023-05-15'),
             endDate: new Date('2023-05-21'),
@@ -479,7 +473,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -0.5,
           },
           {
-            month: 'May',
+            month: 'May 2023',
             week: 4,
             startDate: new Date('2023-05-22'),
             endDate: new Date('2023-05-31'),
@@ -488,7 +482,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.0,
           },
           {
-            month: 'June',
+            month: 'June 2023',
             week: 1,
             startDate: new Date('2023-06-01'),
             endDate: new Date('2023-06-07'),
@@ -497,7 +491,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -1.0,
           },
           {
-            month: 'June',
+            month: 'June 2023',
             week: 2,
             startDate: new Date('2023-06-08'),
             endDate: new Date('2023-06-14'),
@@ -506,7 +500,7 @@ async function createContracts(users: { superadmin: any, admin: any, consultant:
             deviasi: -0.5,
           },
           {
-            month: 'June',
+            month: 'June 2023',
             week: 3,
             startDate: new Date('2023-06-15'),
             endDate: new Date('2023-06-21'),
