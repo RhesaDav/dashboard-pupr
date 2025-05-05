@@ -17,6 +17,7 @@ export function StatsGrid({ data }: StatsGridProps) {
 
   const roundedPhysical = roundToOneDecimal(data.avgPhysicalProgress);
   const roundedFinancial = roundToOneDecimal(data.avgFinancialProgress);
+  console.log(data.avgPhysicalProgress)
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -28,7 +29,9 @@ export function StatsGrid({ data }: StatsGridProps) {
           <div className="flex justify-between text-xs text-muted-foreground mt-2">
             <span>Aktif: {data.activeContracts}</span>
             <span>Selesai: {data.completedContracts}</span>
-            <span className="text-red-500">Masalah: {data.problemContracts.length}</span>
+            <span className="text-red-500">
+              Masalah: {data.problemContracts.length}
+            </span>
           </div>
         }
       />
@@ -37,17 +40,25 @@ export function StatsGrid({ data }: StatsGridProps) {
         title="Nilai Kontrak"
         value={formatRupiah(data.totalContractValue)}
         icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-        footer={<p className="text-xs text-muted-foreground mt-2">Total nilai semua kontrak</p>}
+        footer={
+          <p className="text-xs text-muted-foreground mt-2">
+            Total nilai semua kontrak
+          </p>
+        }
       />
 
       <StatsCard
         title="Pagu Anggaran"
         value={formatRupiah(data.totalBudget)}
         icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-        footer={<p className="text-xs text-muted-foreground mt-2">Total pagu anggaran</p>}
+        footer={
+          <p className="text-xs text-muted-foreground mt-2">
+            Total pagu anggaran
+          </p>
+        }
       />
 
-<StatsCard
+      <StatsCard
         title="Progress Fisik"
         value={`${roundedPhysical}%`}
         icon={<Activity className="h-4 w-4 text-muted-foreground" />}

@@ -465,7 +465,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                       <div className="relative">
                                         <Input
                                           type="number"
-                                          step="0.1"
+                                          step="0.01"
                                           className={hasRencanaError ? "border-red-500 pr-8" : ""}
                                           {...register(
                                             `months.${monthIndex}.items.${weekIndex}.rencana`,

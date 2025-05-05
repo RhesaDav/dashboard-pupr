@@ -116,16 +116,36 @@ export async function getDashboardReport(): Promise<DashboardReport> {
       contract.physicalProgress && contract.physicalProgress.length > 0
   );
 
-  const avgPhysicalProgress =
-    contractsWithPhysicalProgress.length > 0
-      ? contractsWithPhysicalProgress.reduce((sum, contract) => {
-          const lastProgress = contract.physicalProgress.sort(
-            (a, b) =>
-              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          )[0];
-          return sum + (lastProgress?.realisasi || 0);
-        }, 0) / contractsWithPhysicalProgress.length
-      : 0;
+  // Perhitungan avgPhysicalProgress yang benar
+// Formula: (Jumlah semua nilai realisasi di minggu terakhir) / (jumlah total kontrak)
+
+// 1. Dapatkan nilai realisasi terbaru untuk setiap kontrak
+const latestRealisasiValues = contracts.map(contract => {
+  // Jika kontrak tidak memiliki physical progress, kembalikan 0
+  if (!contract.physicalProgress || contract.physicalProgress.length === 0) {
+    return 0;
+  }
+  
+  // Urutkan progress berdasarkan tanggal terbaru
+  const sortedProgress = [...contract.physicalProgress].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  );
+  
+  // Ambil nilai realisasi dari entri terbaru
+  return sortedProgress[0]?.realisasi || 0;
+});
+
+// 2. Jumlahkan semua nilai realisasi terbaru
+const totalLatestRealisasi = latestRealisasiValues.reduce((sum, value) => sum + value, 0);
+
+// 3. Hitung rata-rata dengan membagi jumlah nilai realisasi dengan TOTAL kontrak (termasuk yang tidak memiliki progress)
+const avgPhysicalProgress = contracts.length > 0 
+  ? totalLatestRealisasi / contracts.length 
+  : 0;
+
+console.log(`Total kontrak: ${contracts.length}`);
+console.log(`Total nilai realisasi: ${totalLatestRealisasi.toFixed(2)}`);
+console.log(`Rata-rata progress fisik: ${avgPhysicalProgress.toFixed(2)}%`);
 
   const contractsWithFinancialProgress = contracts.filter(
     (contract) => contract.financialProgress?.totalProgress

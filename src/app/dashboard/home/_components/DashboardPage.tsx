@@ -22,7 +22,7 @@ export default function DashboardPage() {
     currentTime: ''
   });
 
-  // UseQuery implementation for dashboard data
+  
   const { 
     data: dashboardData, 
     isLoading, 
@@ -34,13 +34,13 @@ export default function DashboardPage() {
       const report = await getDashboardReport();
       return report;
     },
-    staleTime: 0, // Always consider data stale to trigger refetch
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    refetchOnMount: true, // Refetch when component mounts
-    refetchOnReconnect: true, // Refetch when reconnected to network
+    staleTime: 0, 
+    refetchOnWindowFocus: true, 
+    refetchOnMount: true, 
+    refetchOnReconnect: true, 
   });
 
-  // Update time greeting and current time
+  
   useEffect(() => {
     const now = new Date();
     const hour = now.getHours();
@@ -53,11 +53,11 @@ export default function DashboardPage() {
     
     setTime({ greeting, currentTime });
 
-    // Manually trigger refetch when component mounts
+    
     refetch();
   }, [refetch]);
 
-  // Combine loading states
+  
   const loading = isLoading || userLoading;
 
   if (loading) {
