@@ -70,6 +70,7 @@ function DataContractTable() {
         limit: pageSizeParam,
         search: searchQuery,
       }),
+      refetchOnMount: "always"
   });
 
   const { user } = useCurrentUser();

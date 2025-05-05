@@ -13,53 +13,60 @@ import { ProblemContractsList } from "./ProblemContractsList";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { getDistrik } from "@/actions/wilayah";
 import { SubkegiatanDistribution } from "./SubkegiatanDistribution";
+import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardReport | null>(null);
-  const {user, loading: userLoading} = useCurrentUser()
-  const [loading, setLoading] = useState(true);
+  const {user, loading: userLoading} = useCurrentUser();
   const [time, setTime] = useState({
     greeting: '',
     currentTime: ''
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const report = await getDashboardReport();
-        console.log(report)
-        setData(report);
-        
-        const now = new Date();
-        const hour = now.getHours();
-        const greeting = 
-          hour < 12 ? 'Pagi' : 
-          hour < 15 ? 'Siang' : 
-          hour < 19 ? 'Sore' : 'Malam';
-        
-        const currentTime = format(now, 'EEEE, d MMMM yyyy HH:mm');
-        
-        setTime({ greeting, currentTime });
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // UseQuery implementation for dashboard data
+  const { 
+    data: dashboardData, 
+    isLoading, 
+    isError,
+    refetch
+  } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: async () => {
+      const report = await getDashboardReport();
+      return report;
+    },
+    staleTime: 0, // Always consider data stale to trigger refetch
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnReconnect: true, // Refetch when reconnected to network
+  });
 
-    fetchData();
-  }, []);
+  // Update time greeting and current time
+  useEffect(() => {
+    const now = new Date();
+    const hour = now.getHours();
+    const greeting = 
+      hour < 12 ? 'Pagi' : 
+      hour < 15 ? 'Siang' : 
+      hour < 19 ? 'Sore' : 'Malam';
+    
+    const currentTime = format(now, 'EEEE, d MMMM yyyy HH:mm');
+    
+    setTime({ greeting, currentTime });
+
+    // Manually trigger refetch when component mounts
+    refetch();
+  }, [refetch]);
+
+  // Combine loading states
+  const loading = isLoading || userLoading;
 
   if (loading) {
     return <DashboardSkeleton />;
   }
 
-  if (!data) {
+  if (isError || !dashboardData) {
     return <DashboardError />;
   }
-
-  console.log(data)
 
   return (
     <div className="p-6 space-y-6">
@@ -69,18 +76,18 @@ export default function DashboardPage() {
         user={user}
       />
 
-      <StatsGrid data={data} />
+      <StatsGrid data={dashboardData} />
 
-      <SubkegiatanDistribution data={data.subkegiatanDistribution} />
+      <SubkegiatanDistribution data={dashboardData.subkegiatanDistribution} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProgressTrendChart data={data.physicalProgressTrend} />
-        <LocationDistributionChart data={data.locationDistribution} />
+        <ProgressTrendChart data={dashboardData.physicalProgressTrend} />
+        <LocationDistributionChart data={dashboardData.locationDistribution} />
       </div>
 
-      <RecentContractsTable contracts={data.recentContracts} />
+      <RecentContractsTable contracts={dashboardData.recentContracts} />
 
-      <ProblemContractsList contracts={data.problemContracts} />
+      <ProblemContractsList contracts={dashboardData.problemContracts} />
     </div>
   );
 }

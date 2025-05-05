@@ -460,7 +460,7 @@ export default function ReportTable() {
         })
         .filter(Boolean);
 
-        console.log(contractsToExport)
+      console.log(contractsToExport);
 
       if (contractsWithFilteredProgress.length === 0) {
         toast.warning(
@@ -481,69 +481,92 @@ export default function ReportTable() {
 
       const pdfData = {
         title,
-        contracts: contractsWithFilteredProgress.map((contract) => ({
-          namaPaket: contract!.namaPaket,
-          namaPenyedia: contract!.namaPenyedia,
-          ppk: contract!.ppk,
-          korwaslap: contract!.korwaslap,
-          pengawasLapangan: contract!.pengawasLapangan,
-          nilaiKontrak: contract!.nilaiKontrak,
-          nilaiKontrakFisik: contract!.nilaiKontrakFisik,
-          tanggalKontrak: contract!.tanggalKontrak,
-          masaPelaksanaan: contract!.masaPelaksanaan,
-          konsultanSupervisi: contract!.konsultanSupervisi,
-          nilaiKontrakSupervisi: contract!.nilaiKontrakSupervisi,
-          volumeKontrak: contract!.volumeKontrak,
-          satuanKontrak: contract!.satuanKontrak,
-          hasilProdukAkhir: contract!.hasilProdukAkhir,
-          koordinatAwal: contract!.koordinatAwal,
-          koordinatAkhir: contract!.koordinatAkhir,
-          realisasiKeuangan: contract!.realisasiKeuangan,
-          akhirKontrakAsli: contract!.akhirKontrakAsli,
-          akhirKontrakAdd: contract!.akhirKontrakAdd,
-          permasalahan: contract!.permasalahan,
-          status: contract!.status,
-          progressPercentage: contract!.progressPercentage,
-          progressData: contract!.progressData.map((progress) => ({
-            bulan: progress.bulan,
-            minggu: progress.minggu,
-            periode: progress.periode,
-            rencana: progress.rencana,
-            realisasi: progress.realisasi,
-            deviasi: progress.deviasi,
-            bermasalah: progress.bermasalah,
-            deskripsiMasalah: progress.deskripsiMasalah,
+        contracts: contractsWithFilteredProgress.map((contract) => {
+          const allProblems = contract!.progressData
+            .filter((progress) => progress.bermasalah)
+            .map((progress) => ({
+              week: progress.weekNumber,
+              description:
+                progress.deskripsiMasalah || "Tidak ada deskripsi masalah",
+            }));
+
+          // Format the problems for display
+          const formattedProblems =
+            allProblems.length > 0
+              ? allProblems
+                  .map((p) => `Minggu ${p.week}: ${p.description}`)
+                  .join("; ")
+              : "";
+          return {
+            namaPaket: contract!.namaPaket,
+            namaPenyedia: contract!.namaPenyedia,
+            ppk: contract!.ppk,
+            korwaslap: contract!.korwaslap,
+            pengawasLapangan: contract!.pengawasLapangan,
+            nilaiKontrak: contract!.nilaiKontrak,
+            nilaiKontrakFisik: contract!.nilaiKontrakFisik,
+            tanggalKontrak: contract!.tanggalKontrak,
+            masaPelaksanaan: contract!.masaPelaksanaan,
+            konsultanSupervisi: contract!.konsultanSupervisi,
+            nilaiKontrakSupervisi: contract!.nilaiKontrakSupervisi,
+            volumeKontrak: contract!.volumeKontrak,
+            satuanKontrak: contract!.satuanKontrak,
+            hasilProdukAkhir: contract!.hasilProdukAkhir,
+            koordinatAwal: contract!.koordinatAwal,
+            koordinatAkhir: contract!.koordinatAkhir,
+            realisasiKeuangan: contract!.realisasiKeuangan,
+            akhirKontrakAsli: contract!.akhirKontrakAsli,
+            akhirKontrakAdd: contract!.akhirKontrakAdd,
+            permasalahan: formattedProblems,
+            status: contract!.status,
+            progressPercentage: contract!.progressPercentage,
+            progressData: contract!.progressData.map((progress) => ({
+              bulan: progress.bulan,
+              minggu: progress.minggu,
+              periode: progress.periode,
+              rencana: progress.rencana,
+              realisasi: progress.realisasi,
+              deviasi: progress.deviasi,
+              bermasalah: progress.bermasalah,
+              deskripsiMasalah: progress.deskripsiMasalah,
+              keterangan: [
+                progress.weekNumber === contract!.maxRealisasiWeek
+                  ? `Nilai realisasi tertinggi (Minggu ${
+                      contract!.maxRealisasiWeek
+                    })`
+                  : null,
+                progress.weekNumber === contract!.maxRencanaWeek
+                  ? `Nilai rencana tertinggi (Minggu ${
+                      contract!.maxRencanaWeek
+                    })`
+                  : null,
+                progress.dataSourceNote ? progress.dataSourceNote : null,
+                progress.bermasalah
+                  ? `Bermasalah: ${progress.deskripsiMasalah}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(", "),
+            })),
+            totalProgress:
+              contract!.progressData.reduce((sum, p) => {
+                return (
+                  sum + parseFloat(p.realisasi.replace("%", "").split(" ")[0])
+                );
+              }, 0) / contract!.progressData.length,
             keterangan: [
-              progress.weekNumber === contract!.maxRealisasiWeek
-                ? `Nilai realisasi tertinggi (Minggu ${
-                    contract!.maxRealisasiWeek
-                  })`
-                : null,
-              progress.weekNumber === contract!.maxRencanaWeek
-                ? `Nilai rencana tertinggi (Minggu ${contract!.maxRencanaWeek})`
-                : null,
-              progress.dataSourceNote ? progress.dataSourceNote : null,
-              progress.bermasalah
-                ? `Bermasalah: ${progress.deskripsiMasalah}`
-                : null,
-            ]
-              .filter(Boolean)
-              .join(", "),
-          })),
-          totalProgress:
-            contract!.progressData.reduce((sum, p) => {
-              return (
-                sum + parseFloat(p.realisasi.replace("%", "").split(" ")[0])
-              );
-            }, 0) / contract!.progressData.length,
-          keterangan: [
-            contract?.progressData.some((item) => item.weekNumber > contract.maxRealisasiWeek) ? `Data diambil dari minggu ke-${contract!.maxRealisasiWeek}`: "",
-            // `Nilai realisasi tertinggi: Minggu ${contract!.maxRealisasiWeek}`,
-            // `Nilai rencana tertinggi: Minggu ${contract!.maxRencanaWeek}`,
-            // `Status: ${contract!.status}`,
-            // `Progress Keseluruhan: ${contract!.progressPercentage.toFixed(2)}%`,
-          ].join("; "),
-        })),
+              contract?.progressData.some(
+                (item) => item.weekNumber > contract.maxRealisasiWeek
+              )
+                ? `Data diambil dari minggu ke-${contract!.maxRealisasiWeek}`
+                : "",
+              // `Nilai realisasi tertinggi: Minggu ${contract!.maxRealisasiWeek}`,
+              // `Nilai rencana tertinggi: Minggu ${contract!.maxRencanaWeek}`,
+              // `Status: ${contract!.status}`,
+              // `Progress Keseluruhan: ${contract!.progressPercentage.toFixed(2)}%`,
+            ].join("; "),
+          };
+        }),
         weekRange: selectedWeekRange,
         columns: [
           { id: "namaPaket", label: "Nama Paket" },
