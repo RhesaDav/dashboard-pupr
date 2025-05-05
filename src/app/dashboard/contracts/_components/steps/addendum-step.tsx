@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { v4 as uuidv4 } from "uuid"
 import { cn } from "@/lib/utils"
 import { DatePicker } from "@/components/ui/datepicker"
+import { Addendum } from "@prisma/client"
 
 // Hanya 2 tipe addendum sesuai kebutuhan
 const ADDENDUM_TYPES = [
@@ -23,9 +24,10 @@ const ADDENDUM_TYPES = [
 
 export default function AddendumStep() {
   const form = useFormContext()
+  console.log(form.getValues("addendum"))
   
   // Inisialisasi dengan fungsi untuk menghindari infinite loop
-  const [addendumItems, setAddendumItems] = useState(() => {
+  const [addendumItems, setAddendumItems] = useState<Partial<Addendum>[]>(() => {
     const currentAddendum = form.getValues("addendum") || [];
     const hasAddendum = form.getValues("hasAddendum");
     
@@ -64,11 +66,9 @@ export default function AddendumStep() {
             id: uuidv4(),
             name: "",
             tipe: "",
-            tanggalAddendum: null,
             hari: "",
             volume: "",
             satuan: "",
-            alasan: "",
             pemberianKesempatan: false,
           }]);
         } else if (!value.hasAddendum) {
@@ -88,11 +88,9 @@ export default function AddendumStep() {
         id: uuidv4(),
         name: "",
         tipe: "",
-        tanggalAddendum: null,
         hari: "",
         volume: "",
         satuan: "",
-        alasan: "",
         pemberianKesempatan: false,
       },
     ])
@@ -104,7 +102,10 @@ export default function AddendumStep() {
     setAddendumItems(updatedItems)
   }
 
-  const updateAddendumItem = (index, field, value) => {
+  const updateAddendumItem = <K extends keyof Addendum>(index: number,
+    field: K,
+    value: Addendum[K]
+) => {
     const updatedItems = [...addendumItems]
     updatedItems[index][field] = value
     setAddendumItems(updatedItems)
@@ -220,7 +221,7 @@ export default function AddendumStep() {
                       </CardHeader>
 
                       <CardContent className="p-4 space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
+                        <div className="grid gap-4 md:grid-cols-3">
                           <FormItem>
                             <FormLabel className="text-sm font-medium">Nama Addendum</FormLabel>
                             <FormControl>
@@ -251,10 +252,25 @@ export default function AddendumStep() {
                               </SelectContent>
                             </Select>
                           </FormItem>
+
+                          <div className="flex items-center pt-6">
+                                <Checkbox
+                                  id={`pemberian-kesempatan-${index}`}
+                                  checked={item.pemberianKesempatan}
+                                  onCheckedChange={(checked) => updateAddendumItem(index, "pemberianKesempatan", checked ? true : false)}
+                                  className="data-[state=checked]:bg-blue-600"
+                                />
+                                <label
+                                  htmlFor={`pemberian-kesempatan-${index}`}
+                                  className="text-sm font-medium leading-none ml-2 cursor-pointer"
+                                >
+                                  Pemberian Kesempatan
+                                </label>
+                              </div>
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-2">
-                          <FormItem>
+                          {/* <FormItem>
                             <FormLabel className="text-sm font-medium">Tanggal Addendum</FormLabel>
                             <DatePicker
                               selected={item.tanggalAddendum ? new Date(item.tanggalAddendum) : undefined}
@@ -262,10 +278,10 @@ export default function AddendumStep() {
                               className="w-full"
                               placeholder="Pilih tanggal addendum"
                             />
-                          </FormItem>
+                          </FormItem> */}
                           
                           {/* Field untuk tipe waktu */}
-                          {(item.tipe === "waktu" || !item.tipe) && (
+                          {(item.tipe === "waktu") && (
                             <div className="grid gap-4 grid-cols-2">
                               <FormItem>
                                 <FormLabel className="text-sm font-medium">Jumlah Hari</FormLabel>
@@ -286,7 +302,7 @@ export default function AddendumStep() {
                                 <Checkbox
                                   id={`pemberian-kesempatan-${index}`}
                                   checked={item.pemberianKesempatan}
-                                  onCheckedChange={(checked) => updateAddendumItem(index, "pemberianKesempatan", checked)}
+                                  onCheckedChange={(checked) => updateAddendumItem(index, "pemberianKesempatan", checked ? true : false)}
                                   className="data-[state=checked]:bg-blue-600"
                                 />
                                 <label
@@ -301,7 +317,7 @@ export default function AddendumStep() {
                         </div>
 
                         {/* Field untuk tipe volume */}
-                        {(item.tipe === "volume" || !item.tipe) && (
+                        {(item.tipe === "volume") && (
                           <div className="grid gap-4 md:grid-cols-2">
                             <FormItem>
                               <FormLabel className="text-sm font-medium">Volume</FormLabel>
@@ -326,18 +342,6 @@ export default function AddendumStep() {
                             </FormItem>
                           </div>
                         )}
-
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium">Alasan Addendum</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Deskripsikan alasan pemberian addendum..."
-                              value={item.alasan || ""}
-                              onChange={(e) => updateAddendumItem(index, "alasan", e.target.value)}
-                              rows={3}
-                            />
-                          </FormControl>
-                        </FormItem>
                       </CardContent>
                     </Card>
                   ))}

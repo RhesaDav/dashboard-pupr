@@ -39,7 +39,7 @@ export function DeleteContractDialog({
     if (res.success) {
       toast.success(`Contract ${contractName} berhasil dihapus`);
     } else {
-      toast.error(res.error);
+      toast.error(`Gagal menghapus contract`);
     }
   };
 

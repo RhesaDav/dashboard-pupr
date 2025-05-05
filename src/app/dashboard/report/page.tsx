@@ -2,6 +2,8 @@ import React from 'react'
 import ReportTable from './_components/report-table';
 import Pagination from '@/components/ui/pagination';
 import { getAllContracts } from '@/actions/contract';
+import { getAllProgress } from '@/actions/progress';
+import DatePickerWeek from './_components/date-picker-week';
 
 export default async function page({
   searchParams,
@@ -11,12 +13,12 @@ export default async function page({
   const page = Number((await searchParams).page || 1);
   const pageSize = Number((await searchParams).pageSize || 10);
   const search = String((await searchParams).search || "");
-  const contracts = await getAllContracts(page,pageSize,search)
+  // const contracts = await getAllContracts(page,pageSize,search)
+  const progress = await getAllProgress({
+    startDate: '2025-02-10',
+  endDate: '2025-04-07',
+  })
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-5">Report</h1>
-      <ReportTable contracts={contracts.contracts} />
-      <Pagination totalPages={contracts.pagination?.totalPages} />
-    </div>
+      <ReportTable />
   );
 }

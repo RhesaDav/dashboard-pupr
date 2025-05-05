@@ -14,18 +14,26 @@ import {
 import { Contract } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
-import * as XLSX from "xlsx"
+import * as XLSX from "xlsx";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { getAllContracts } from "@/actions/contract";
+import { Input } from "@/components/ui/input";
 
 interface LakipTableTypes {
   contracts?: Contract[];
 }
 
-function LakipTable({ contracts }: LakipTableTypes) {
+function LakipTable({}: LakipTableTypes) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+
+  const { data: contracts, isLoading } = useQuery({
+    queryKey: ["kontrak-lakip"],
+    queryFn: () => getAllContracts(),
+  });
 
   const columns: ColumnDef<Contract>[] = [
     {
@@ -44,7 +52,9 @@ function LakipTable({ contracts }: LakipTableTypes) {
       cell: ({ row }) => {
         return (
           <div className="relative max-w-[280px] truncate">
-            <span title={row.original.namaPaket || "-"}>{row.original.namaPaket}</span>
+            <span title={row.original.namaPaket || "-"}>
+              {row.original.namaPaket}
+            </span>
           </div>
         );
       },
@@ -116,24 +126,55 @@ function LakipTable({ contracts }: LakipTableTypes) {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Selected Data");
 
     // Generate and download Excel file
-    XLSX.writeFile(workbook, `laporan_${format(new Date(), "dd-MMM-yyyy")}.xlsx`);
+    XLSX.writeFile(
+      workbook,
+      `laporan_${format(new Date(), "dd-MMM-yyyy")}.xlsx`
+    );
   };
 
   const handleExportPDF = (filteredData: Record<string, any>[]) => {
     console.log("Filtered data for pdf:", filteredData);
+  };
 
-    
+  const handleResetFilter = () => {
+    const params = new URLSearchParams(searchParams);
+    params.set("search", "");
+    router.push(`?${params.toString()}`);
   };
 
   return (
+    <div className="p-4 md:p-6 space-y-6 max-w-screen-2xl mx-auto">
+    {/* Header Section */}
+    <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Lakip</h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          Kelola Lakip
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+        <Input onChange={handleSearch} placeholder="Cari kontrak..." />
+        <Button
+          variant={"outline"}
+          onClick={() => router.push(`${pathname}/create`)}
+        >
+          Create New
+        </Button>
+      </div>
+    </div>
     <DataTable
       columns={columns}
-      data={contracts || []}
-      searchKey="name"
-      pageSizeOptions={[5, 10, 20, 50]}
-      defaultPageSize={10}
-      onSearch={handleSearch}
+      data={contracts?.data || []}
+      isLoading={isLoading}
+      totalItems={contracts?.pagination?.total || 0}
+      noDataMessage="Tidak ada data kontrak tersedia"
+      noFilteredDataMessage="Tidak ada kontrak yang sesuai dengan filter"
+      filterActive={searchParams.get("search") !== ""}
+      onResetFilter={handleResetFilter}
+      tableName="kontrak"
     />
+    </div>
   );
 }
 

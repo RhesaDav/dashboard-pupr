@@ -65,14 +65,24 @@ interface ViewProgressProps {
 
 const sortMonthsChronologically = (months: MonthProgress[]) => {
   const monthOrder = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
   ];
-  
+
   return [...months].sort((a, b) => {
     const [monthA, yearA] = a.month.split(" ");
     const [monthB, yearB] = b.month.split(" ");
-    
+
     if (yearA !== yearB) return parseInt(yearA) - parseInt(yearB);
     return monthOrder.indexOf(monthA) - monthOrder.indexOf(monthB);
   });
@@ -85,10 +95,13 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
   const contractId = String(params.id);
 
   const sortedProgressData = useMemo(() => {
-    return contract.progress?.length ? sortMonthsChronologically(contract.progress) : [];
+    return contract.progress?.length
+      ? sortMonthsChronologically(contract.progress)
+      : [];
   }, [contract.progress]);
 
-  const calculateDeviasi = (rencana: number, realisasi: number) => realisasi - rencana;
+  const calculateDeviasi = (rencana: number, realisasi: number) =>
+    realisasi - rencana;
 
   const calculateMonthProgress = (items: ProgressItem[]) => {
     const totalRealisasi = items.reduce((sum, item) => sum + item.realisasi, 0);
@@ -98,19 +111,44 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
 
   const calculateTotalProgress = () => {
     if (!sortedProgressData.length) return 0;
-    const lastMonth = sortedProgressData[sortedProgressData.length - 1];
-    if (!lastMonth.items.length) return 0;
-    return Math.min(lastMonth.items[lastMonth.items.length - 1].realisasi, 100);
+
+    let maxRealisasi = 0;
+    let maxWeek = null;
+
+    for (const month of sortedProgressData) {
+      for (const week of month.items) {
+        if (
+          week &&
+          typeof week.realisasi === "number" &&
+          !isNaN(week.realisasi) &&
+          week.realisasi > maxRealisasi
+        ) {
+          maxRealisasi = week.realisasi;
+          maxWeek = week;
+        }
+      }
+    }
+
+    if (maxWeek) {
+      console.log(
+        "Max realisasi found in week:",
+        maxWeek.week,
+        "with value:",
+        maxRealisasi
+      );
+    }
+
+    return Math.min(maxRealisasi, 100);
   };
 
   const chartData = useMemo(() => {
-    return sortedProgressData.flatMap(month => 
-      month.items.map(item => ({
-        name: `Minggu ${item.week}`,
+    return sortedProgressData.flatMap((month) =>
+      month.items.map((item) => ({
+        name: `${item.week}`,
         rencana: item.rencana,
         realisasi: item.realisasi,
         deviasi: item.deviasi,
-        dateRange: `${item.startDate} - ${item.endDate}`
+        dateRange: `${item.startDate} - ${item.endDate}`,
       }))
     );
   }, [sortedProgressData]);
@@ -128,10 +166,12 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
                 {contract.namaPaket}
               </p>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
-              onClick={() => router.push(`/dashboard/progress/${contractId}/edit`)}
+              onClick={() =>
+                router.push(`/dashboard/progress/${contractId}/edit`)
+              }
               className="flex items-center gap-1"
             >
               <Pencil className="h-4 w-4" />
@@ -160,7 +200,9 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
             <div className="space-y-2">
               <div className="flex">
                 <span className="w-36 font-medium">Volume</span>
-                <span>: {contract.volumeKontrak} {contract.satuanKontrak}</span>
+                <span>
+                  : {contract.volumeKontrak} {contract.satuanKontrak}
+                </span>
               </div>
               <div className="flex">
                 <span className="w-36 font-medium">Target Selesai</span>
@@ -190,7 +232,7 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
               </div>
             </div>
           </div>
-          
+
           {/* Progress Chart */}
           {chartData.length > 0 && (
             <div className="mb-8 p-4 bg-white border rounded-lg">
@@ -205,12 +247,12 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
                     margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis 
-                      dataKey="name" 
+                    <XAxis
+                      dataKey="name"
                       tick={{ fontSize: 12 }}
                       tickMargin={10}
                     />
-                    <YAxis 
+                    <YAxis
                       domain={[0, 100]}
                       tickCount={6}
                       tick={{ fontSize: 12 }}
@@ -286,9 +328,15 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
                 <AccordionContent className="p-4">
                   <div className="space-y-4">
                     {month.items.map((week, weekIndex) => {
-                      const deviasi = calculateDeviasi(week.rencana, week.realisasi);
+                      const deviasi = calculateDeviasi(
+                        week.rencana,
+                        week.realisasi
+                      );
                       return (
-                        <div key={`week-${weekIndex}`} className="p-3 border rounded-lg">
+                        <div
+                          key={`week-${weekIndex}`}
+                          className="p-3 border rounded-lg"
+                        >
                           <div className="flex justify-between items-center mb-3">
                             <div className="font-medium flex items-center">
                               Minggu {week.week}
@@ -297,7 +345,9 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
                                   <Tooltip>
                                     <TooltipTrigger className="ml-2 flex items-center text-sm text-muted-foreground">
                                       <Calendar className="h-3.5 w-3.5 mr-1" />
-                                      <span>{week.startDate} - {week.endDate}</span>
+                                      <span>
+                                        {week.startDate} - {week.endDate}
+                                      </span>
                                     </TooltipTrigger>
                                     <TooltipContent>
                                       <p>Periode pelaksanaan minggu ini</p>
@@ -328,10 +378,15 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
                               <label className="block text-sm font-medium mb-1">
                                 Deviasi (%)
                               </label>
-                              <div 
+                              <div
                                 className="bg-muted p-2 rounded border"
                                 style={{
-                                  color: deviasi < 0 ? "#ef4444" : deviasi > 0 ? "#22c55e" : "#64748b",
+                                  color:
+                                    deviasi < 0
+                                      ? "#ef4444"
+                                      : deviasi > 0
+                                      ? "#22c55e"
+                                      : "#64748b",
                                 }}
                               >
                                 {deviasi.toFixed(1)}%
@@ -352,7 +407,11 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
           <Button variant="outline" onClick={() => router.back()}>
             Kembali
           </Button>
-          <Button onClick={() => router.push(`/dashboard/progress/${contractId}/edit`)}>
+          <Button
+            onClick={() =>
+              router.push(`/dashboard/progress/${contractId}/edit`)
+            }
+          >
             Edit Progress
           </Button>
         </CardFooter>

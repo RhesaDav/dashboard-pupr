@@ -69,7 +69,6 @@ export const districts: District[] = [
   { kodeKabupaten: "05", namaKabupaten: "MANOKWARI", namaDistrik: "Masni" },
   { kodeKabupaten: "05", namaKabupaten: "MANOKWARI", namaDistrik: "Prafi" },
   { kodeKabupaten: "05", namaKabupaten: "MANOKWARI", namaDistrik: "Warmare" },
-  { kodeKabupaten: "05", namaKabupaten: "MANOKWARI", namaDistrik: "Testega" },
   { kodeKabupaten: "11", namaKabupaten: "MANOKWARI SELATAN", namaDistrik: "Ransiki" },
   { kodeKabupaten: "11", namaKabupaten: "MANOKWARI SELATAN", namaDistrik: "Oransbari" },
   { kodeKabupaten: "11", namaKabupaten: "MANOKWARI SELATAN", namaDistrik: "Tahota" },

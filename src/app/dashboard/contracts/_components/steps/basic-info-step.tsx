@@ -99,29 +99,52 @@ export default function BasicInfoStep() {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="tanggalKontrak"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Tanggal Kontrak</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="YYYY-MM-DD"
-                {...field}
-                value={field.value || ""}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="masaPelaksanaan"
-        render={({ field }) => (
-          <FormItem>
+      <div className="grid gap-4 md:grid-cols-2">
+        <FormField
+          control={form.control}
+          name="tanggalKontrak"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Tanggal Kontrak</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(new Date(field.value), "dd MMM yyyy")
+                      ) : (
+                        <span>Pilih tanggal</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value ? new Date(field.value) : undefined}
+                    onSelect={(date) =>
+                      field.onChange(date)
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="masaPelaksanaan"
+          render={({ field }) => (
+            <FormItem>
             <FormLabel>Masa Pelaksanaan (hari)</FormLabel>
             <FormControl>
               <Input
@@ -138,88 +161,6 @@ export default function BasicInfoStep() {
             </FormControl>
             <FormMessage />
           </FormItem>
-        )}
-      />
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <FormField
-          control={form.control}
-          name="startDate"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Tanggal Mulai</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(new Date(field.value), "PPP")
-                      ) : (
-                        <span>Pilih tanggal</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) =>
-                      field.onChange(date ? format(date, "yyyy-MM-dd") : "")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="endDate"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Tanggal Selesai</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(new Date(field.value), "PPP")
-                      ) : (
-                        <span>Pilih tanggal</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) =>
-                      field.onChange(date ? format(date, "yyyy-MM-dd") : "")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
           )}
         />
       </div>

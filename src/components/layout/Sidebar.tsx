@@ -20,7 +20,8 @@ import {
   GanttChart,
   LineChart,
   BarChart3,
-  ChevronDown
+  ChevronDown,
+  TriangleAlert
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { Role } from "@prisma/client";

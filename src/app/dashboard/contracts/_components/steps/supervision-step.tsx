@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
 
 export default function SupervisionStep() {
   const form = useFormContext()
@@ -191,23 +196,46 @@ export default function SupervisionStep() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="tanggalKontrakSupervisi"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tanggal Kontrak Supervisi</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="YYYY-MM-DD" 
-                    {...field} 
-                    value={field.value || ""} 
+        <FormField
+          control={form.control}
+          name="tanggalKontrakSupervisi"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Tanggal Kontrak</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(new Date(field.value), "dd MMM yyyy")
+                      ) : (
+                        <span>Pilih tanggal</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value ? new Date(field.value) : undefined}
+                    onSelect={(date) =>
+                      field.onChange(date)
+                    }
+                    initialFocus
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
           <FormField
             control={form.control}
             name="masaPelaksanaanSupervisi"

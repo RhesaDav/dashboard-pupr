@@ -26,17 +26,10 @@ export default async function FinancialProgressPage({
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">
-        Progress Finansial - {contract.data?.contract.namaPaket}
+        Progress Finansial - {contract.data?.namaPaket}
       </h1>
       
-      <FinancialProgressForm 
-        contract={{
-          id: String(contract.data?.contract.id),
-          nilaiKontrak: contract.data?.contract.nilaiKontrak || 0,
-          financialProgress: contract.data?.contract.financialProgress
-        }}
-        onSave={handleSave}
-      />
+      <FinancialProgressForm/>
     </div>
   );
 }

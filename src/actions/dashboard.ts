@@ -54,6 +54,27 @@ export interface DashboardReport {
     contractValue: number;
     vendor: string;
   }[];
+  subkegiatanDistribution: {
+    subkegiatan: string;
+    totalContracts: number;
+    completedContracts: number;
+    ongoingContracts: number;
+    problemContracts: number;
+    totalPaguAnggaran: number;       // New field
+    totalNilaiKontrak: number;       // New field
+    totalRealisasiKeuangan: number;  // New field
+    avgProgressFisik: number;        // New field
+    avgProgressKeuangan: number;     // New field
+    contractValue: number;
+    contracts: {
+      id: string;
+      packageName: string;
+      status: string;
+      progress: number | null;
+      financialProgress: number | null; // New field for individual contract financial progress
+    }[];
+  }[];
+
 }
 
 export async function getDashboardReport(): Promise<DashboardReport> {
@@ -85,7 +106,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
   );
 
   const totalBudget = contracts.reduce(
-    (sum, contract) => sum + parseFloat(contract.paguAnggaran || "0"),
+    (sum, contract) => sum + (contract.paguAnggaran || 0),
     0
   );
 
@@ -264,6 +285,96 @@ export async function getDashboardReport(): Promise<DashboardReport> {
       };
     });
 
+    const subkegiatanMap = new Map<
+    string,
+    {
+      totalContracts: number;
+      completedContracts: number;
+      ongoingContracts: number;
+      problemContracts: number;
+      totalPaguAnggaran: number;
+      totalNilaiKontrak: number;
+      totalRealisasiKeuangan: number;
+      totalPhysicalProgress: number;
+      totalFinancialProgress: number;
+      contracts: {
+        id: string;
+        packageName: string;
+        status: string;
+        progress: number | null;
+        financialProgress: number | null;
+      }[];
+    }
+  >();
+
+  contracts.forEach((contract) => {
+    const subkegiatan = contract.subKegiatan || "Lainnya";
+    const current = subkegiatanMap.get(subkegiatan) || {
+      totalContracts: 0,
+      completedContracts: 0,
+      ongoingContracts: 0,
+      problemContracts: 0,
+      totalPaguAnggaran: 0,
+      totalNilaiKontrak: 0,
+      totalRealisasiKeuangan: 0,
+      totalPhysicalProgress: 0,
+      totalFinancialProgress: 0,
+      contracts: [],
+    };
+
+    const latestPhysicalProgress = contract.physicalProgress.sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    )[0];
+
+    const isCompleted = latestPhysicalProgress?.realisasi >= 100;
+    const isProblem = contract.kendala === true || contract.permasalahan;
+    const financialProgress = contract.financialProgress?.totalProgress || 0;
+
+    subkegiatanMap.set(subkegiatan, {
+      totalContracts: current.totalContracts + 1,
+      completedContracts: current.completedContracts + (isCompleted ? 1 : 0),
+      ongoingContracts: current.ongoingContracts + (!isCompleted ? 1 : 0),
+      problemContracts: current.problemContracts + (isProblem ? 1 : 0),
+      totalPaguAnggaran: current.totalPaguAnggaran + (contract.paguAnggaran || 0),
+      totalNilaiKontrak: current.totalNilaiKontrak + (contract.nilaiKontrak || 0),
+      totalRealisasiKeuangan:
+        current.totalRealisasiKeuangan +
+        (contract.financialProgress?.totalPayment || 0),
+      totalPhysicalProgress:
+        current.totalPhysicalProgress + (latestPhysicalProgress?.realisasi || 0),
+      totalFinancialProgress: current.totalFinancialProgress + financialProgress,
+      contracts: [
+        ...current.contracts,
+        {
+          id: contract.id,
+          packageName: contract.namaPaket,
+          status: getContractStatus(contract),
+          progress: latestPhysicalProgress?.realisasi || null,
+          financialProgress,
+        },
+      ],
+    });
+  });
+
+  const subkegiatanDistribution = Array.from(subkegiatanMap.entries()).map(
+    ([subkegiatan, data]) => ({
+      subkegiatan,
+      totalContracts: data.totalContracts,
+      completedContracts: data.completedContracts,
+      ongoingContracts: data.ongoingContracts,
+      problemContracts: data.problemContracts,
+      totalPaguAnggaran: data.totalPaguAnggaran,
+      totalNilaiKontrak: data.totalNilaiKontrak,
+      totalRealisasiKeuangan: data.totalRealisasiKeuangan,
+      avgProgressFisik:
+        data.totalPhysicalProgress / data.totalContracts,
+      avgProgressKeuangan:
+        data.totalFinancialProgress / data.totalContracts,
+      contractValue: data.totalNilaiKontrak,
+      contracts: data.contracts,
+    })
+  );
+
   return {
     totalContracts,
     activeContracts,
@@ -278,6 +389,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     fundingSourceDistribution,
     recentContracts,
     problemContracts,
+    subkegiatanDistribution
   };
 }
 

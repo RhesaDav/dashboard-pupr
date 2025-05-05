@@ -68,7 +68,7 @@ import {
 import { useSearchParams, useRouter } from "next/navigation";
 
 interface ContractWithProgress extends Contract {
-  progress: ProgressType[];
+  physicalProgress: ProgressType[];
   progressPercentage?: number;
   status?: string;
 }
@@ -148,13 +148,13 @@ export default function ContractExportPage() {
   const calculateProgressPercentage = (
     contract: ContractWithProgress
   ): number => {
-    if (!contract.progress || contract.progress.length === 0) return 0;
+    if (!contract.physicalProgress || contract.physicalProgress.length === 0) return 0;
 
-    const totalProgress = contract.progress.reduce(
+    const totalProgress = contract.physicalProgress.reduce(
       (sum, p) => sum + p.realisasi,
       0
     );
-    return totalProgress / contract.progress.length;
+    return totalProgress / contract.physicalProgress.length;
   };
 
   // Helper function to determine contract status
@@ -185,9 +185,9 @@ export default function ContractExportPage() {
     if (!selectedWeekRange) return filteredContracts;
 
     return filteredContracts.filter((contract) => {
-      if (!contract.progress || contract.progress.length === 0) return false;
+      if (!contract.physicalProgress || contract.physicalProgress.length === 0) return false;
 
-      return contract.progress.some((week) => {
+      return contract.physicalProgress.some((week) => {
         const weekStart = week.startDate ? new Date(week.startDate) : null;
         if (!weekStart || !isValid(weekStart)) return false;
 
@@ -344,11 +344,11 @@ export default function ContractExportPage() {
 
       const contractsWithFilteredProgress = contractsToExport
         .map((contract) => {
-          if (!contract.progress || contract.progress.length === 0) {
+          if (!contract.physicalProgress || contract.physicalProgress.length === 0) {
             return null;
           }
 
-          const filteredWeeks = contract.progress
+          const filteredWeeks = contract.physicalProgress
             .filter((week) => {
               const weekStart = week.startDate
                 ? new Date(week.startDate)

@@ -25,7 +25,7 @@ model Contract {
   nipPengawasLapangan String?
 
   // Financial details
-  paguAnggaran String?
+  paguAnggaran Float?  @default(0.0)
   nilaiKontrak Float?  @default(0.0)
   sumberDana   String?
 
@@ -45,12 +45,11 @@ model Contract {
   masaPelaksanaanSupervisi Int?      @default(0)
 
   // Project status and completion
-  pemberianKesempatan Boolean? @default(false)
-  hasilProdukAkhir    String?
-  dimensi             String?
-  kendala             Boolean? @default(false)
-  permasalahan        String?
-  keterangan          String?
+  hasilProdukAkhir String?
+  dimensi          String?
+  kendala          Boolean? @default(false)
+  permasalahan     String?
+  keterangan       String?
 
   // Documentation
   dokumentasiAwal   String?
@@ -85,8 +84,12 @@ model PhysicalProgress {
   realisasi Float
   deviasi   Float
 
+  bermasalah       Boolean @default(false)
+  deskripsiMasalah String?
+  keterangan       String?
+
   @@unique([contractId, month, week])
-  @@map("progress")
+  @@map("progress_fisik")
 }
 
 model FinancialProgress {
@@ -104,6 +107,8 @@ model FinancialProgress {
 
   contractId String   @unique
   contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@map("progress_keuangan")
 }
 
 model Location {
@@ -118,6 +123,8 @@ model Location {
 
   contractId String   @unique
   contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@map("lokasi")
 }
 
 model Addendum {

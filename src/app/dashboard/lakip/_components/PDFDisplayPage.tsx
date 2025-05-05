@@ -1,103 +1,185 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { PDFViewer, PDFDownloadLink, BlobProvider } from '@react-pdf/renderer';
-import MyPdfDocument, { PdfData } from './PDFDocument'; // Sesuaikan path import
+import React, { useState, useEffect } from "react";
+import { PDFViewer, PDFDownloadLink, BlobProvider } from "@react-pdf/renderer";
+import MyPdfDocument, { PdfData } from "./PDFDocument"; // Sesuaikan path import
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { getContractById } from "@/actions/contract";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Loader } from "lucide-react";
 
-const dummyData: PdfData = {
-  tahun: 2024,
-  sasaran: "Meningkatkan kualitas Layanan Ruas Jalan Provinsi",
-  indikator: "Persentase kualitas jalan yang baik",
-  pekerjaan: "Pembangunan Jalan Rte Kab. Pegaf - Testega - Bts Kab. Bintuni",
-  deskripsi: "Pembangunan Jalan Rte Kab. Pegaf - Testega - Bts Kab. Bintuni",
-  lingkupPekerjaan: "Urpil",
-  panjang: "2200",
-  lebar: "6",
-  tebal: "0,25",
-  lokasi: {
-    kabupaten: "Kabupaten Pegunungan Arfak",
-    distrik: "Kampung Demora - Kampung Bomoi, Distrik Testega",
-    koordinatAwal: "1°27'30,99\"S 133°35'17,85\"E",
-    koordinatAkhir: "1°21'42,30\"S 133°36'7,13\"E"
-  },
-  kontrakFisik: {
-    nilai: "19.274.177.000,00",
-    kontraktor: "PT. TOMBOROK JAYA PERMAI",
-    nomor: "003.A/KONTR/01.0042-BM/600/2024",
-    nomorAddendum1: "003.A/ADD-I/KONTR/01.0042-BM/600/2024",
-    nomorAddendum2: "003.A/ADD-II/KONTR/01.0042-BM/600/2024"
-  },
-  kontrakPengawasan: {
-    nilai: "431.808.000,00",
-    konsultan: "CV. AMERTA ATMA PERKASA",
-    nomor: "003.C/KONTR-PW/01.0042-BM/600/2024"
-  },
-  pihakTerlibat: {
-    direksi: "Ir. CHARLTON PARLINDUNGAN, ST, M.Si",
-    koordinatorPengawas: "IDRUS WASARAKA, ST",
-    ppk: "T. MUHAMMAD ALLIPA, S.ST"
-  },
-  realisasi: {
-    rencanaFisik: "2200",
-    realisasiFisik: "2200",
-    rencanaKeuangan: "19.274.177.000,00",
-    realisasiKeuangan: "16.479.421.335,00"
-  },
-  dataPendukung: {
-    laporan: "Ada",
-    gambar: "Ada",
-    dokumentasi: "Ada",
-    backUpQuality: "Ada"
-  },
-  manfaat: [
-    "Penyerapan tenaga kerja saat proses konstruksi",
-    "Mempercepat ibu kota dan mendukung perekonomian"
-  ],
-  foto0: "https://dummyimage.com/600x400/000/fff",
-  foto50: "https://dummyimage.com/600x400/000/fff",
-  foto100: "https://dummyimage.com/600x400/000/fff",
-  penandatangan: {
-    ppk: {
-      nama: "T. MUHAMMAD ALLIPA, S.ST",
-      nip: "19830415 201104 1 001"
-    },
-    koordinator: {
-      nama: "IDRUS WASARAKA, ST",
-      nip: "19691024 200904 1 002"
-    },
-    pengawasLapangan: {
-      nama: "Ir. CHARLTON PARLINDUNGAN, ST, M.Si",
-      nip: "19751102 200701 1 014"
-    }
-  }
-};
-
-
-
-const PdfDisplayPage: React.FC = () => {
-  const [pdfData, setPdfData] = useState<PdfData>(dummyData);
+const PdfDisplayPage = () => {
+  const [pdfData, setPdfData] = useState<PdfData | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const params = useParams();
+  const contractId = params.id as string;
+
+  const {
+    data: apiData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["detail-contract", contractId],
+    queryFn: () => getContractById(contractId),
+    retry: false,
+  });
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
 
-  const pdfDocumentInstance = <MyPdfDocument data={pdfData} />;
+    if (apiData?.data) {
+      const formattedData = transformToPdfData(apiData.data);
+      setPdfData(formattedData);
+    }
+  }, [apiData]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[800px]">
+        <Card className="w-full h-full p-6">
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-[700px] w-full" />
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-[800px]">
+        <Card className="w-full max-w-2xl p-6">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Gagal memuat data kontrak: {error.message}
+            </AlertDescription>
+          </Alert>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!pdfData) {
+    return (
+      <div className="flex items-center justify-center h-[800px]">
+        <Card className="w-full p-6">
+          <div className="text-center text-muted-foreground">
+            Data kontrak tidak ditemukan
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '10px' }}>
-
-      {isClient ? ( 
-        <PDFViewer width="100%" height="800px" style={{ border: '1px solid #ccc' }}>
-          {pdfDocumentInstance}
-        </PDFViewer>
-      ) : (
-        <div style={{ width: '100%', height: '800px', border: '1px solid #ccc', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f0f0' }}>
-            Memuat PDF Viewer...
-        </div>
-      )}
+    <div className="p-4">
+      <Card className="overflow-hidden">
+        {isClient ? (
+          <PDFViewer width="100%" height="800px" className="border-0">
+            <MyPdfDocument data={pdfData} />
+          </PDFViewer>
+        ) : (
+          <div className="flex items-center justify-center h-[800px]">
+            <div className="flex flex-col items-center gap-4">
+              <Loader className="h-8 w-8 animate-spin" />
+              <p className="text-muted-foreground">Menyiapkan PDF Viewer...</p>
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   );
+};
+
+const transformToPdfData = (data: any): PdfData => {
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  return {
+    lebar: "-",
+    panjang: "-",
+    tebal: "-",
+    tahun: new Date(data.tanggalKontrak).getFullYear() || 2025,
+    sasaran: data.namaPaket || "-",
+    indikator: data.namaPaket || "-",
+    pekerjaan: data.namaPaket || "-",
+    deskripsi: data.deskripsi || "-",
+    lingkupPekerjaan: data.hasilProdukAkhir || "-",
+    lokasi: {
+      kabupaten: data.location?.kota || "-",
+      distrik: data.location?.distrik || "-",
+      koordinatAwal: data.location?.koordinatAwal || "-",
+      koordinatAkhir: data.location?.koordinatAkhir || "-",
+    },
+    kontrakFisik: {
+      nilai: data.nilaiKontrak ? formatCurrency(data.nilaiKontrak) : "-",
+      kontraktor: data.namaPenyedia || "-",
+      nomor: data.nomorKontrak || "-",
+      nomorAddendum1: data.addendum?.[0]?.name || "-",
+      nomorAddendum2: data.addendum?.[1]?.name || "-",
+    },
+    kontrakPengawasan: {
+      nilai: data.nilaiKontrakSupervisi
+        ? formatCurrency(data.nilaiKontrakSupervisi)
+        : "-",
+      konsultan: data.konsultanSupervisi || "-",
+      nomor: data.nomorKontrakSupervisi || "-",
+    },
+    pihakTerlibat: {
+      direksi: data.pengawasLapangan || "-",
+      koordinatorPengawas: data.korwaslap || "-",
+      ppk: data.ppk || "-",
+    },
+    realisasi: {
+      rencanaFisik: data.financialProgress?.totalProgress
+        ? `${data.financialProgress.totalProgress}%`
+        : "-",
+      realisasiFisik: data.financialProgress?.totalProgress
+        ? `${data.financialProgress.totalProgress}%`
+        : "-",
+      rencanaKeuangan: data.nilaiKontrak
+        ? formatCurrency(data.nilaiKontrak)
+        : "-",
+      realisasiKeuangan: data.financialProgress?.totalPayment
+        ? formatCurrency(data.financialProgress.totalPayment)
+        : "-",
+    },
+    dataPendukung: {
+      laporan: "-",
+      gambar: "-",
+      dokumentasi: data.dokumentasiAkhir || "-",
+      backUpQuality: "-",
+    },
+    manfaat: [],
+    foto0: data.dokumentasiAwal || "-",
+    foto50: data.dokumentasiTengah || "-",
+    foto100: data.dokumentasiAkhir || "-",
+    penandatangan: {
+      ppk: {
+        nama: data.ppk || "-",
+        nip: data.nipPPK || "-",
+      },
+      koordinator: {
+        nama: data.korwaslap || "-",
+        nip: data.nipKorwaslap || "-",
+      },
+      pengawasLapangan: {
+        nama: data.pengawasLapangan || "-",
+        nip: data.nipPengawasLapangan || "-",
+      },
+    },
+  };
 };
 
 export default PdfDisplayPage;

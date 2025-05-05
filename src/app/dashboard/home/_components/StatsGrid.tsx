@@ -11,8 +11,15 @@ interface StatsGridProps {
 }
 
 export function StatsGrid({ data }: StatsGridProps) {
+  const roundToOneDecimal = (value: number) => {
+    return Math.round(value * 10) / 10;
+  };
+
+  const roundedPhysical = roundToOneDecimal(data.avgPhysicalProgress);
+  const roundedFinancial = roundToOneDecimal(data.avgFinancialProgress);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       <StatsCard
         title="Total Kontrak"
         value={data.totalContracts}
@@ -34,14 +41,21 @@ export function StatsGrid({ data }: StatsGridProps) {
       />
 
       <StatsCard
+        title="Pagu Anggaran"
+        value={formatRupiah(data.totalBudget)}
+        icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
+        footer={<p className="text-xs text-muted-foreground mt-2">Total pagu anggaran</p>}
+      />
+
+<StatsCard
         title="Progress Fisik"
-        value={`${data.avgPhysicalProgress.toFixed(2)}%`}
+        value={`${roundedPhysical}%`}
         icon={<Activity className="h-4 w-4 text-muted-foreground" />}
         footer={
           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
             <div
               className="bg-blue-500 h-2 rounded-full"
-              style={{ width: `${data.avgPhysicalProgress}%` }}
+              style={{ width: `${roundedPhysical}%` }}
             />
           </div>
         }
@@ -49,11 +63,11 @@ export function StatsGrid({ data }: StatsGridProps) {
 
       <StatsCard
         title="Progress Keuangan"
-        value={`${data.avgFinancialProgress.toFixed(2)}%`}
+        value={`${roundedFinancial}%`}
         icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
         footer={
           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-            <Progress value={data.avgFinancialProgress} />
+            <Progress value={roundedFinancial} />
           </div>
         }
       />

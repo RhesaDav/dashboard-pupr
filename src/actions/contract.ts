@@ -3,398 +3,579 @@ import { z, ZodError } from "zod";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import {
-  CreateContractSchema,
-  CreateContractType,
-  UpdateContractSchema,
-  UpdateContractType,
-} from "@/schemas/contractSchemas";
-import { Prisma } from "@prisma/client";
-import { getCurrentUser } from "./auth";
-import { addDays, parse } from "date-fns";
+  CompleteContractCreate,
+  CompleteContractCreateSchema,
+  ContractUpdate,
+  ContractUpdateSchema,
+} from "@/schemas/contract.schema";
+import {
+  ContractFilter,
+  ContractFilterSchema,
+} from "@/schemas/contract-filter.schema";
+import {
+  handlePrismaError,
+  NotFoundError,
+  safeAction,
+  validateSchema,
+} from "@/lib/utils";
+import { IdSchema } from "@/schemas/id.schema";
+import { addDays, format } from "date-fns";
 
-export const createContract = async (data: CreateContractType) => {
-  try {
-    const validatedData = CreateContractSchema.parse(data);
-
-    const { 
-      location, 
-      financialProgress, 
-      physicalProgress, 
-      addendum, 
-      contractAccess,
-      ...contractData 
-    } = validatedData;
-
-    const totalAddendumDays = addendum?.map((item) => item.hari).reduce((acc, add) => acc + Number(add), 1)
-
-    const newContract = await prisma.contract.create({
-      data: {
-        ...contractData,
-        tanggalKontrak: parse(contractData.tanggalKontrak || "", "dd-MM-yyyy", new Date) || null,
-        tanggalKontrakSupervisi: parse(contractData.tanggalKontrak || "", "dd-MM-yyyy", new Date) || null,
-        startDate: parse(contractData.tanggalKontrak || "", "dd-MM-yyyy", new Date) || null,
-        endDate: contractData.tanggalKontrak && totalAddendumDays ? addDays(parse(contractData.tanggalKontrak, "dd-MM-yyyy", new Date),totalAddendumDays + contractData.masaPelaksanaan) : null, 
-        // Create location if provided
-        ...(location ? {
-          location: {
-            create: location
-          }
-        } : {}),
-        
-        // Create financialProgress if provided
-        ...(financialProgress ? {
-          financialProgress: {
-            create: financialProgress
-          }
-        } : {}),
-        
-        // Create physicalProgress entries if provided
-        ...(physicalProgress && physicalProgress.length > 0 ? {
-          physicalProgress: {
-            create: physicalProgress
-          }
-        } : {}),
-        
-        // Create addendum entries if provided
-        ...(addendum && addendum.length > 0 ? {
-          addendum: {
-            create: addendum
-          }
-        } : {}),
-        
-        // Create contract access entries if provided
-        // ...(contractAccess && contractAccess.length > 0 ? {
-        //   contractAccess: {
-        //     create: contractAccess
-        //   }
-        // } : {
-        //   // Always give access to the current user
-        //   contractAccess: {
-        //     create: {
-        //       userId: session.user.id
-        //     }
-        //   }
-        // })
-      },
-      include: {
-        addendum: true // Optional: include addendums in the response
-      }
-    });
-
-    revalidatePath("/dashboard/contracts", "page");
-
-    return { success: true, contract: "newContract" };
-  } catch (error) {
-    if (error instanceof ZodError) {
-      console.log(error.errors);
-      return {
-        success: false,
-        error: error.errors.map((err) => err.message).join(", "),
-      };
-    }
-    if (error instanceof Error) {
-      console.log(error);
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: "Something wrong" };
-  }
-};
-
-export const getAllContracts = async (page = 1, limit = 10, search = "") => {
-  try {
-    const user = await getCurrentUser();
-    const skip = (page - 1) * limit;
-
-    const isConsultant = user?.role === "CONSULTANT";
-
-    const searchCondition: Prisma.ContractWhereInput = {
-      ...(search && {
-        OR: [
-          {
-            namaPaket: {
-              contains: search,
-              mode: "insensitive" as Prisma.QueryMode,
-            },
-          },
-          {
-            nomorKontrak: {
-              contains: search,
-              mode: "insensitive" as Prisma.QueryMode,
-            },
-          },
-        ],
-      }),
-      ...(isConsultant && {
-        contractAccess: {
-          some: {
-            userId: user?.id,
-          },
-        },
-      }),
-    };
-
-    const contracts = await prisma.contract.findMany({
-      where: searchCondition,
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-      include: {
-        physicalProgress: true,
-        financialProgress: true,
-        location: true
-      },
-    });
-
-    const totalContracts = await prisma.contract.count({
-      where: searchCondition,
-    });
-
-    const totalPages = Math.ceil(totalContracts / limit);
-
-    return {
-      success: true,
-      contracts,
-      pagination: {
-        total: totalContracts,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
-      },
-    };
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        success: false,
-        error: error.errors.map((err) => err.message).join(", "),
-      };
-    }
-
-    if (error instanceof Error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-
-    return {
-      success: false,
-      error: "Something wrong",
-    };
-  }
-};
-
-export async function editContract(
-  id: string,
-  rawData: Partial<UpdateContractType>
-) {
-  try {
-    // Validate the incoming data
-    const validatedData = UpdateContractSchema.partial().parse(rawData);
-
-    // Create a Prisma-compatible update object
-    // const prismaUpdateData: any = {
-    //   ...validatedData,
-    //   tanggalKontrak: parse(
-    //     validatedData.tanggalKontrak || "",
-    //     "dd-MM-yyyy",
-    //     new Date()
-    //   ),
-    //   tanggalKontrakSupervisi: parse(
-    //     validatedData.tanggalKontrakSupervisi || "",
-    //     "dd-MM-yyyy",
-    //     new Date()
-    //   ),
-    // };
-
-    // // Handle the addendum relationship properly if it exists
-    // if (validatedData.addendum) {
-    //   // Transform the addendum array into Prisma's expected format
-    //   prismaUpdateData.addendum = {
-    //     // This will delete any removed addendums and update existing ones
-    //     deleteMany: {
-    //       contractId: id,
-    //       // Only delete items that aren't in the updated list
-    //       NOT: validatedData.addendum.map((item) => ({ id: item.id })),
-    //     },
-    //     // Update existing items or create new ones
-    //     upsert: validatedData.addendum.map((item) => ({
-    //       where: { id: item.id },
-    //       update: {
-    //         name: item.name,
-    //         tipe: item.tipe,
-    //         hari: item.hari,
-    //         volume: item.volume,
-    //         satuan: item.satuan,
-    //       },
-    //       create: {
-    //         id: item.id,
-    //         name: item.name,
-    //         tipe: item.tipe,
-    //         hari: item.hari,
-    //         volume: item.volume,
-    //         satuan: item.satuan,
-    //       },
-    //     })),
-    //   };
-    // }
-
-    // // Remove addendum from the root object since it's now handled in the nested structure
-    // delete prismaUpdateData.addendum;
-
-    const {location, financialProgress, physicalProgress, addendum, contractAccess, ...newData} = validatedData
-
-    const totalAddendumDays = addendum?.map((item) => item.hari).reduce((acc, add) => acc + Number(add), 1)
-    // Perform the update with the transformed data
-    const updatedContract = await prisma.contract.update({
-      where: { id },
-      data: {
-        ...newData,
-        tanggalKontrak: newData.tanggalKontrak ? parse(newData.tanggalKontrak, "dd-MM-yyyy", new Date) : undefined,
-        tanggalKontrakSupervisi: newData.tanggalKontrakSupervisi ? parse(newData.tanggalKontrakSupervisi, "dd-MM-yyyy", new Date) : undefined,
-        startDate: parse(newData.tanggalKontrak || "", "dd-MM-yyyy", new Date) || null,
-        endDate: newData.tanggalKontrak && totalAddendumDays ? addDays(parse(newData.tanggalKontrak, "dd-MM-yyyy", new Date),totalAddendumDays + (newData.masaPelaksanaan || 0)) : null, 
-        location: location ? {
-          upsert: {
-            create: location,
-            update: location,
-          }
-        } : undefined,
-        financialProgress: financialProgress ? {
-          upsert: {
-            create: financialProgress,
-            update: financialProgress,
-          }
-        } : undefined,
-        addendum: {
-          deleteMany: {
-            contractId: id,
-            // Only delete items that aren't in the updated list
-            NOT: validatedData.addendum?.map((item) => ({ id: item.id })),
-          },
-          // Update existing items or create new ones
-          upsert: validatedData.addendum?.map((item) => ({
-            where: { id: item.id },
-            update: {
-              name: item.name,
-              tipe: item.tipe,
-              hari: item.hari,
-              volume: item.volume,
-              satuan: item.satuan,
-              pemberianKesempatan: item.pemberianKesempatan
-            },
-            create: {
-              id: item.id,
-              name: item.name,
-              tipe: item.tipe,
-              hari: item.hari,
-              volume: item.volume,
-              satuan: item.satuan,
-              pemberianKesempatan: item.pemberianKesempatan
-            },
-          })),
-        }
-      },
-      include: {
-        addendum: true,
-      },
-    });
-
-    revalidatePath("/dashboard/contracts", "page");
-
-    return {
-      success: true,
-      data: updatedContract,
-      message: "Kontrak berhasil diperbarui",
-    };
-  } catch (error) {
-    console.error("Error updating contract:", error);
-
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: "Validasi data gagal",
-        details: error.errors,
-      };
-    }
-
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Gagal memperbarui kontrak",
-    };
-  }
+interface ProgressItem {
+  week: number;
+  startDate: Date;
+  endDate: Date;
+  rencana: number;
+  realisasi: number;
+  deviasi: number;
 }
 
-export async function deleteContract(id: string) {
+function generateWeeks(startDate: Date, durationDays: number) {
+  const weeks: { month: string; items: ProgressItem[] }[] = [];
+
+  let currentDate = new Date(startDate);
+  const dayOfWeek = currentDate.getDay();
+  const daysToMonday =
+    dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 1 - dayOfWeek;
+  currentDate.setDate(currentDate.getDate() + daysToMonday);
+
+  const endDate = addDays(startDate, durationDays);
+
+  let weekNumber = 1;
+  let currentMonth = "";
+  let currentMonthData: { month: string; items: ProgressItem[] } | null = null;
+
+  const formatMonth = (date: Date) => {
+    return date.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+  };
+
+  while (currentDate <= endDate) {
+    const monthName = formatMonth(currentDate);
+    const weekStart = new Date(currentDate);
+    const weekEnd = addDays(weekStart, 6);
+
+    if (monthName !== currentMonth) {
+      currentMonth = monthName;
+      currentMonthData = {
+        month: monthName,
+        items: [],
+      };
+      weeks.push(currentMonthData);
+    }
+
+    if (currentMonthData) {
+      currentMonthData.items.push({
+        week: weekNumber,
+        startDate: weekStart,
+        endDate: weekEnd,
+        rencana: 0,
+        realisasi: 0,
+        deviasi: 0,
+      });
+    }
+
+    currentDate = addDays(currentDate, 7);
+    weekNumber++;
+  }
+
+  return weeks;
+}
+
+export async function createContract(data: CompleteContractCreate) {
   try {
-    const deletedContract = await prisma.contract.delete({
-      where: { id },
+    const validatedData = await validateSchema(
+      CompleteContractCreateSchema,
+      data
+    );
+
+    const {
+      financialProgress,
+      location,
+      physicalProgress,
+      addendum,
+      accessUserIds,
+      ...contractData
+    } = validatedData;
+
+    if (!contractData.tanggalKontrak) {
+      throw new Error("Tanggal kontrak harus diisi");
+    }
+    if (!contractData.masaPelaksanaan || contractData.masaPelaksanaan <= 0) {
+      throw new Error("Masa pelaksanaan harus lebih dari 0 hari");
+    }
+
+    const generatedProgress = generateWeeks(
+      contractData.tanggalKontrak,
+      contractData.masaPelaksanaan
+    );
+
+    const result = await prisma.$transaction(async (tx) => {
+      const contract = await tx.contract.create({
+        data: {
+          ...contractData,
+          tanggalKontrak: contractData.tanggalKontrak,
+          tanggalKontrakSupervisi: contractData.tanggalKontrakSupervisi || null,
+          hasAddendum: addendum && addendum.length > 0 ? true : false,
+        },
+      });
+
+      if (financialProgress) {
+        await tx.financialProgress.create({
+          data: {
+            ...financialProgress,
+            contractId: contract.id,
+          },
+        });
+      }
+
+      if (location) {
+        await tx.location.create({
+          data: {
+            ...location,
+            contractId: contract.id,
+          },
+        });
+      }
+
+      for (const monthData of generatedProgress) {
+        await tx.physicalProgress.createMany({
+          data: monthData.items.map((item) => ({
+            contractId: contract.id,
+            month: monthData.month,
+            week: item.week,
+            startDate: item.startDate,
+            endDate: item.endDate,
+            rencana: 0,
+            realisasi: 0,
+            deviasi: 0,
+          })),
+        });
+      }
+
+      if (addendum && addendum.length > 0) {
+        await tx.addendum.createMany({
+          data: addendum.map((item) => ({
+            ...item,
+            contractId: contract.id,
+          })),
+        });
+      }
+
+      if (accessUserIds && accessUserIds.length > 0) {
+        await tx.contractAccess.createMany({
+          data: accessUserIds.map((userId) => ({
+            contractId: contract.id,
+            userId,
+          })),
+        });
+      }
+
+      return contract;
     });
 
-    revalidatePath("/dashboard/contracts", "page");
-
-    return {
-      success: true,
-      data: deletedContract,
-      message: "Kontrak berhasil dihapus",
-    };
+    revalidatePath("/contracts");
+    return { success: true, data: result };
   } catch (error) {
-    console.error("Error deleting contract:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Gagal menghapus kontrak",
-    };
+    throw handlePrismaError(error);
   }
 }
 
 export async function getContractById(id: string) {
   try {
+    await validateSchema(IdSchema, { id });
+
     const contract = await prisma.contract.findUnique({
       where: { id },
       include: {
-        contractAccess: true,
-        addendum: true,
-        physicalProgress: true,
         financialProgress: true,
-        location: true
+        location: true,
+        physicalProgress: true,
+        addendum: {
+          orderBy: { createdAt: "asc" },
+        },
+        contractAccess: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                lastLoggedIn: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
+        },
       },
     });
 
     if (!contract) {
-      return {
-        success: false,
-        error: "Kontrak tidak ditemukan",
-      };
+      throw new NotFoundError("Kontrak tidak ditemukan");
     }
 
-    const progress = await prisma.physicalProgress.findMany({
-      where: { contractId: id },
-    });
-    const total = progress.reduce(
-      (acc, item) => {
-        acc.rencana += item.rencana;
-        acc.realisasi += item.realisasi;
-        acc.deviasi += item.deviasi;
-        return acc;
+    return { success: true, data: contract };
+  } catch (error) {
+    throw handlePrismaError(error);
+  }
+}
+
+export async function getAllContracts(filterParams: any = {}) {
+  try {
+    const filter = {
+      page: 1,
+      limit: 10,
+      ...filterParams,
+    };
+
+    const validatedFilter = await validateSchema(ContractFilterSchema, filter);
+
+    const { search, startDate, endDate, sumberDana, hasKendala, page, limit } =
+      validatedFilter;
+
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { namaPaket: { contains: search, mode: "insensitive" } },
+        { namaPenyedia: { contains: search, mode: "insensitive" } },
+        { nomorKontrak: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    if (startDate) {
+      where.tanggalKontrak = { gte: startDate };
+    }
+
+    if (endDate) {
+      where.tanggalKontrak = { ...where.tanggalKontrak, lte: endDate };
+    }
+
+    if (sumberDana) {
+      where.sumberDana = { equals: sumberDana };
+    }
+
+    if (hasKendala !== undefined) {
+      where.kendala = hasKendala;
+    }
+
+    const total = await prisma.contract.count({ where });
+
+    const contracts = await prisma.contract.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { updatedAt: "desc" },
+      include: {
+        physicalProgress: true,
+        financialProgress: true,
+        location: true,
+        addendum: true,
+        _count: {
+          select: {
+            physicalProgress: true,
+            addendum: true,
+          },
+        },
       },
-      { rencana: 0, realisasi: 0, deviasi: 0 }
-    );
+    });
 
     return {
       success: true,
-      data: {
-        contract,
-        progressTotal: total,
+      data: contracts,
+      pagination: {
+        total,
+        page,
+        limit,
+        pageCount: Math.ceil(total / limit),
       },
     };
   } catch (error) {
-    console.error("Error fetching contract:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Gagal mengambil kontrak",
-    };
+    throw handlePrismaError(error);
+  }
+}
+
+export async function updateContract(id: string, updateData: any) {
+  try {
+    await validateSchema(IdSchema, { id });
+
+    const {
+      financialProgress,
+      location,
+      physicalProgress,
+      addendum,
+      accessUserIds,
+      ...contractData
+    } = updateData;
+
+    const validatedContractData = await validateSchema(
+      ContractUpdateSchema,
+      contractData
+    );
+
+    const existingContract = await prisma.contract.findUnique({
+      where: { id },
+      include: {
+        financialProgress: true,
+        location: true,
+        physicalProgress: true,
+        addendum: true,
+        contractAccess: true,
+      },
+    });
+
+    if (!existingContract) {
+      throw new NotFoundError("Kontrak tidak ditemukan");
+    }
+
+    const existingStartDate = existingContract.tanggalKontrak
+      ? new Date(existingContract.tanggalKontrak)
+      : null;
+    const newStartDate = validatedContractData.tanggalKontrak
+      ? new Date(validatedContractData.tanggalKontrak)
+      : null;
+
+    const isDurationChanged =
+      validatedContractData.masaPelaksanaan !== undefined &&
+      validatedContractData.masaPelaksanaan !==
+        existingContract.masaPelaksanaan;
+
+    const isStartDateChanged =
+      validatedContractData.tanggalKontrak !== undefined &&
+      ((existingStartDate === null && newStartDate !== null) ||
+        (existingStartDate !== null && newStartDate === null) ||
+        (existingStartDate !== null &&
+          newStartDate !== null &&
+          existingStartDate.getTime() !== newStartDate.getTime()));
+
+    const shouldRegenerateProgress = isDurationChanged || isStartDateChanged;
+
+    const result = await prisma.$transaction(async (tx) => {
+      if (
+        shouldRegenerateProgress &&
+        existingContract.physicalProgress.length > 0
+      ) {
+        await tx.physicalProgress.deleteMany({
+          where: { contractId: id },
+        });
+      }
+
+      const updatedContract = await tx.contract.update({
+        where: { id },
+        data: {
+          ...validatedContractData,
+          tanggalKontrak:
+            validatedContractData.tanggalKontrak ||
+            existingContract.tanggalKontrak,
+          tanggalKontrakSupervisi:
+            validatedContractData.tanggalKontrakSupervisi ||
+            existingContract.tanggalKontrakSupervisi ||
+            null,
+          hasAddendum:
+            addendum && addendum.length > 0
+              ? true
+              : existingContract.hasAddendum,
+        },
+      });
+
+      if (shouldRegenerateProgress) {
+        const effectiveStartDate = newStartDate || existingStartDate;
+        const effectiveDuration =
+          validatedContractData.masaPelaksanaan ||
+          existingContract.masaPelaksanaan;
+
+        if (!effectiveStartDate) {
+          throw new Error(
+            "Tidak dapat generate progress tanpa tanggal kontrak"
+          );
+        }
+
+        const newProgressData = generateWeeks(
+          effectiveStartDate,
+          effectiveDuration || 0
+        );
+
+        for (const monthData of newProgressData) {
+          await tx.physicalProgress.createMany({
+            data: monthData.items.map((item) => ({
+              contractId: id,
+              month: monthData.month,
+              week: item.week,
+              startDate: item.startDate,
+              endDate: item.endDate,
+              rencana: 0,
+              realisasi: 0,
+              deviasi: 0,
+            })),
+          });
+        }
+      }
+
+      if (financialProgress) {
+        if (existingContract.financialProgress) {
+          await tx.financialProgress.update({
+            where: { id: existingContract.financialProgress.id },
+            data: financialProgress,
+          });
+        } else {
+          await tx.financialProgress.create({
+            data: {
+              ...financialProgress,
+              contractId: id,
+            },
+          });
+        }
+      }
+
+      if (location) {
+        if (existingContract.location) {
+          await tx.location.update({
+            where: { id: existingContract.location.id },
+            data: location,
+          });
+        } else {
+          await tx.location.create({
+            data: {
+              ...location,
+              contractId: id,
+            },
+          });
+        }
+      }
+
+      if (addendum && Array.isArray(addendum)) {
+        const existingAddendumIds = existingContract.addendum.map((a) => a.id);
+
+        for (const addendumItem of addendum) {
+          if (addendumItem.id) {
+            await tx.addendum.update({
+              where: { id: addendumItem.id },
+              data: {
+                name: addendumItem.name,
+                tipe: addendumItem.tipe,
+                hari: addendumItem.hari,
+                volume: addendumItem.volume,
+                satuan: addendumItem.satuan,
+                pemberianKesempatan: addendumItem.pemberianKesempatan,
+              },
+            });
+
+            const index = existingAddendumIds.indexOf(addendumItem.id);
+            if (index > -1) {
+              existingAddendumIds.splice(index, 1);
+            }
+          } else {
+            await tx.addendum.create({
+              data: {
+                contractId: id,
+                name: addendumItem.name,
+                tipe: addendumItem.tipe,
+                hari: addendumItem.hari,
+                volume: addendumItem.volume,
+                satuan: addendumItem.satuan,
+                pemberianKesempatan: addendumItem.pemberianKesempatan || false,
+              },
+            });
+          }
+        }
+
+        if (existingAddendumIds.length > 0) {
+          await tx.addendum.deleteMany({
+            where: {
+              id: {
+                in: existingAddendumIds,
+              },
+            },
+          });
+        }
+      }
+
+      if (accessUserIds && Array.isArray(accessUserIds)) {
+        const existingAccessUserIds = existingContract.contractAccess.map(
+          (a) => a.userId
+        );
+
+        const userIdsToAdd = accessUserIds.filter(
+          (id) => !existingAccessUserIds.includes(id)
+        );
+
+        const userIdsToRemove = existingAccessUserIds.filter(
+          (id) => !accessUserIds.includes(id)
+        );
+
+        if (userIdsToAdd.length > 0) {
+          await tx.contractAccess.createMany({
+            data: userIdsToAdd.map((userId) => ({
+              contractId: id,
+              userId,
+            })),
+          });
+        }
+
+        if (userIdsToRemove.length > 0) {
+          await tx.contractAccess.deleteMany({
+            where: {
+              contractId: id,
+              userId: {
+                in: userIdsToRemove,
+              },
+            },
+          });
+        }
+      }
+
+      return updatedContract;
+    });
+
+    revalidatePath("/contracts");
+    revalidatePath(`/contracts/${id}`);
+    revalidatePath(`/contracts/${id}/progress`);
+
+    return { success: true, data: result };
+  } catch (error) {
+    throw handlePrismaError(error);
+  }
+}
+
+export async function deleteContract(id: string) {
+  try {
+    await validateSchema(IdSchema, { id });
+
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.financialProgress.deleteMany({
+        where: { contractId: id },
+      });
+
+      await tx.physicalProgress.deleteMany({
+        where: { contractId: id },
+      });
+
+      await tx.location.deleteMany({
+        where: { contractId: id },
+      });
+
+      await tx.addendum.deleteMany({
+        where: { contractId: id },
+      });
+
+      await tx.contractAccess.deleteMany({
+        where: { contractId: id },
+      });
+
+      const deletedContract = await tx.contract.delete({
+        where: { id },
+      });
+
+      return deletedContract;
+    });
+
+    revalidatePath("/contracts");
+
+    return { success: true, data: result };
+  } catch (error) {
+    throw handlePrismaError(error);
   }
 }

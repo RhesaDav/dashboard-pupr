@@ -40,16 +40,16 @@ export const CreateContractSchema = z.object({
   dokumentasiTengah: z.string().optional().nullable(),
   dokumentasiAkhir: z.string().optional().nullable(),
 
-  startDate: z
-    .string()
-    .optional()
-    .nullable()
-    .transform((val) => (val ? new Date(val) : null)),
-  endDate: z
-    .string()
-    .optional()
-    .nullable()
-    .transform((val) => (val ? new Date(val) : null)),
+  // startDate: z
+  //   .string()
+  //   .optional()
+  //   .nullable()
+  //   .transform((val) => (val ? new Date(val) : null)),
+  // endDate: z
+  //   .string()
+  //   .optional()
+  //   .nullable()
+  //   .transform((val) => (val ? new Date(val) : null)),
 
   hasAddendum: z.boolean().optional().default(false),
 
@@ -63,15 +63,15 @@ export const CreateContractSchema = z.object({
     })
     .optional(),
 
-  financialProgress: z
+    financialProgress: z
     .object({
-      totalProgress: z.number().optional().default(0.0),
-      totalPayment: z.number().optional().default(0.0),
-      uangMuka: z.number().optional().default(0.0),
-      termin1: z.number().optional().default(0.0),
-      termin2: z.number().optional().default(0.0),
-      termin3: z.number().optional().default(0.0),
-      termin4: z.number().optional().default(0.0),
+      totalProgress: z.number().nullish().default(0.0),
+      totalPayment: z.number().nullish().default(0.0),
+      uangMuka: z.number().nullish().default(0.0),
+      termin1: z.number().nullish().default(0.0),
+      termin2: z.number().nullish().default(0.0),
+      termin3: z.number().nullish().default(0.0),
+      termin4: z.number().nullish().default(0.0),
     })
     .optional(),
 
@@ -100,7 +100,6 @@ export const CreateContractSchema = z.object({
   addendum: z
     .array(
       z.object({
-        id: z.string().optional(),
         name: z.string().optional().nullable(),
         tipe: z.string().optional().nullable(),
         hari: z.string().optional().nullable(),
@@ -122,6 +121,19 @@ export const CreateContractSchema = z.object({
 
 export const UpdateContractSchema = CreateContractSchema.extend({
   id: z.string().uuid(),
+  addendum: z
+  .array(
+    z.object({
+      id: z.string(),
+      name: z.string().optional().nullable(),
+      tipe: z.string().optional().nullable(),
+      hari: z.string().optional().nullable(),
+      volume: z.string().optional().nullable(),
+      satuan: z.string().optional().nullable(),
+      pemberianKesempatan: z.boolean().default(false),
+    })
+  )
+  .optional(),
 });
 
 export const ContractIdSchema = z.object({
