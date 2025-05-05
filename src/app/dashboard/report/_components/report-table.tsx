@@ -537,7 +537,7 @@ export default function ReportTable() {
               );
             }, 0) / contract!.progressData.length,
           keterangan: [
-            `Data diambil dari minggu ke-${contract!.maxRealisasiWeek}`,
+            contract?.progressData.some((item) => item.weekNumber > contract.maxRealisasiWeek) ? `Data diambil dari minggu ke-${contract!.maxRealisasiWeek}`: "",
             // `Nilai realisasi tertinggi: Minggu ${contract!.maxRealisasiWeek}`,
             // `Nilai rencana tertinggi: Minggu ${contract!.maxRencanaWeek}`,
             // `Status: ${contract!.status}`,

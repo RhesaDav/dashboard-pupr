@@ -20,31 +20,28 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function BasicInfoStep() {
   const form = useFormContext();
-  // const form = useForm({
-  //   resolver: zodResolver(basicInfoSchema),
-  //   defaultValues: {
-  //     namaPaket: data.namaPaket || "",
-  //     namaPenyedia: data.namaPenyedia || "",
-  //     nomorKontrak: data.nomorKontrak || "",
-  //     tanggalKontrak: data.tanggalKontrak || "",
-  //     masaPelaksanaan: data.masaPelaksanaan || 0,
-  //     subKegiatan: data.subKegiatan || "",
-  //     volumeKontrak: data.volumeKontrak || "",
-  //     satuanKontrak: data.satuanKontrak || "",
-  //     startDate: data.startDate
-  //       ? format(new Date(data.startDate), "yyyy-MM-dd")
-  //       : "",
-  //     endDate: data.endDate ? format(new Date(data.endDate), "yyyy-MM-dd") : "",
-  //   },
-  // });
 
-  // function onSubmit(values: any) {
-  //   updateData(values);
-  //   onNext();
-  // }
+  const KEGIATAN_LIST = [
+    "Pengawasan Penyelenggaraan Jalan Kewenangan Provinsi",
+    "Pemantauan dan Evaluasi Penyelenggaraan Jalan/Jembatan",
+    "Rehabilitasi Jalan",
+    "Rekonstruksi Jalan",
+    "Pembangunan Jembatan",
+    "Pemeliharaan Berkala Jalan",
+    "Penyusunan Rencana, Kebijakan, Strategi dan Teknis Pengembangan Jaringan Jalan serta Perencanaan Teknis Penyelenggaraan Jalan dan Jembatan",
+    "Pembangunan Jalan",
+    "Survey Kondisi Jalan/Jembatan",
+  ] as const;
 
   return (
     <div className="space-y-6">
@@ -129,9 +126,7 @@ export default function BasicInfoStep() {
                   <Calendar
                     mode="single"
                     selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) =>
-                      field.onChange(date)
-                    }
+                    onSelect={(date) => field.onChange(date)}
                     initialFocus
                   />
                 </PopoverContent>
@@ -145,22 +140,24 @@ export default function BasicInfoStep() {
           name="masaPelaksanaan"
           render={({ field }) => (
             <FormItem>
-            <FormLabel>Masa Pelaksanaan (hari)</FormLabel>
-            <FormControl>
-              <Input
-                type="number"
-                placeholder="Masukkan masa pelaksanaan"
-                {...field}
-                value={field.value === 0 ? "" : field.value}
-                onChange={(e) =>
-                  field.onChange(
-                    e.target.value === "" ? 0 : Number.parseInt(e.target.value)
-                  )
-                }
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+              <FormLabel>Masa Pelaksanaan (hari)</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Masukkan masa pelaksanaan"
+                  {...field}
+                  value={field.value === 0 ? "" : field.value}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value === ""
+                        ? 0
+                        : Number.parseInt(e.target.value)
+                    )
+                  }
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
         />
       </div>
@@ -173,11 +170,18 @@ export default function BasicInfoStep() {
             <FormItem>
               <FormLabel>Sub Kegiatan</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="Masukkan sub kegiatan"
-                  {...field}
-                  value={field.value || ""}
-                />
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={"Pilih subkegiatan"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {KEGIATAN_LIST.map((kegiatan) => (
+                      <SelectItem key={kegiatan} value={kegiatan}>
+                        {kegiatan}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
