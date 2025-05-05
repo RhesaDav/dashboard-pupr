@@ -60,11 +60,11 @@ export interface DashboardReport {
     completedContracts: number;
     ongoingContracts: number;
     problemContracts: number;
-    totalPaguAnggaran: number;       // New field
-    totalNilaiKontrak: number;       // New field
-    totalRealisasiKeuangan: number;  // New field
-    avgProgressFisik: number;        // New field
-    avgProgressKeuangan: number;     // New field
+    totalPaguAnggaran: number; // New field
+    totalNilaiKontrak: number; // New field
+    totalRealisasiKeuangan: number; // New field
+    avgProgressFisik: number; // New field
+    avgProgressKeuangan: number; // New field
     contractValue: number;
     contracts: {
       id: string;
@@ -74,7 +74,6 @@ export interface DashboardReport {
       financialProgress: number | null; // New field for individual contract financial progress
     }[];
   }[];
-
 }
 
 export async function getDashboardReport(): Promise<DashboardReport> {
@@ -110,46 +109,61 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     0
   );
 
-  // Perhitungan avgPhysicalProgress yang benar:
-// 1. Ambil data progress fisik paling terakhir dari setiap kontrak
-// 2. Jumlahkan nilai realisasi dari semua kontrak tersebut
-// 3. Bagi dengan jumlah kontrak yang memiliki data progress fisik
+  /// Asumsikan 'contracts' adalah array objek kontrak Anda
 
-// Filter kontrak yang memiliki data progress fisik
+// 1. Filter kontrak yang memiliki data progress fisik (Langkah ini sudah benar)
 const contractsWithPhysicalProgress = contracts.filter(
-  (contract) => contract.physicalProgress && contract.physicalProgress.length > 0
+  (contract) =>
+    contract.physicalProgress && contract.physicalProgress.length > 0
 );
 
-// Total semua nilai realisasi di minggu terakhir
-let totalRealisasi = 0;
+console.log(
+  `Jumlah kontrak yang difilter (memiliki data progress fisik): ${contractsWithPhysicalProgress.length}`
+);
 
-// Untuk setiap kontrak, ambil data progress paling terakhir dan jumlahkan nilai realisasinya
-contractsWithPhysicalProgress.forEach(contract => {
-  // Urutkan data progress berdasarkan updatedAt untuk mendapatkan yang terbaru
-  const sortedProgress = [...contract.physicalProgress].sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+// 2 & 3. Cari nilai realisasi MAKSIMUM per kontrak dan jumlahkan
+let totalOfMaxRealisasi = 0; // Variabel untuk menjumlahkan nilai realisasi maksimum dari tiap kontrak
+
+contractsWithPhysicalProgress.forEach((contract) => {
+  // Inisialisasi nilai realisasi maksimum untuk kontrak saat ini
+  let maxRealisasiForThisContract = 0;
+
+  // Iterasi melalui SEMUA entri progress untuk mencari nilai realisasi tertinggi
+  contract.physicalProgress.forEach((progressEntry) => {
+    // Pastikan nilai realisasi valid dan bandingkan dengan maksimum saat ini
+    if (
+      progressEntry.realisasi !== null &&
+      progressEntry.realisasi !== undefined &&
+      progressEntry.realisasi > maxRealisasiForThisContract // Lebih besar dari max saat ini?
+    ) {
+      // Jika ya, update nilai maksimum untuk kontrak ini
+      maxRealisasiForThisContract = progressEntry.realisasi;
+    }
+  });
+
+  // Tambahkan nilai realisasi maksimum dari kontrak ini ke total keseluruhan
+  totalOfMaxRealisasi += maxRealisasiForThisContract;
+
+  console.log(
+    `Kontrak ID: ${contract.id}, Realisasi Tertinggi Ditemukan: ${maxRealisasiForThisContract}%`
   );
-  
-  // Ambil data progress paling terakhir
-  const latestProgress = sortedProgress[0];
-  
-  // Tambahkan nilai realisasi ke total
-  if (latestProgress && latestProgress.realisasi !== null && latestProgress.realisasi !== undefined) {
-    totalRealisasi += latestProgress.realisasi;
-    console.log(`Kontrak ID: ${contract.id}, Progress terakhir: ${latestProgress.realisasi}%`);
-  }
 });
 
-// Hitung rata-rata dengan membagi total realisasi dengan jumlah kontrak
-const avgPhysicalProgress = 
+// 4. Hitung rata-rata progress fisik berdasarkan nilai realisasi maksimum
+const avgPhysicalProgress =
   contractsWithPhysicalProgress.length > 0
-    ? totalRealisasi / contractsWithPhysicalProgress.length
+    ? totalOfMaxRealisasi / contractsWithPhysicalProgress.length // Bagi total max realisasi dengan jumlah kontrak
     : 0;
 
-console.log(`Total kontrak dengan data progress: ${contractsWithPhysicalProgress.length}`);
-console.log(`Total nilai realisasi: ${totalRealisasi}`);
-console.log(`Rata-rata progress fisik: ${avgPhysicalProgress.toFixed(2)}%`);
-
+console.log(
+  `Total dari Nilai Realisasi Maksimum Setiap Kontrak: ${totalOfMaxRealisasi}`
+);
+console.log(
+  `Jumlah kontrak yang dihitung rata-ratanya: ${contractsWithPhysicalProgress.length}`
+);
+console.log(
+  `Rata-rata Progress Fisik (berdasarkan Realisasi Tertinggi): ${avgPhysicalProgress.toFixed(2)}%`
+);
   const contractsWithFinancialProgress = contracts.filter(
     (contract) => contract.financialProgress?.totalProgress
   );
@@ -308,7 +322,7 @@ console.log(`Rata-rata progress fisik: ${avgPhysicalProgress.toFixed(2)}%`);
       };
     });
 
-    const subkegiatanMap = new Map<
+  const subkegiatanMap = new Map<
     string,
     {
       totalContracts: number;
@@ -346,7 +360,8 @@ console.log(`Rata-rata progress fisik: ${avgPhysicalProgress.toFixed(2)}%`);
     };
 
     const latestPhysicalProgress = contract.physicalProgress.sort(
-      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     )[0];
 
     const isCompleted = latestPhysicalProgress?.realisasi >= 100;
@@ -358,14 +373,18 @@ console.log(`Rata-rata progress fisik: ${avgPhysicalProgress.toFixed(2)}%`);
       completedContracts: current.completedContracts + (isCompleted ? 1 : 0),
       ongoingContracts: current.ongoingContracts + (!isCompleted ? 1 : 0),
       problemContracts: current.problemContracts + (isProblem ? 1 : 0),
-      totalPaguAnggaran: current.totalPaguAnggaran + (contract.paguAnggaran || 0),
-      totalNilaiKontrak: current.totalNilaiKontrak + (contract.nilaiKontrak || 0),
+      totalPaguAnggaran:
+        current.totalPaguAnggaran + (contract.paguAnggaran || 0),
+      totalNilaiKontrak:
+        current.totalNilaiKontrak + (contract.nilaiKontrak || 0),
       totalRealisasiKeuangan:
         current.totalRealisasiKeuangan +
         (contract.financialProgress?.totalPayment || 0),
       totalPhysicalProgress:
-        current.totalPhysicalProgress + (latestPhysicalProgress?.realisasi || 0),
-      totalFinancialProgress: current.totalFinancialProgress + financialProgress,
+        current.totalPhysicalProgress +
+        (latestPhysicalProgress?.realisasi || 0),
+      totalFinancialProgress:
+        current.totalFinancialProgress + financialProgress,
       contracts: [
         ...current.contracts,
         {
@@ -389,10 +408,8 @@ console.log(`Rata-rata progress fisik: ${avgPhysicalProgress.toFixed(2)}%`);
       totalPaguAnggaran: data.totalPaguAnggaran,
       totalNilaiKontrak: data.totalNilaiKontrak,
       totalRealisasiKeuangan: data.totalRealisasiKeuangan,
-      avgProgressFisik:
-        data.totalPhysicalProgress / data.totalContracts,
-      avgProgressKeuangan:
-        data.totalFinancialProgress / data.totalContracts,
+      avgProgressFisik: data.totalPhysicalProgress / data.totalContracts,
+      avgProgressKeuangan: data.totalFinancialProgress / data.totalContracts,
       contractValue: data.totalNilaiKontrak,
       contracts: data.contracts,
     })
@@ -412,7 +429,7 @@ console.log(`Rata-rata progress fisik: ${avgPhysicalProgress.toFixed(2)}%`);
     fundingSourceDistribution,
     recentContracts,
     problemContracts,
-    subkegiatanDistribution
+    subkegiatanDistribution,
   };
 }
 
@@ -430,7 +447,6 @@ function isContractCompleted(
 function getContractStatus(
   contract: Contract & { physicalProgress: PhysicalProgress[] }
 ): string {
-  
   if (!contract.tanggalKontrak) return "BELUM DIMULAI";
 
   const latestProgress = contract.physicalProgress.sort(
