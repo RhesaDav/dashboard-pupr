@@ -257,10 +257,10 @@ export async function updateProgressEntry(
 /**
  * Updates multiple progress entries for a specific contract and month
  */
-export async function updateMonthlyProgress(
+export async function updateContractProgress(
   contractId: string,
-  month: string,
   entries: Array<{
+    month: string;
     week: number;
     rencana: number;
     realisasi: number;
@@ -274,15 +274,13 @@ export async function updateMonthlyProgress(
   try {
     const result = await prisma.$transaction(async (tx) => {
       const updatedEntries = [];
-
       for (const entry of entries) {
         const deviasi = entry.realisasi - entry.rencana;
-
         const updatedEntry = await tx.physicalProgress.upsert({
           where: {
             contractId_month_week: {
               contractId,
-              month,
+              month: entry.month,
               week: entry.week,
             },
           },
@@ -302,7 +300,7 @@ export async function updateMonthlyProgress(
           },
           create: {
             contractId,
-            month,
+            month: entry.month,
             week: entry.week,
             rencana: entry.rencana,
             realisasi: entry.realisasi,
@@ -318,16 +316,13 @@ export async function updateMonthlyProgress(
             keterangan: entry.keterangan,
           },
         });
-
         updatedEntries.push(updatedEntry);
       }
-
       return updatedEntries;
     });
-
     return result;
   } catch (error) {
-    console.error("Error updating monthly progress:", error);
-    throw new Error("Failed to update monthly progress");
+    console.error("Error updating contract progress:", error);
+    throw new Error("Failed to update contract progress");
   }
 }

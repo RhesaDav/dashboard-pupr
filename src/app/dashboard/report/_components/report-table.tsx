@@ -90,7 +90,6 @@ export default function ReportTable() {
     // staleTime: 5 * 60 * 1000,
     // retry: 2,
   });
-  console.log(contractsData);
 
   const contracts = contractsData?.contracts || [];
   const totalContracts = contractsData?.totalCount || 0;
@@ -460,6 +459,8 @@ export default function ReportTable() {
             : null;
         })
         .filter(Boolean);
+
+        console.log(contractsToExport)
 
       if (contractsWithFilteredProgress.length === 0) {
         toast.warning(

@@ -12,7 +12,7 @@ import { formatRupiah } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { updateMonthlyProgress } from "@/actions/progress";
+import { updateContractProgress } from "@/actions/progress";
 import { useForm, useFieldArray } from "react-hook-form";
 import { AlertCircle, Calendar, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -282,22 +282,24 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      for (const month of data.months) {
-        const monthEntries = month.items.map((item) => ({
+      // Flatten all entries from all months into a single array
+      const allEntries = data.months.flatMap(month => 
+        month.items.map(item => ({
+          month: month.month,
           week: item.week,
           rencana: Number(item.rencana) || 0,
           realisasi: Number(item.realisasi) || 0,
-          deviasi: Number(item.deviasi) || 0,
           startDate: item.startDate,
           endDate: item.endDate,
           bermasalah: Boolean(item.bermasalah),
           deskripsiMasalah: item.deskripsiMasalah,
           keterangan: item.keterangan
-        }));
-
-        await updateMonthlyProgress(contractId, month.month, monthEntries);
-      }
-
+        }))
+      );
+  
+      // Process all entries in a single transaction
+      await updateContractProgress(contractId, allEntries);
+  
       toast.success("Progress berhasil disimpan");
       router.refresh();
     } catch (error) {
@@ -307,6 +309,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
       setIsSubmitting(false);
     }
   };
+  
 
   const masaPelaksanaan = contract.masaPelaksanaan || 0;
   const hasNoExecutionPeriod = masaPelaksanaan <= 0;
