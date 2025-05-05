@@ -14,7 +14,7 @@ import {
 import { Contract } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getAllContracts } from "@/actions/contract";
 import { Input } from "@/components/ui/input";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
@@ -29,23 +29,36 @@ function ProgressTable() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const searchQuery = searchParams.get("search") || "";
-  const pageParam = parseInt(searchParams.get("page") || "1");
-  const pageSizeParam = parseInt(searchParams.get("pageSize") || "10");
+
+  const [searchValue, setSearchValue] = useState(
+    searchParams.get("search") || ""
+  );
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+      params.set("search", searchValue);
+      router.push(`?${params.toString()}`);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchValue, router, searchParams]);
 
   const {
     data: contracts,
     isLoading,
     isError,
     error,
+    isFetching,
   } = useQuery({
-    queryKey: ["contracts", pageParam, pageSizeParam, searchQuery],
+    queryKey: ["contracts", searchParams.toString()],
     queryFn: () =>
       getAllContracts({
-        page: pageParam,
-        limit: pageSizeParam,
-        search: searchQuery,
+        page: parseInt(searchParams.get("page") || "1"),
+        limit: parseInt(searchParams.get("pageSize") || "10"),
+        search: searchParams.get("search") || "",
       }),
+    placeholderData: keepPreviousData,
   });
 
   const columns: ColumnDef<Contract>[] = [
@@ -89,7 +102,7 @@ function ProgressTable() {
       header: "Nilai Kontrak",
       cell: ({ row }) => {
         const nilai = row.getValue("nilaiKontrak") as number;
-        const formatted = formatRupiah(nilai)
+        const formatted = formatRupiah(nilai);
 
         return (
           <div className="relative max-w-[120px] truncate">

@@ -59,6 +59,7 @@ export default function ReportTable() {
     data: contractsData,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["contracts", pageParam, pageSizeParam, searchQuery],
     queryFn: async () => {
@@ -86,8 +87,8 @@ export default function ReportTable() {
         totalCount: result.data.length || 0,
       };
     },
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
+    // staleTime: 5 * 60 * 1000,
+    // retry: 2,
   });
   console.log(contractsData);
 
@@ -683,7 +684,10 @@ export default function ReportTable() {
       >
         <DateWeekPicker
           selectedDate={selectedDateForWeek}
-          onChange={setSelectedDateForWeek}
+          onChange={(date) => {
+            setSelectedDateForWeek(date);
+            refetch();
+          }}
           weekRange={selectedWeekRange}
           onWeekRangeChange={handleWeekRangeChange}
         />
