@@ -11,7 +11,7 @@ import {
   Eye,
   Trash,
 } from "lucide-react";
-import { Contract } from "@prisma/client";
+import { Contract, PhysicalProgress } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -24,6 +24,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatRupiah } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 
 function ProgressTable() {
   const router = useRouter();
@@ -61,7 +63,7 @@ function ProgressTable() {
     placeholderData: keepPreviousData,
   });
 
-  const columns: ColumnDef<Contract>[] = [
+  const columns: ColumnDef<Contract & {physicalProgress: PhysicalProgress[]}>[] = [
     {
       accessorKey: "namaPaket",
       header: ({ column }) => {
@@ -111,6 +113,7 @@ function ProgressTable() {
         );
       },
     },
+    
     {
       accessorKey: "tanggalKontrak",
       header: "Tanggal Kontrak",
@@ -123,6 +126,29 @@ function ProgressTable() {
         return (
           <div className="relative max-w-[120px] truncate">
             <span title={tanggalKontrak}>{tanggalKontrak}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "progress",
+      header: "Progress",
+      cell: ({ row }) => {
+        const maxRealisasiEntry = row.original.physicalProgress.reduce(
+          (prev, current) => {
+            return prev.realisasi > current.realisasi ? prev : current;
+          }
+        );
+
+        return (
+          <div className="flex items-center gap-3 w-[150px]">
+            <Progress value={maxRealisasiEntry.realisasi} className="h-2 flex-1" />
+            <Badge
+              variant="outline"
+              className="text-xs px-2 py-0.5 font-normal"
+            >
+              {maxRealisasiEntry.realisasi.toFixed()}%
+            </Badge>
           </div>
         );
       },

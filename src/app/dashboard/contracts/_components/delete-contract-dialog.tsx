@@ -21,27 +21,17 @@ import { Loader, Trash } from "lucide-react";
 interface DeleteContractDialogProps {
   contractId: string;
   contractName: string;
-  trigger: JSX.Element
+  trigger: JSX.Element;
+  onDelete: () => void;
 }
 
 export function DeleteContractDialog({
   contractId,
   contractName,
-  trigger
+  trigger,
+  onDelete
 }: DeleteContractDialogProps) {
   const [loading, setLoading] = useState(false);
-
-  const handleDelete = async () => {
-    setLoading(true);
-    const res = await deleteContract(contractId);
-    setLoading(false);
-
-    if (res.success) {
-      toast.success(`Contract ${contractName} berhasil dihapus`);
-    } else {
-      toast.error(`Gagal menghapus contract`);
-    }
-  };
 
   return (
     <AlertDialog>
@@ -60,7 +50,7 @@ export function DeleteContractDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleDelete}
+            onClick={onDelete}
             className="flex items-center gap-2"
           >
             {loading && <Loader className="w-4 h-4 animate-spin" />}

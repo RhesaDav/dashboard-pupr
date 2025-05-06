@@ -9,6 +9,9 @@ import {
   FileText,
   AlertTriangle,
   Camera,
+  Percent,
+  ArrowDownRight,
+  ArrowUpRight,
 } from "lucide-react";
 
 import {
@@ -36,6 +39,7 @@ import {
   Location,
 } from "@prisma/client";
 import { useQuery } from "@tanstack/react-query";
+import { Label } from "@/components/ui/label";
 
 interface ExtendedContract extends Contract {
   addendum?: Addendum[];
@@ -103,6 +107,11 @@ export default function ContractDetailsPage() {
       ? contract?.physicalProgress[contract.physicalProgress.length - 1]
       : null;
 
+  const maxRealisasiEntry = contract?.physicalProgress.reduce(
+    (prev, current) => {
+      return prev.realisasi > current.realisasi ? prev : current;
+    }
+  );
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
@@ -420,193 +429,130 @@ export default function ContractDetailsPage() {
           </div>
         </TabsContent>
 
-        {/* Progress Tab (Physical + Financial) */}
         <TabsContent value="progress">
-          <div className="space-y-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Physical Progress Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Progres Fisik
-                </CardTitle>
-                {latestProgress && (
-                  <CardDescription>
-                    Progres terakhir: Minggu {latestProgress.week},{" "}
-                    {latestProgress.month} ({formatDate(latestProgress.endDate)}
-                    )
-                  </CardDescription>
-                )}
+            <Card className="flex-1 shadow-sm">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-blue-500" />
+                      Progress Fisik
+                    </CardTitle>
+                    <CardDescription>
+                      Kemajuan pembangunan fisik proyek
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {contract?.physicalProgress &&
-                contract?.physicalProgress.length > 0 ? (
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex justify-between mb-2">
-                        <span className="text-sm font-medium">
-                          Progres Keseluruhan
-                        </span>
-                        <span className="text-sm font-medium">
-                          {latestProgress?.realisasi.toFixed(2)}%
-                        </span>
-                      </div>
-                      <Progress
-                        value={latestProgress?.realisasi || 0}
-                        className="h-2"
-                      />
-                      <div className="flex justify-between mt-1 text-xs text-gray-500">
-                        <span>
-                          Rencana: {latestProgress?.rencana.toFixed(2)}%
-                        </span>
-                        <span>
-                          Deviasi: {latestProgress?.deviasi.toFixed(2)}%
-                        </span>
-                      </div>
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium">
+                        Progress Keseluruhan
+                      </span>
+                      <span className="text-sm font-medium">
+                        {maxRealisasiEntry?.realisasi}%
+                      </span>
+                    </div>
+                    <Progress
+                      value={maxRealisasiEntry?.realisasi}
+                      className="h-2"
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1 bg-slate-50 rounded-lg p-4 text-center">
+                      <p className="text-sm text-slate-500 mb-1">Rencana</p>
+                      <p className="text-xl font-semibold">
+                        {maxRealisasiEntry?.rencana}%
+                      </p>
                     </div>
 
-                    <div className="border rounded-md overflow-hidden">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-2 text-left font-medium">
-                              Bulan
-                            </th>
-                            <th className="px-4 py-2 text-left font-medium">
-                              Minggu
-                            </th>
-                            <th className="px-4 py-2 text-left font-medium">
-                              Periode
-                            </th>
-                            <th className="px-4 py-2 text-right font-medium">
-                              Rencana
-                            </th>
-                            <th className="px-4 py-2 text-right font-medium">
-                              Realisasi
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          {contract?.physicalProgress?.map((progress) => (
-                            <tr
-                              key={`${progress.month}-${progress.week}`}
-                              className="hover:bg-gray-50"
-                            >
-                              <td className="px-4 py-2">{progress.month}</td>
-                              <td className="px-4 py-2">{progress.week}</td>
-                              <td className="px-4 py-2">
-                                {progress.startDate && progress.endDate
-                                  ? `${formatDate(
-                                      progress.startDate
-                                    )} - ${formatDate(progress.endDate)}`
-                                  : "-"}
-                              </td>
-                              <td className="px-4 py-2 text-right">
-                                {progress.rencana.toFixed(2)}%
-                              </td>
-                              <td className="px-4 py-2 text-right">
-                                {progress.realisasi.toFixed(2)}%
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="flex-1 bg-slate-50 rounded-lg p-4 text-center">
+                      <p className="text-sm text-slate-500 mb-1">Realisasi</p>
+                      <p className="text-xl font-semibold">
+                        {maxRealisasiEntry?.realisasi}%
+                      </p>
+                    </div>
+
+                    <div className="flex-1 bg-slate-50 rounded-lg p-4 text-center">
+                      <p className="text-sm text-slate-500 mb-1">Deviasi</p>
+                      <div className="flex items-center justify-center">
+                        {(maxRealisasiEntry?.deviasi || 0) < 0 ? (
+                          <ArrowDownRight className="h-5 w-5 text-red-500" />
+                        ) : (
+                          <ArrowUpRight className="h-5 w-5 text-green-500" />
+                        )}
+                        <span
+                          className={`text-xl font-semibold ${
+                            (maxRealisasiEntry?.deviasi || 0) < 0
+                              ? "text-red-500"
+                              : "text-green-500"
+                          }`}
+                        >
+                          {Math.abs(maxRealisasiEntry?.deviasi || 0).toFixed(2)}
+                          %
+                        </span>
+                      </div>
                     </div>
                   </div>
-                ) : (
-                  <p>Belum ada data progres fisik</p>
-                )}
+                </div>
               </CardContent>
             </Card>
 
-            {/* Financial Progress Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Progres Keuangan</CardTitle>
+            <Card className="flex-1 shadow-sm">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-green-600" />
+                      Progress Keuangan
+                    </CardTitle>
+                    <CardDescription>
+                      Status keuangan proyek saat ini
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {contract?.financialProgress ? (
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex justify-between mb-2">
-                        <span className="text-sm font-medium">
-                          Total Progres Keuangan
+                <div className="space-y-6">
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <p className="text-sm text-slate-500 mb-1">Nilai Kontrak</p>
+                    <p className="text-xl font-semibold">
+                      {formatMoney(contract?.nilaiKontrak)}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1 bg-slate-50 rounded-lg p-4 text-center">
+                      <p className="text-sm text-slate-500 mb-1">
+                        Progress Keuangan
+                      </p>
+                      <div className="flex items-center justify-center">
+                        <span className="text-xl font-semibold">
+                          {contract?.financialProgress?.totalProgress}
                         </span>
-                        <span className="text-sm font-medium">
-                          {contract.financialProgress.totalProgress
-                            ? (
-                                contract.financialProgress.totalProgress * 100
-                              ).toFixed(2) + "%"
-                            : "0%"}
-                        </span>
+                        <Percent className="h-5 w-5 text-blue-500 mr-1" />
                       </div>
-                      <Progress
-                        value={
-                          contract.financialProgress.totalProgress
-                            ? contract.financialProgress.totalProgress * 100
-                            : 0
-                        }
-                        className="h-2"
-                      />
                     </div>
 
-                    <div className="border rounded-md p-4 space-y-4">
-                      <div>
-                        <h3 className="font-medium">Total Pembayaran</h3>
-                        <p className="text-lg font-semibold">
-                          {formatMoney(
-                            contract.financialProgress.totalPayment || 0
-                          )}
-                        </p>
-                      </div>
-
-                      <Separator />
-
-                      <div className="space-y-3">
-                        <h3 className="font-medium">Detail Termin</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {contract.financialProgress.uangMuka &&
-                            contract.financialProgress.uangMuka > 0 && (
-                              <div className="p-3 border rounded-md">
-                                <h4 className="text-sm font-medium">
-                                  Uang Muka
-                                </h4>
-                                <p>
-                                  {formatMoney(
-                                    contract.financialProgress.uangMuka
-                                  )}
-                                </p>
-                              </div>
-                            )}
-
-                          {[1, 2, 3, 4].map((termin) => {
-                            const value = contract.financialProgress?.[
-                              `termin${termin}` as keyof typeof contract.financialProgress
-                            ] as number;
-                            return value && value > 0 ? (
-                              <div
-                                key={termin}
-                                className="p-3 border rounded-md"
-                              >
-                                <h4 className="text-sm font-medium">
-                                  Termin {termin}
-                                </h4>
-                                <p>{formatMoney(value)}</p>
-                              </div>
-                            ) : null;
-                          })}
-                        </div>
-                      </div>
+                    <div className="flex-1 bg-slate-50 rounded-lg p-4 text-center">
+                      <p className="text-sm text-slate-500 mb-1">
+                        Keuangan Terbayar
+                      </p>
+                      <p className="text-xl font-semibold">
+                        {formatMoney(contract?.financialProgress?.totalPayment)}
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <p>Belum ada data progres keuangan</p>
-                )}
+                </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
-
         {/* Location & Documentation Tab */}
         <TabsContent value="location-docs">
           <div className="space-y-6">

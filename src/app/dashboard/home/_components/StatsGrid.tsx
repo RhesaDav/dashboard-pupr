@@ -2,7 +2,7 @@
 
 import { Activity, DollarSign, FileCheck, TrendingUp } from "lucide-react";
 import { StatsCard } from "./StatsCard";
-import { formatRupiah } from "@/lib/utils";
+import { formatRupiah, roundToOneDecimal } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { DashboardReport } from "../../../../actions/dashboard";
 
@@ -11,10 +11,6 @@ interface StatsGridProps {
 }
 
 export function StatsGrid({ data }: StatsGridProps) {
-  const roundToOneDecimal = (value: number) => {
-    return Math.round(value * 10) / 10;
-  };
-
   const roundedPhysical = roundToOneDecimal(data.avgPhysicalProgress);
   const roundedFinancial = roundToOneDecimal(data.avgFinancialProgress);
   console.log(data.avgPhysicalProgress)

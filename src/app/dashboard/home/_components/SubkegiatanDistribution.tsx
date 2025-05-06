@@ -70,11 +70,11 @@ export function SubkegiatanDistribution({ data }: SubkegiatanDistributionProps) 
                     <div className="flex gap-8">
                       <div className="flex flex-col items-center">
                         <div>Progress Fisik</div>
-                        <div className="text-xl font-bold">{item.avgProgressFisik}%</div>
+                        <div className="text-xl font-bold">{item.avgProgressFisik.toFixed(2)}%</div>
                       </div>
                       <div className="flex flex-col items-center">
                         <div>Progress Keuangan</div>
-                        <div className="text-xl font-bold">{item.avgProgressKeuangan}%</div>
+                        <div className="text-xl font-bold">{item.avgProgressKeuangan.toFixed(2)}%</div>
                       </div>
                     </div>
                   </div>

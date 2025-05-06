@@ -34,7 +34,6 @@ import {
 } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 
-// Schema untuk validasi form
 const progressSchema = z.object({
   months: z.array(
     z.object({
@@ -63,7 +62,7 @@ interface ProgressItem {
   rencana: number;
   realisasi: number;
   deviasi: number;
-  startDate?: string; 
+  startDate?: string;
   endDate?: string;
   bermasalah?: boolean;
   deskripsiMasalah?: string | null;
@@ -89,11 +88,20 @@ interface EditProgressProps {
   };
 }
 
-// Fungsi untuk mengurutkan bulan secara kronologis
 const sortMonthsChronologically = (months: MonthProgress[]) => {
   const monthOrder = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
   ];
 
   return [...months].sort((a, b) => {
@@ -120,15 +128,13 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
   const router = useRouter();
   const contractId = String(params.id);
 
-  // Proses data progress awal dan urutkan secara kronologis
   const initialProgressData = useMemo(() => {
     if (contract.progress && contract.progress.length > 0) {
       return sortMonthsChronologically(contract.progress);
     }
     return [];
   }, [contract.progress]);
-  
-  // Setup form menggunakan react-hook-form
+
   const {
     register,
     handleSubmit,
@@ -148,12 +154,10 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     name: "months",
   });
 
-  // Fungsi untuk menghitung deviasi
   const calculateDeviasi = (rencana: number, realisasi: number) => {
     return realisasi - rencana;
   };
 
-  // Fungsi untuk mendapatkan nilai progress dari semua entry sebelumnya
   const getAllProgressEntriesSorted = (formValues: FormValues) => {
     const allEntries: {
       monthIndex: number;
@@ -177,7 +181,6 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
       });
     });
 
-    // Urutkan berdasarkan bulan dan minggu
     return allEntries.sort((a, b) => {
       if (a.monthIndex === b.monthIndex) {
         return a.weekIndex - b.weekIndex;
@@ -186,7 +189,6 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     });
   };
 
-  // Fungsi untuk memvalidasi nilai progress (harus selalu meningkat)
   const validateProgressValue = (
     monthIndex: number,
     weekIndex: number,
@@ -196,48 +198,43 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     const currentMonthName = formValues.months[monthIndex].month;
     const currentWeek = formValues.months[monthIndex].items[weekIndex].week;
     const key = `months.${monthIndex}.items.${weekIndex}.${field}`;
-    
-    // Dapatkan semua entry yang sudah diurutkan
+
     const allEntries = getAllProgressEntriesSorted(formValues);
-    
-    // Cari posisi entry saat ini
+
     const currentEntryIndex = allEntries.findIndex(
-      entry => entry.monthIndex === monthIndex && entry.weekIndex === weekIndex
+      (entry) =>
+        entry.monthIndex === monthIndex && entry.weekIndex === weekIndex
     );
-    
+
     if (currentEntryIndex <= 0) {
-      // Ini adalah entry pertama, tidak perlu validasi
       return value;
     }
-    
-    // Cari nilai tertinggi sebelum entry ini
+
     let highestPreviousValue = 0;
     for (let i = 0; i < currentEntryIndex; i++) {
-      const prevValue = field === "rencana" ? allEntries[i].rencana : allEntries[i].realisasi;
+      const prevValue =
+        field === "rencana" ? allEntries[i].rencana : allEntries[i].realisasi;
       if (prevValue > highestPreviousValue) {
         highestPreviousValue = prevValue;
       }
     }
-    
-    // Jika nilai saat ini lebih rendah dari nilai tertinggi sebelumnya, tambahkan error
+
     if (value < highestPreviousValue) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
         [key]: `Nilai ${field} (${value}%) lebih rendah dari nilai tertinggi sebelumnya (${highestPreviousValue}%)`,
       }));
     } else {
-      // Hapus error jika nilai valid
-      setValidationErrors(prev => {
+      setValidationErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[key];
         return newErrors;
       });
     }
-    
+
     return value;
   };
 
-  // Hitung progress bulanan
   const calculateMonthProgress = (items: ProgressItem[]) => {
     if (items.length === 0) return 0;
     const lastItem = items[items.length - 1];
@@ -278,13 +275,11 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
 
   const formValues = watch();
 
-  // Fungsi untuk menyimpan data
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      // Flatten all entries from all months into a single array
-      const allEntries = data.months.flatMap(month => 
-        month.items.map(item => ({
+      const allEntries = data.months.flatMap((month) =>
+        month.items.map((item) => ({
           month: month.month,
           week: item.week,
           rencana: Number(item.rencana) || 0,
@@ -293,13 +288,12 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
           endDate: item.endDate,
           bermasalah: Boolean(item.bermasalah),
           deskripsiMasalah: item.deskripsiMasalah,
-          keterangan: item.keterangan
+          keterangan: item.keterangan,
         }))
       );
-  
-      // Process all entries in a single transaction
+
       await updateContractProgress(contractId, allEntries);
-  
+
       toast.success("Progress berhasil disimpan");
       router.refresh();
     } catch (error) {
@@ -309,7 +303,6 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
       setIsSubmitting(false);
     }
   };
-  
 
   const masaPelaksanaan = contract.masaPelaksanaan || 0;
   const hasNoExecutionPeriod = masaPelaksanaan <= 0;
@@ -340,7 +333,12 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                 </div>
                 <div className="flex">
                   <span className="w-36 font-medium">Masa Pelaksanaan</span>
-                  <span>: {hasNoExecutionPeriod ? "Tidak ditentukan" : `${masaPelaksanaan} Hari`}</span>
+                  <span>
+                    :{" "}
+                    {hasNoExecutionPeriod
+                      ? "Tidak ditentukan"
+                      : `${masaPelaksanaan} Hari`}
+                  </span>
                 </div>
               </div>
               <div className="space-y-2">
@@ -365,7 +363,10 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-center gap-2 text-yellow-700">
                   <AlertCircle className="h-5 w-5" />
-                  <p>Tidak ada masa pelaksanaan yang ditentukan. Tidak dapat menampilkan progress.</p>
+                  <p>
+                    Tidak ada masa pelaksanaan yang ditentukan. Tidak dapat
+                    menampilkan progress.
+                  </p>
                 </div>
               </div>
             ) : (
@@ -392,7 +393,8 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                     <div className="flex gap-2 text-yellow-700 font-medium">
                       <AlertCircle className="h-5 w-5" />
                       <span>
-                        Ada {Object.keys(validationErrors).length} peringatan validasi:
+                        Ada {Object.keys(validationErrors).length} peringatan
+                        validasi:
                       </span>
                     </div>
                     <ul className="mt-2 ml-6 list-disc text-yellow-600 text-sm">
@@ -436,8 +438,10 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                               const rencanaErrorKey = `months.${monthIndex}.items.${weekIndex}.rencana`;
                               const realisasiErrorKey = `months.${monthIndex}.items.${weekIndex}.realisasi`;
 
-                              const hasRencanaError = !!validationErrors[rencanaErrorKey];
-                              const hasRealisasiError = !!validationErrors[realisasiErrorKey];
+                              const hasRencanaError =
+                                !!validationErrors[rencanaErrorKey];
+                              const hasRealisasiError =
+                                !!validationErrors[realisasiErrorKey];
 
                               return (
                                 <div
@@ -466,7 +470,11 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                         <Input
                                           type="number"
                                           step="0.01"
-                                          className={hasRencanaError ? "border-red-500 pr-8" : ""}
+                                          className={
+                                            hasRencanaError
+                                              ? "border-red-500 pr-8"
+                                              : ""
+                                          }
                                           {...register(
                                             `months.${monthIndex}.items.${weekIndex}.rencana`,
                                             {
@@ -474,26 +482,37 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                               onChange: (e) => {
                                                 const inputValue = Math.min(
                                                   100,
-                                                  Math.max(0, Number(e.target.value) || 0)
+                                                  Math.max(
+                                                    0,
+                                                    Number(e.target.value) || 0
+                                                  )
                                                 );
 
-                                                const validatedValue = validateProgressValue(
-                                                  monthIndex,
-                                                  weekIndex,
-                                                  "rencana",
-                                                  inputValue
-                                                );
+                                                const validatedValue =
+                                                  validateProgressValue(
+                                                    monthIndex,
+                                                    weekIndex,
+                                                    "rencana",
+                                                    inputValue
+                                                  );
 
                                                 setValue(
                                                   `months.${monthIndex}.items.${weekIndex}.rencana`,
                                                   validatedValue
                                                 );
-                                                
-                                                // Update deviasi
-                                                const realisasi = Number(formValues.months[monthIndex].items[weekIndex].realisasi) || 0;
+
+                                                const realisasi =
+                                                  Number(
+                                                    formValues.months[
+                                                      monthIndex
+                                                    ].items[weekIndex].realisasi
+                                                  ) || 0;
                                                 setValue(
                                                   `months.${monthIndex}.items.${weekIndex}.deviasi`,
-                                                  calculateDeviasi(validatedValue, realisasi)
+                                                  calculateDeviasi(
+                                                    validatedValue,
+                                                    realisasi
+                                                  )
                                                 );
                                               },
                                             }
@@ -509,16 +528,26 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                               </TooltipTrigger>
                                               <TooltipContent side="right">
                                                 <p className="text-xs max-w-xs">
-                                                  {validationErrors[rencanaErrorKey]}
+                                                  {
+                                                    validationErrors[
+                                                      rencanaErrorKey
+                                                    ]
+                                                  }
                                                 </p>
                                               </TooltipContent>
                                             </Tooltip>
                                           </TooltipProvider>
                                         )}
                                       </div>
-                                      {errors.months?.[monthIndex]?.items?.[weekIndex]?.rencana && (
+                                      {errors.months?.[monthIndex]?.items?.[
+                                        weekIndex
+                                      ]?.rencana && (
                                         <p className="text-red-500 text-xs mt-1">
-                                          {errors.months[monthIndex]?.items[weekIndex]?.rencana?.message}
+                                          {
+                                            errors.months[monthIndex]?.items[
+                                              weekIndex
+                                            ]?.rencana?.message
+                                          }
                                         </p>
                                       )}
                                     </div>
@@ -529,8 +558,12 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                       <div className="relative">
                                         <Input
                                           type="number"
-                                          step="0.1"
-                                          className={hasRealisasiError ? "border-red-500 pr-8" : ""}
+                                          step="0.01"
+                                          className={
+                                            hasRealisasiError
+                                              ? "border-red-500 pr-8"
+                                              : ""
+                                          }
                                           {...register(
                                             `months.${monthIndex}.items.${weekIndex}.realisasi`,
                                             {
@@ -538,26 +571,37 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                               onChange: (e) => {
                                                 const inputValue = Math.min(
                                                   100,
-                                                  Math.max(0, Number(e.target.value) || 0)
+                                                  Math.max(
+                                                    0,
+                                                    Number(e.target.value) || 0
+                                                  )
                                                 );
 
-                                                const validatedValue = validateProgressValue(
-                                                  monthIndex,
-                                                  weekIndex,
-                                                  "realisasi",
-                                                  inputValue
-                                                );
+                                                const validatedValue =
+                                                  validateProgressValue(
+                                                    monthIndex,
+                                                    weekIndex,
+                                                    "realisasi",
+                                                    inputValue
+                                                  );
 
                                                 setValue(
                                                   `months.${monthIndex}.items.${weekIndex}.realisasi`,
                                                   validatedValue
                                                 );
-                                                
-                                                // Update deviasi
-                                                const rencana = Number(formValues.months[monthIndex].items[weekIndex].rencana) || 0;
+
+                                                const rencana =
+                                                  Number(
+                                                    formValues.months[
+                                                      monthIndex
+                                                    ].items[weekIndex].rencana
+                                                  ) || 0;
                                                 setValue(
                                                   `months.${monthIndex}.items.${weekIndex}.deviasi`,
-                                                  calculateDeviasi(rencana, validatedValue)
+                                                  calculateDeviasi(
+                                                    rencana,
+                                                    validatedValue
+                                                  )
                                                 );
                                               },
                                             }
@@ -573,16 +617,26 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                               </TooltipTrigger>
                                               <TooltipContent side="right">
                                                 <p className="text-xs max-w-xs">
-                                                  {validationErrors[realisasiErrorKey]}
+                                                  {
+                                                    validationErrors[
+                                                      realisasiErrorKey
+                                                    ]
+                                                  }
                                                 </p>
                                               </TooltipContent>
                                             </Tooltip>
                                           </TooltipProvider>
                                         )}
                                       </div>
-                                      {errors.months?.[monthIndex]?.items?.[weekIndex]?.realisasi && (
+                                      {errors.months?.[monthIndex]?.items?.[
+                                        weekIndex
+                                      ]?.realisasi && (
                                         <p className="text-red-500 text-xs mt-1">
-                                          {errors.months[monthIndex]?.items[weekIndex]?.realisasi?.message}
+                                          {
+                                            errors.months[monthIndex]?.items[
+                                              weekIndex
+                                            ]?.realisasi?.message
+                                          }
                                         </p>
                                       )}
                                     </div>
@@ -592,8 +646,10 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                       </label>
                                       <Input
                                         type="number"
-                                        step="0.1"
-                                        value={(Number(week.deviasi) || 0).toFixed(1)}
+                                        step="0.01"
+                                        value={(
+                                          Number(week.deviasi) || 0
+                                        ).toFixed(1)}
                                         readOnly
                                         className="bg-muted"
                                         style={{
@@ -676,9 +732,13 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
             >
               Kembali
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || hasNoExecutionPeriod || Object.keys(validationErrors).length > 0}
+            <Button
+              type="submit"
+              disabled={
+                isSubmitting ||
+                hasNoExecutionPeriod ||
+                Object.keys(validationErrors).length > 0
+              }
               className="min-w-32"
             >
               {isSubmitting ? (

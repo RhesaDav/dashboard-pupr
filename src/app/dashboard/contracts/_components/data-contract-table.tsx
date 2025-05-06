@@ -40,7 +40,7 @@ import {
   Select,
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { getAllContracts } from "@/actions/contract";
+import { deleteContract, getAllContracts } from "@/actions/contract";
 import {
   Tooltip,
   TooltipContent,
@@ -62,6 +62,7 @@ function DataContractTable() {
     isLoading,
     isError,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["contracts", pageParam, pageSizeParam, searchQuery],
     queryFn: () =>
@@ -70,7 +71,7 @@ function DataContractTable() {
         limit: pageSizeParam,
         search: searchQuery,
       }),
-      refetchOnMount: "always"
+    refetchOnMount: "always",
   });
 
   const { user } = useCurrentUser();
@@ -128,7 +129,7 @@ function DataContractTable() {
       header: "Nilai Kontrak",
       cell: ({ row }) => {
         const nilai = row.getValue("nilaiKontrak") as number;
-        const formatted = formatRupiah(nilai)
+        const formatted = formatRupiah(nilai);
 
         return (
           <div className="relative max-w-[120px] truncate">
@@ -206,6 +207,17 @@ function DataContractTable() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DeleteContractDialog
+                      onDelete={async () => {
+                        const res = await deleteContract(contract.id as string);
+                        if (res.success) {
+                          toast.success(
+                            `Contract ${contract.namaPaket} berhasil dihapus`
+                          );
+                          refetch();
+                        } else {
+                          toast.error(`Gagal menghapus contract`);
+                        }
+                      }}
                       contractId={String(contract.id)}
                       contractName={contract.namaPaket || "-"}
                       trigger={

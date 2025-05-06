@@ -33,6 +33,7 @@ import {
   CompleteContractCreate,
   CompleteContractCreateSchema,
 } from "@/schemas/contract.schema";
+import { usePathname, useRouter } from "next/navigation";
 
 const steps = [
   { id: 0, title: "Informasi Dasar" },
@@ -92,6 +93,8 @@ interface MultiStepFormProps {
 }
 
 export default function MultiStepForm({ id }: MultiStepFormProps) {
+  const router =useRouter()
+  const pathname = usePathname()
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -199,6 +202,7 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
                 })) || [],
               addendum: contractData.addendum || [],
             };
+            console.log(formData)
 
             form.reset(formData);
           }
@@ -268,6 +272,7 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
 
         if (result.success) {
           toast.success(`Kontrak berhasil ${id ? "diperbarui" : "dibuat"}`);
+          router.push(`/dashboard/contracts`)
           if (!id) {
             form.reset();
           }

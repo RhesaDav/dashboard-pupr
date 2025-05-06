@@ -208,3 +208,7 @@ export async function safeAction<T, R>(
     return { data: null, error: "Terjadi kesalahan yang tidak diketahui." };
   }
 }
+
+export function roundToOneDecimal (value: number) {
+  return Math.round(value * 10) / 10;
+};

@@ -60,18 +60,18 @@ export interface DashboardReport {
     completedContracts: number;
     ongoingContracts: number;
     problemContracts: number;
-    totalPaguAnggaran: number; // New field
-    totalNilaiKontrak: number; // New field
-    totalRealisasiKeuangan: number; // New field
-    avgProgressFisik: number; // New field
-    avgProgressKeuangan: number; // New field
+    totalPaguAnggaran: number;
+    totalNilaiKontrak: number;
+    totalRealisasiKeuangan: number;
+    avgProgressFisik: number;
+    avgProgressKeuangan: number;
     contractValue: number;
     contracts: {
       id: string;
       packageName: string;
       status: string;
       progress: number | null;
-      financialProgress: number | null; // New field for individual contract financial progress
+      financialProgress: number | null;
     }[];
   }[];
 }
@@ -109,73 +109,86 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     0
   );
 
-  /// Asumsikan 'contracts' adalah array objek kontrak Anda
-
-// 1. Filter kontrak yang memiliki data progress fisik (Langkah ini sudah benar)
-const contractsWithPhysicalProgress = contracts.filter(
-  (contract) =>
-    contract.physicalProgress && contract.physicalProgress.length > 0
-);
-
-console.log(
-  `Jumlah kontrak yang difilter (memiliki data progress fisik): ${contractsWithPhysicalProgress.length}`
-);
-
-// 2 & 3. Cari nilai realisasi MAKSIMUM per kontrak dan jumlahkan
-let totalOfMaxRealisasi = 0; // Variabel untuk menjumlahkan nilai realisasi maksimum dari tiap kontrak
-
-contractsWithPhysicalProgress.forEach((contract) => {
-  // Inisialisasi nilai realisasi maksimum untuk kontrak saat ini
-  let maxRealisasiForThisContract = 0;
-
-  // Iterasi melalui SEMUA entri progress untuk mencari nilai realisasi tertinggi
-  contract.physicalProgress.forEach((progressEntry) => {
-    // Pastikan nilai realisasi valid dan bandingkan dengan maksimum saat ini
-    if (
-      progressEntry.realisasi !== null &&
-      progressEntry.realisasi !== undefined &&
-      progressEntry.realisasi > maxRealisasiForThisContract // Lebih besar dari max saat ini?
-    ) {
-      // Jika ya, update nilai maksimum untuk kontrak ini
-      maxRealisasiForThisContract = progressEntry.realisasi;
-    }
-  });
-
-  // Tambahkan nilai realisasi maksimum dari kontrak ini ke total keseluruhan
-  totalOfMaxRealisasi += maxRealisasiForThisContract;
+  // Filter contracts with physical progress data
+  const contractsWithPhysicalProgress = contracts.filter(
+    (contract) =>
+      contract.physicalProgress && contract.physicalProgress.length > 0
+  );
 
   console.log(
-    `Kontrak ID: ${contract.id}, Realisasi Tertinggi Ditemukan: ${maxRealisasiForThisContract}%`
+    `Jumlah kontrak yang difilter (memiliki data progress fisik): ${contractsWithPhysicalProgress.length}`
   );
-});
 
-// 4. Hitung rata-rata progress fisik berdasarkan nilai realisasi maksimum
-const avgPhysicalProgress =
-  contractsWithPhysicalProgress.length > 0
-    ? totalOfMaxRealisasi / contractsWithPhysicalProgress.length // Bagi total max realisasi dengan jumlah kontrak
-    : 0;
+  // Calculate average physical progress based on maximum realization per contract
+  let totalOfMaxRealisasi = 0;
 
-console.log(
-  `Total dari Nilai Realisasi Maksimum Setiap Kontrak: ${totalOfMaxRealisasi}`
-);
-console.log(
-  `Jumlah kontrak yang dihitung rata-ratanya: ${contractsWithPhysicalProgress.length}`
-);
-console.log(
-  `Rata-rata Progress Fisik (berdasarkan Realisasi Tertinggi): ${avgPhysicalProgress.toFixed(2)}%`
-);
+  contractsWithPhysicalProgress.forEach((contract) => {
+    // Find maximum realization value for this contract
+    let maxRealisasiForThisContract = 0;
+
+    contract.physicalProgress.forEach((progressEntry) => {
+      if (
+        progressEntry.realisasi !== null &&
+        progressEntry.realisasi !== undefined &&
+        progressEntry.realisasi > maxRealisasiForThisContract
+      ) {
+        maxRealisasiForThisContract = progressEntry.realisasi;
+      }
+    });
+
+    totalOfMaxRealisasi += maxRealisasiForThisContract;
+
+    console.log(
+      `Kontrak ID: ${contract.id}, Realisasi Tertinggi Ditemukan: ${maxRealisasiForThisContract}%`
+    );
+  });
+
+  const avgPhysicalProgress =
+    contractsWithPhysicalProgress.length > 0
+      ? totalOfMaxRealisasi / contractsWithPhysicalProgress.length
+      : 0;
+
+  console.log(
+    `Total dari Nilai Realisasi Maksimum Setiap Kontrak: ${totalOfMaxRealisasi}`
+  );
+  console.log(
+    `Jumlah kontrak yang dihitung rata-ratanya: ${contractsWithPhysicalProgress.length}`
+  );
+  console.log(
+    `Rata-rata Progress Fisik (berdasarkan Realisasi Tertinggi): ${avgPhysicalProgress.toFixed(2)}%`
+  );
+
+  // Fixed avgFinancialProgress calculation - similar approach to physical progress
   const contractsWithFinancialProgress = contracts.filter(
-    (contract) => contract.financialProgress?.totalProgress
+    (contract) => contract.financialProgress
   );
+
+  let totalOfMaxFinancialProgress = 0;
+
+  contractsWithFinancialProgress.forEach((contract) => {
+    // For financial progress, we'll use totalProgress if available
+    const financialProgress = contract.financialProgress?.totalProgress || 0;
+    totalOfMaxFinancialProgress += financialProgress;
+    
+    console.log(
+      `Kontrak ID: ${contract.id}, Progress Keuangan: ${financialProgress}%`
+    );
+  });
 
   const avgFinancialProgress =
     contractsWithFinancialProgress.length > 0
-      ? contractsWithFinancialProgress.reduce(
-          (sum, contract) =>
-            sum + (contract.financialProgress?.totalProgress || 0),
-          0
-        ) / contractsWithFinancialProgress.length
+      ? totalOfMaxFinancialProgress / contractsWithFinancialProgress.length
       : 0;
+
+  console.log(
+    `Total Progress Keuangan: ${totalOfMaxFinancialProgress}`
+  );
+  console.log(
+    `Jumlah kontrak dengan progress keuangan: ${contractsWithFinancialProgress.length}`
+  );
+  console.log(
+    `Rata-rata Progress Keuangan: ${avgFinancialProgress.toFixed(2)}%`
+  );
 
   // Get physical progress trend by month
   const physicalProgressByMonth = new Map<string, number[]>();
@@ -322,6 +335,7 @@ console.log(
       };
     });
 
+  // Fixed subkegiatan distribution implementation
   const subkegiatanMap = new Map<
     string,
     {
@@ -332,8 +346,10 @@ console.log(
       totalPaguAnggaran: number;
       totalNilaiKontrak: number;
       totalRealisasiKeuangan: number;
-      totalPhysicalProgress: number;
-      totalFinancialProgress: number;
+      contractsWithPhysicalProgress: number;
+      contractsWithFinancialProgress: number;
+      maxPhysicalProgressValues: number[];
+      financialProgressValues: number[];
       contracts: {
         id: string;
         packageName: string;
@@ -346,6 +362,8 @@ console.log(
 
   contracts.forEach((contract) => {
     const subkegiatan = contract.subKegiatan || "Lainnya";
+    
+    // Get or initialize data for this subkegiatan
     const current = subkegiatanMap.get(subkegiatan) || {
       totalContracts: 0,
       completedContracts: 0,
@@ -354,20 +372,38 @@ console.log(
       totalPaguAnggaran: 0,
       totalNilaiKontrak: 0,
       totalRealisasiKeuangan: 0,
-      totalPhysicalProgress: 0,
-      totalFinancialProgress: 0,
+      contractsWithPhysicalProgress: 0,
+      contractsWithFinancialProgress: 0,
+      maxPhysicalProgressValues: [],
+      financialProgressValues: [],
       contracts: [],
     };
 
-    const latestPhysicalProgress = contract.physicalProgress.sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    )[0];
+    // Find max physical progress for this contract (similar to the avgPhysicalProgress calculation)
+    let maxPhysicalProgress = 0;
+    let hasPhysicalProgress = false;
+    
+    if (contract.physicalProgress && contract.physicalProgress.length > 0) {
+      hasPhysicalProgress = true;
+      contract.physicalProgress.forEach((progressEntry) => {
+        if (
+          progressEntry.realisasi !== null &&
+          progressEntry.realisasi !== undefined &&
+          progressEntry.realisasi > maxPhysicalProgress
+        ) {
+          maxPhysicalProgress = progressEntry.realisasi;
+        }
+      });
+    }
 
-    const isCompleted = latestPhysicalProgress?.realisasi >= 100;
-    const isProblem = contract.kendala === true || contract.permasalahan;
+    // Get financial progress
     const financialProgress = contract.financialProgress?.totalProgress || 0;
+    const hasFinancialProgress = !!contract.financialProgress;
 
+    const isCompleted = maxPhysicalProgress >= 100;
+    const isProblem = contract.kendala === true || contract.permasalahan;
+
+    // Update subkegiatan data
     subkegiatanMap.set(subkegiatan, {
       totalContracts: current.totalContracts + 1,
       completedContracts: current.completedContracts + (isCompleted ? 1 : 0),
@@ -380,39 +416,65 @@ console.log(
       totalRealisasiKeuangan:
         current.totalRealisasiKeuangan +
         (contract.financialProgress?.totalPayment || 0),
-      totalPhysicalProgress:
-        current.totalPhysicalProgress +
-        (latestPhysicalProgress?.realisasi || 0),
-      totalFinancialProgress:
-        current.totalFinancialProgress + financialProgress,
+      contractsWithPhysicalProgress: 
+        current.contractsWithPhysicalProgress + (hasPhysicalProgress ? 1 : 0),
+      contractsWithFinancialProgress: 
+        current.contractsWithFinancialProgress + (hasFinancialProgress ? 1 : 0),
+      maxPhysicalProgressValues: 
+        hasPhysicalProgress 
+          ? [...current.maxPhysicalProgressValues, maxPhysicalProgress] 
+          : current.maxPhysicalProgressValues,
+      financialProgressValues: 
+        hasFinancialProgress 
+          ? [...current.financialProgressValues, financialProgress] 
+          : current.financialProgressValues,
       contracts: [
         ...current.contracts,
         {
           id: contract.id,
           packageName: contract.namaPaket,
           status: getContractStatus(contract),
-          progress: latestPhysicalProgress?.realisasi || null,
-          financialProgress,
+          progress: hasPhysicalProgress ? maxPhysicalProgress : null,
+          financialProgress: hasFinancialProgress ? financialProgress : null,
         },
       ],
     });
   });
 
+  // Transform subkegiatan data for the return value, calculating proper averages
   const subkegiatanDistribution = Array.from(subkegiatanMap.entries()).map(
-    ([subkegiatan, data]) => ({
-      subkegiatan,
-      totalContracts: data.totalContracts,
-      completedContracts: data.completedContracts,
-      ongoingContracts: data.ongoingContracts,
-      problemContracts: data.problemContracts,
-      totalPaguAnggaran: data.totalPaguAnggaran,
-      totalNilaiKontrak: data.totalNilaiKontrak,
-      totalRealisasiKeuangan: data.totalRealisasiKeuangan,
-      avgProgressFisik: data.totalPhysicalProgress / data.totalContracts,
-      avgProgressKeuangan: data.totalFinancialProgress / data.totalContracts,
-      contractValue: data.totalNilaiKontrak,
-      contracts: data.contracts,
-    })
+    ([subkegiatan, data]) => {
+      // Calculate average physical progress for this subkegiatan
+      const avgProgressFisik = data.maxPhysicalProgressValues.length > 0
+        ? data.maxPhysicalProgressValues.reduce((sum, val) => sum + val, 0) / data.maxPhysicalProgressValues.length
+        : 0;
+      
+      // Calculate average financial progress for this subkegiatan
+      const avgProgressKeuangan = data.financialProgressValues.length > 0
+        ? data.financialProgressValues.reduce((sum, val) => sum + val, 0) / data.financialProgressValues.length
+        : 0;
+      
+      console.log(`Subkegiatan: ${subkegiatan}`);
+      console.log(`  Contracts with physical progress: ${data.contractsWithPhysicalProgress}`);
+      console.log(`  Average physical progress: ${avgProgressFisik.toFixed(2)}%`);
+      console.log(`  Contracts with financial progress: ${data.contractsWithFinancialProgress}`);
+      console.log(`  Average financial progress: ${avgProgressKeuangan.toFixed(2)}%`);
+      
+      return {
+        subkegiatan,
+        totalContracts: data.totalContracts,
+        completedContracts: data.completedContracts,
+        ongoingContracts: data.ongoingContracts,
+        problemContracts: data.problemContracts,
+        totalPaguAnggaran: data.totalPaguAnggaran,
+        totalNilaiKontrak: data.totalNilaiKontrak,
+        totalRealisasiKeuangan: data.totalRealisasiKeuangan,
+        avgProgressFisik,
+        avgProgressKeuangan,
+        contractValue: data.totalNilaiKontrak,
+        contracts: data.contracts,
+      };
+    }
   );
 
   return {
@@ -437,11 +499,19 @@ console.log(
 function isContractCompleted(
   contract: Contract & { physicalProgress: PhysicalProgress[] }
 ): boolean {
-  const latestProgress = contract.physicalProgress.sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  )[0];
-
-  return latestProgress?.realisasi >= 100;
+  if (!contract.physicalProgress || contract.physicalProgress.length === 0) {
+    return false;
+  }
+  
+  // Find maximum realization across all progress entries
+  let maxRealisasi = 0;
+  contract.physicalProgress.forEach(progress => {
+    if (progress.realisasi > maxRealisasi) {
+      maxRealisasi = progress.realisasi;
+    }
+  });
+  
+  return maxRealisasi >= 100;
 }
 
 function getContractStatus(
@@ -449,11 +519,17 @@ function getContractStatus(
 ): string {
   if (!contract.tanggalKontrak) return "BELUM DIMULAI";
 
-  const latestProgress = contract.physicalProgress.sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  )[0];
+  // Find maximum realization across all progress entries
+  let maxRealisasi = 0;
+  if (contract.physicalProgress && contract.physicalProgress.length > 0) {
+    contract.physicalProgress.forEach(progress => {
+      if (progress.realisasi > maxRealisasi) {
+        maxRealisasi = progress.realisasi;
+      }
+    });
+  }
 
-  if (latestProgress && latestProgress.realisasi >= 100) return "SELESAI";
+  if (maxRealisasi >= 100) return "SELESAI";
   if (contract.kendala === true) return "BERMASALAH";
 
   // Check if contract duration has passed (if we have masa pelaksanaan in days)

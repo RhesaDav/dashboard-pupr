@@ -1,7 +1,10 @@
-"use client"
+"use client";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { DashboardReport, getDashboardReport } from "../../../../actions/dashboard";
+import {
+  DashboardReport,
+  getDashboardReport,
+} from "../../../../actions/dashboard";
 import { DashboardSkeleton } from "./DashboardSkeleton";
 import { DashboardError } from "./DashboardError";
 import { DashboardHeader } from "./DashboardHeader";
@@ -16,48 +19,42 @@ import { SubkegiatanDistribution } from "./SubkegiatanDistribution";
 import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
-  const {user, loading: userLoading} = useCurrentUser();
+  const { user, loading: userLoading } = useCurrentUser();
   const [time, setTime] = useState({
-    greeting: '',
-    currentTime: ''
+    greeting: "",
+    currentTime: "",
   });
 
-  
-  const { 
-    data: dashboardData, 
-    isLoading, 
+  const {
+    data: dashboardData,
+    isLoading,
     isError,
-    refetch
+    refetch,
   } = useQuery({
-    queryKey: ['dashboard'],
+    queryKey: ["dashboard"],
     queryFn: async () => {
       const report = await getDashboardReport();
       return report;
     },
-    staleTime: 0, 
-    refetchOnWindowFocus: true, 
-    refetchOnMount: true, 
-    refetchOnReconnect: true, 
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
   });
 
-  
   useEffect(() => {
     const now = new Date();
     const hour = now.getHours();
-    const greeting = 
-      hour < 12 ? 'Pagi' : 
-      hour < 15 ? 'Siang' : 
-      hour < 19 ? 'Sore' : 'Malam';
-    
-    const currentTime = format(now, 'EEEE, d MMMM yyyy HH:mm');
-    
+    const greeting =
+      hour < 12 ? "Pagi" : hour < 15 ? "Siang" : hour < 19 ? "Sore" : "Malam";
+
+    const currentTime = format(now, "EEEE, d MMMM yyyy HH:mm");
+
     setTime({ greeting, currentTime });
 
-    
     refetch();
   }, [refetch]);
 
-  
   const loading = isLoading || userLoading;
 
   if (loading) {
@@ -68,9 +65,11 @@ export default function DashboardPage() {
     return <DashboardError />;
   }
 
+  console.log(dashboardData.physicalProgressTrend)
+
   return (
     <div className="p-6 space-y-6">
-      <DashboardHeader 
+      <DashboardHeader
         greeting={time.greeting}
         currentTime={time.currentTime}
         user={user}
@@ -87,7 +86,9 @@ export default function DashboardPage() {
 
       <RecentContractsTable contracts={dashboardData.recentContracts} />
 
-      <ProblemContractsList contracts={dashboardData.problemContracts} />
+      {dashboardData.problemContracts.length >= 1 && (
+        <ProblemContractsList contracts={dashboardData.problemContracts} />
+      )}
     </div>
   );
 }

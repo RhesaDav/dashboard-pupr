@@ -12,22 +12,44 @@ import { Percent, CircleDollarSign } from "lucide-react";
 import { FinancialProgress } from "@prisma/client";
 import { FinancialProgressCreateSchema } from "@/schemas/financial-progress.schema";
 import { upsertFinancialProgress } from "@/actions/financial-progress";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getContractById } from "@/actions/contract";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 
 export function FinancialProgressForm() {
   const params = useParams();
+  const queryClient = useQueryClient();
   const contractId = params.id as string;
+
   const {
     data: contract,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["contract", contractId],
+    queryKey: ["contract-financial-progress", contractId],
     queryFn: () => getContractById(contractId),
   });
+  const { mutate: upsertProgress, isPending: isSaving } = useMutation({
+    mutationFn: (data: z.infer<typeof FinancialProgressCreateSchema>) => 
+      upsertFinancialProgress({
+        ...data,
+        totalPayment,
+        totalProgress,
+        contractId: contractId,
+      }),
+    onSuccess: () => {
+      toast.success("Progress finansial berhasil disimpan");
+      queryClient.invalidateQueries({
+        queryKey: ["contract-financial-progress", contractId],
+      });
+    },
+    onError: () => {
+      toast.error("Gagal menyimpan progress");
+    },
+  });
+  
 
   const form = useForm<z.infer<typeof FinancialProgressCreateSchema>>({
     resolver: zodResolver(
@@ -50,14 +72,31 @@ export function FinancialProgressForm() {
     ),
     defaultValues: {
       contractId: contractId,
+      totalPayment: contract?.data.financialProgress?.totalPayment || 0,
+      totalProgress: contract?.data.financialProgress?.totalProgress || 0,
       uangMuka: contract?.data.financialProgress?.uangMuka || 0,
       termin1: contract?.data.financialProgress?.termin1 || 0,
       termin2: contract?.data.financialProgress?.termin2 || 0,
       termin3: contract?.data.financialProgress?.termin3 || 0,
       termin4: contract?.data.financialProgress?.termin4 || 0,
     },
-    mode: "onBlur"
+    mode: "onBlur",
   });
+
+  useEffect(() => {
+    if (contract?.data?.financialProgress) {
+      form.reset({
+        contractId: contractId,
+        totalPayment: contract.data.financialProgress.totalPayment || 0,
+        totalProgress: contract.data.financialProgress.totalProgress || 0,
+        uangMuka: contract.data.financialProgress.uangMuka || 0,
+        termin1: contract.data.financialProgress.termin1 || 0,
+        termin2: contract.data.financialProgress.termin2 || 0,
+        termin3: contract.data.financialProgress.termin3 || 0,
+        termin4: contract.data.financialProgress.termin4 || 0,
+      });
+    }
+  }, [contract, contractId, form.reset]);
 
   const uangMuka = form.watch("uangMuka") || 0;
   const termin1 = form.watch("termin1") || 0;
@@ -72,15 +111,18 @@ export function FinancialProgressForm() {
   const onSubmit = async (
     data: z.infer<typeof FinancialProgressCreateSchema>
   ) => {
-    try {
-      await upsertFinancialProgress({
-        ...data,
-        contractId: contractId,
-      });
-      toast.success("Progress finansial berhasil disimpan");
-    } catch (error) {
-      toast.error("Gagal menyimpan progress");
-    }
+    upsertProgress(data)
+    // try {
+    //   await upsertFinancialProgress({
+    //     ...data,
+    //     totalPayment,
+    //     totalProgress,
+    //     contractId: contractId,
+    //   });
+    //   toast.success("Progress finansial berhasil disimpan");
+    // } catch (error) {
+    //   toast.error("Gagal menyimpan progress");
+    // }
   };
 
   console.log(form.formState.errors);
@@ -131,10 +173,8 @@ export function FinancialProgressForm() {
                 {totalProgress.toFixed(1)}%
               </p>
               {totalProgress > 100 && (
-      <p className="text-sm text-destructive mt-1">
-        Melebihi 100%
-      </p>
-    )}
+                <p className="text-sm text-destructive mt-1">Melebihi 100%</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

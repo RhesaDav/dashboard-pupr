@@ -132,7 +132,7 @@ function FinancialProgressTable() {
 
         return (
           <div className="flex items-center gap-3 w-[150px]">
-            <Progress value={totalProgress} className="h-2 flex-1" />
+            <Progress value={financialProgress.totalProgress} className="h-2 flex-1" />
             <Badge
               variant="outline"
               className="text-xs px-2 py-0.5 font-normal"

@@ -34,6 +34,7 @@ import {
   ComposedChart,
   Legend,
 } from "recharts";
+import { format } from "date-fns";
 
 interface ProgressItem {
   week: number;
@@ -139,6 +140,11 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
     }
 
     return Math.min(maxRealisasi, 100);
+  };
+
+  const formatDate = (date: Date | null) => {
+    if (!date) return "Tidak tersedia";
+    return format(new Date(date), "dd MMMM yyyy");
   };
 
   const chartData = useMemo(() => {
@@ -305,8 +311,69 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
             </div>
           )}
 
+          <div className="border rounded-md overflow-hidden">
+            <table className="w-full text-sm border-collapse">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700 border-b">
+                    Bulan
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700 border-b">
+                    Minggu
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700 border-b">
+                    Periode
+                  </th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-700 border-b">
+                    Rencana
+                  </th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-700 border-b">
+                    Realisasi
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {sortedProgressData?.map((month, monthIndex) =>
+                  month.items.map((item, itemIndex) => (
+                    <tr
+                      key={`${monthIndex}-${itemIndex}`}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+
+                      <td className="px-4 py-3 border-b">{month.month}</td>
+                      <td className="px-4 py-3 border-b">{item.week}</td>
+                      <td className="px-4 py-3 border-b whitespace-nowrap">
+                        {item.startDate} - {item.endDate}
+                      </td>
+                      <td className="px-4 py-3 text-right border-b">
+                        <span
+                          className={`inline-block w-16 ${
+                            item.rencana > 0 ? "text-blue-600" : "text-gray-400"
+                          }`}
+                        >
+                          {item.rencana.toFixed(2)}%
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right border-b">
+                        <span
+                          className={`inline-block w-16 ${
+                            item.realisasi > 0
+                              ? "text-green-600"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {item.realisasi.toFixed(2)}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
           {/* Monthly Progress */}
-          <Accordion
+          {/* <Accordion
             type="multiple"
             value={expandedMonths}
             onValueChange={setExpandedMonths}
@@ -400,7 +467,7 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
                 </AccordionContent>
               </AccordionItem>
             ))}
-          </Accordion>
+          </Accordion> */}
         </CardContent>
 
         <CardFooter className="flex justify-end space-x-2 bg-muted/50 px-6 py-4">

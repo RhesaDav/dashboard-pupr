@@ -19,7 +19,7 @@ import {
   validateSchema,
 } from "@/lib/utils";
 import { IdSchema } from "@/schemas/id.schema";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 
 interface ProgressItem {
   week: number;
@@ -30,15 +30,16 @@ interface ProgressItem {
   deviasi: number;
 }
 
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
 function generateWeeks(startDate: Date, durationDays: number) {
   const weeks: { month: string; items: ProgressItem[] }[] = [];
 
   let currentDate = new Date(startDate);
-  const dayOfWeek = currentDate.getDay();
-  const daysToMonday =
-    dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 1 - dayOfWeek;
-  currentDate.setDate(currentDate.getDate() + daysToMonday);
-
   const endDate = addDays(startDate, durationDays);
 
   let weekNumber = 1;
@@ -49,10 +50,37 @@ function generateWeeks(startDate: Date, durationDays: number) {
     return date.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
   };
 
+  const monthName = formatMonth(currentDate);
+  currentMonth = monthName;
+  currentMonthData = {
+    month: monthName,
+    items: [],
+  };
+  weeks.push(currentMonthData);
+
+  const dayOfWeek = currentDate.getDay();
+  const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+  const firstWeekEnd = addDays(currentDate, daysToSunday);
+
+  const actualFirstWeekEnd = firstWeekEnd > endDate ? endDate : firstWeekEnd;
+
+  currentMonthData.items.push({
+    week: weekNumber,
+    startDate: new Date(currentDate),
+    endDate: new Date(actualFirstWeekEnd),
+    rencana: 0,
+    realisasi: 0,
+    deviasi: 0,
+  });
+
+  currentDate = addDays(actualFirstWeekEnd, 1);
+  weekNumber++;
+
   while (currentDate <= endDate) {
     const monthName = formatMonth(currentDate);
     const weekStart = new Date(currentDate);
     const weekEnd = addDays(weekStart, 6);
+    const actualWeekEnd = weekEnd > endDate ? endDate : weekEnd;
 
     if (monthName !== currentMonth) {
       currentMonth = monthName;
@@ -67,7 +95,7 @@ function generateWeeks(startDate: Date, durationDays: number) {
       currentMonthData.items.push({
         week: weekNumber,
         startDate: weekStart,
-        endDate: weekEnd,
+        endDate: actualWeekEnd,
         rencana: 0,
         realisasi: 0,
         deviasi: 0,
@@ -100,13 +128,10 @@ export async function createContract(data: CompleteContractCreate) {
     if (!contractData.tanggalKontrak) {
       throw new Error("Tanggal kontrak harus diisi");
     }
-    if (!contractData.masaPelaksanaan || contractData.masaPelaksanaan <= 0) {
-      throw new Error("Masa pelaksanaan harus lebih dari 0 hari");
-    }
 
     const generatedProgress = generateWeeks(
       contractData.tanggalKontrak,
-      contractData.masaPelaksanaan
+      contractData.masaPelaksanaan || 0
     );
 
     const result = await prisma.$transaction(async (tx) => {
