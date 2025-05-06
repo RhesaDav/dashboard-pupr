@@ -214,6 +214,7 @@ export function DateWeekPicker({
 
           <div className="p-1">
             <Calendar
+            disableNavigation
               mode="single"
               selected={selectedDate}
               onSelect={handleWeekSelect}
