@@ -3,7 +3,6 @@ import ReportTable from './_components/report-table';
 import Pagination from '@/components/ui/pagination';
 import { getAllContracts } from '@/actions/contract';
 import { getAllProgress } from '@/actions/progress';
-import DatePickerWeek from './_components/date-picker-week';
 
 export default async function page({
   searchParams,
