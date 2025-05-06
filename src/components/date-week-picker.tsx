@@ -1,7 +1,6 @@
-// DateWeekPicker.tsx
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Calendar as CalendarIcon, X } from "lucide-react";
@@ -34,12 +33,26 @@ export function DateWeekPicker({
   placeholder = "Pilih minggu",
   className,
 }: DateWeekPickerProps) {
+  const [calendarMonth, setCalendarMonth] = useState<Date>(
+    selectedDate || new Date()
+  );
+
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (selectedDate) {
+      setCalendarMonth(selectedDate);
+    }
+  }, [selectedDate]);
+
   const handleWeekSelect = (date: Date | undefined) => {
     onChange(date);
     if (date) {
       const start = startOfWeek(date, { weekStartsOn: 1 });
       const end = endOfWeek(date, { weekStartsOn: 1 });
       onWeekRangeChange({ start, end });
+
+      setOpen(false);
     } else {
       onWeekRangeChange(undefined);
     }
@@ -55,7 +68,7 @@ export function DateWeekPicker({
       <Label htmlFor="week-picker" className="text-sm whitespace-nowrap">
         {label}
       </Label>
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             id="week-picker"
@@ -82,6 +95,8 @@ export function DateWeekPicker({
             mode="single"
             selected={selectedDate}
             onSelect={handleWeekSelect}
+            month={calendarMonth}
+            onMonthChange={setCalendarMonth}
             modifiers={{
               ...(weekRange && {
                 selectedWeek: {
