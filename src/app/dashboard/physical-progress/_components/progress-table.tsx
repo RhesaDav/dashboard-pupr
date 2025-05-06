@@ -31,20 +31,9 @@ function ProgressTable() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  const [searchValue, setSearchValue] = useState(
-    searchParams.get("search") || ""
-  );
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams);
-      params.set("search", searchValue);
-      router.push(`?${params.toString()}`);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchValue, router, searchParams]);
+  const searchQuery = searchParams.get("search") || "";
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const pageSizeParam = parseInt(searchParams.get("pageSize") || "10");
 
   const {
     data: contracts,
@@ -53,12 +42,12 @@ function ProgressTable() {
     error,
     isFetching,
   } = useQuery({
-    queryKey: ["contracts", searchParams.toString()],
+    queryKey: ["contracts", pageParam, pageSizeParam, searchQuery],
     queryFn: () =>
       getAllContracts({
-        page: parseInt(searchParams.get("page") || "1"),
-        limit: parseInt(searchParams.get("pageSize") || "10"),
-        search: searchParams.get("search") || "",
+        page: pageParam,
+        limit: pageSizeParam,
+        search: searchQuery,
       }),
     // placeholderData: keepPreviousData,
   });

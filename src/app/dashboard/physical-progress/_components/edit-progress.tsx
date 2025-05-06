@@ -295,6 +295,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
       await updateContractProgress(contractId, allEntries);
 
       toast.success("Progress berhasil disimpan");
+      router.push("/dashboard/physical-progress")
       router.refresh();
     } catch (error) {
       console.error("Error updating progress:", error);

@@ -8,18 +8,19 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Percent, CircleDollarSign } from "lucide-react";
+import { Percent, CircleDollarSign, Loader2 } from "lucide-react";
 import { FinancialProgress } from "@prisma/client";
 import { FinancialProgressCreateSchema } from "@/schemas/financial-progress.schema";
 import { upsertFinancialProgress } from "@/actions/financial-progress";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getContractById } from "@/actions/contract";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect } from "react";
 
 export function FinancialProgressForm() {
   const params = useParams();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const contractId = params.id as string;
 
@@ -32,7 +33,7 @@ export function FinancialProgressForm() {
     queryFn: () => getContractById(contractId),
   });
   const { mutate: upsertProgress, isPending: isSaving } = useMutation({
-    mutationFn: (data: z.infer<typeof FinancialProgressCreateSchema>) => 
+    mutationFn: (data: z.infer<typeof FinancialProgressCreateSchema>) =>
       upsertFinancialProgress({
         ...data,
         totalPayment,
@@ -41,6 +42,7 @@ export function FinancialProgressForm() {
       }),
     onSuccess: () => {
       toast.success("Progress finansial berhasil disimpan");
+      router.push("/dashboard/financial-progress");
       queryClient.invalidateQueries({
         queryKey: ["contract-financial-progress", contractId],
       });
@@ -49,7 +51,6 @@ export function FinancialProgressForm() {
       toast.error("Gagal menyimpan progress");
     },
   });
-  
 
   const form = useForm<z.infer<typeof FinancialProgressCreateSchema>>({
     resolver: zodResolver(
@@ -111,7 +112,7 @@ export function FinancialProgressForm() {
   const onSubmit = async (
     data: z.infer<typeof FinancialProgressCreateSchema>
   ) => {
-    upsertProgress(data)
+    upsertProgress(data);
     // try {
     //   await upsertFinancialProgress({
     //     ...data,
@@ -291,7 +292,20 @@ export function FinancialProgressForm() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit">Simpan Progress</Button>
+              <Button
+                type="submit"
+                className="min-w-[100px]"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {"Menyimpan..."}
+                  </>
+                ) : (
+                  "Simpan Progress"
+                )}
+              </Button>
             </div>
           </form>
         </CardContent>
