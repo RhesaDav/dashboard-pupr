@@ -508,9 +508,7 @@ export default function ReportTable() {
             tanggalKontrak: contract!.tanggalKontrak,
             masaPelaksanaan: contract!.masaPelaksanaan,
             konsultanSupervisi: contract!.konsultanSupervisi,
-            nilaiKontrakSupervisi: formatRupiah(
-              contract!.nilaiKontrakSupervisi
-            ),
+            nilaiKontrakSupervisi: contract!.nilaiKontrakSupervisi,
             volumeKontrak: contract!.volumeKontrak,
             satuanKontrak: contract!.satuanKontrak,
             hasilProdukAkhir: contract!.hasilProdukAkhir,

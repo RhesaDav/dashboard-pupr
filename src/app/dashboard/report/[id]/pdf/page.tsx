@@ -119,57 +119,124 @@ export default function PDFExportPage() {
 
   const generatePDF = async (forPreview = false) => {
     if (!contentRef.current) return;
-
+  
     setIsGenerating(true);
-
+  
     try {
+      
       const originalStyles = {
         width: contentRef.current.style.width,
         minWidth: contentRef.current.style.minWidth,
         overflowX: contentRef.current.style.overflowX,
       };
-
-      contentRef.current.style.width = "1100px";
-      contentRef.current.style.minWidth = "1100px";
+  
+      
+      const tableElement = contentRef.current.querySelector('table');
+      let tableWidth = 0;
+      
+      if (tableElement) {
+        
+        const headerCells = tableElement.querySelectorAll('thead th');
+        headerCells.forEach(cell => {
+          
+          const cellStyle = window.getComputedStyle(cell);
+          const cellWidth = cell.getBoundingClientRect().width + 
+            parseInt(cellStyle.paddingLeft) + 
+            parseInt(cellStyle.paddingRight) +
+            parseInt(cellStyle.borderLeftWidth) + 
+            parseInt(cellStyle.borderRightWidth);
+          tableWidth += cellWidth;
+        });
+  
+        
+        tableWidth += 40; 
+      } else {
+        
+        tableWidth = 1100;
+      }
+  
+      
+      contentRef.current.style.width = `${tableWidth}px`;
+      contentRef.current.style.minWidth = `${tableWidth}px`;
       contentRef.current.style.overflowX = "visible";
-
+      
+      
+      if (tableElement) {
+        const colgroup = document.createElement('colgroup');
+        const headerCells = tableElement.querySelectorAll('thead th');
+      
+        headerCells.forEach(cell => {
+          const col = document.createElement('col');
+          const computedWidth = window.getComputedStyle(cell as HTMLElement).width;
+          col.style.width = computedWidth;
+          colgroup.appendChild(col);
+        });
+      
+        
+        const existingColgroup = tableElement.querySelector('colgroup');
+        if (existingColgroup) {
+          tableElement.removeChild(existingColgroup);
+        }
+      
+        
+        tableElement.insertBefore(colgroup, tableElement.firstChild);
+      }
+      
+  
+      
       const canvas = await html2canvas(contentRef.current, {
         scale: 2,
         useCORS: true,
         logging: false,
         allowTaint: true,
-        width: 2000,
+        width: tableWidth,
         height: contentRef.current.offsetHeight,
+        onclone: (clonedDoc, element) => {
+          
+          const clonedTable = element.querySelector('table');
+          if (clonedTable) {
+            clonedTable.style.width = '100%';
+            clonedTable.style.tableLayout = 'fixed';
+          }
+        }
       });
-
+  
+      
       contentRef.current.style.width = originalStyles.width;
       contentRef.current.style.minWidth = originalStyles.minWidth;
       contentRef.current.style.overflowX = originalStyles.overflowX;
-
+  
       const imgData = canvas.toDataURL("image/png");
+      
+      
       const pdf = new jsPDF({
         orientation: "landscape",
         unit: "mm",
         format: "a4",
       });
-
-      const imgWidth = 297;
-      const pageHeight = 210;
+  
+      const pageWidth = 297; 
+      const pageHeight = 210; 
+      
+      
+      const imgWidth = pageWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
+  
       let heightLeft = imgHeight;
       let position = 0;
-
+  
+      
       pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-
+  
+      
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
-
+  
       if (forPreview) {
         const pdfBlob = pdf.output("blob");
         const url = URL.createObjectURL(pdfBlob);
@@ -367,16 +434,17 @@ export default function PDFExportPage() {
 
   return (
     <div className="container mx-auto px-4 py-6">
+      {/* Header dengan tombol aksi */}
       <div className="flex flex-col sm:flex-row justify-between items-start mb-6 print:hidden gap-4">
         <Button variant="outline" onClick={handleBack} className="mb-4 sm:mb-0">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Kembali
         </Button>
-
-        <div className="flex flex-wrap gap-2">
+  
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="sm:ml-auto">
+              <Button variant="outline">
                 Kolom <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -392,17 +460,17 @@ export default function PDFExportPage() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-
+  
           <Button onClick={handleGeneratePreview} disabled={isGenerating}>
             <Eye className="mr-2 h-4 w-4" />
             Preview PDF
           </Button>
-
+  
           <Button onClick={handleDownloadPDF} disabled={isGenerating}>
             <Download className="mr-2 h-4 w-4" />
             Download PDF
           </Button>
-
+  
           <Button
             onClick={handleExportExcel}
             disabled={isExportingExcel}
@@ -413,128 +481,120 @@ export default function PDFExportPage() {
           </Button>
         </div>
       </div>
-
-      <div
-        className={`flex flex-col ${isSmallScreen ? "" : "lg:flex-row"} gap-6`}
-      >
-        <div className={`${isSmallScreen ? "w-full" : "lg:w-1/2"}`}>
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <div
-                ref={contentRef}
-                className="p-6 print:p-0 print:shadow-none"
-                style={{
-                  width: "100%",
-                  minWidth: isSmallScreen ? "800px" : "100%",
-                }}
-              >
-                <h1 className="text-2xl font-bold mb-2">{exportData.title}</h1>
-                <p className="text-sm text-gray-600 mb-4">
-                  Periode:{" "}
-                  {format(new Date(exportData.weekRange.start), "dd/MM/yyyy")} -{" "}
-                  {format(new Date(exportData.weekRange.end), "dd/MM/yyyy")}
-                </p>
-
-                <table className="w-full border-collapse border border-gray-200">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      {visibleColumns.map((colId) => {
-                        const column = exportData.columns.find(
-                          (c) => c.id === colId
-                        );
-                        if (!column) return null;
-                        return (
-                          <th
-                            key={colId}
-                            className="px-4 py-2 text-left text-sm font-medium border border-gray-200"
-                          >
-                            {column.label}
-                          </th>
-                        );
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {exportData.contracts.flatMap((contract, contractIdx) =>
-                      contract.progressData.map((progress, progressIdx) => (
-                        <tr
-                          key={`${contractIdx}-${progressIdx}`}
-                          className={
-                            progressIdx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                          }
+  
+      {/* Konten utama - sekarang vertikal */}
+      <div className="flex flex-col gap-6">
+        {/* Tabel data */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <div
+              ref={contentRef}
+              className="p-6 print:p-0 print:shadow-none"
+            >
+              <h1 className="text-2xl font-bold mb-2">{exportData.title}</h1>
+              <p className="text-sm text-gray-600 mb-4">
+                Periode:{" "}
+                {format(new Date(exportData.weekRange.start), "dd/MM/yyyy")} -{" "}
+                {format(new Date(exportData.weekRange.end), "dd/MM/yyyy")}
+              </p>
+  
+              <table className="w-full border-collapse border border-gray-200">
+                <thead>
+                  <tr className="bg-gray-50">
+                    {visibleColumns.map((colId) => {
+                      const column = exportData.columns.find(
+                        (c) => c.id === colId
+                      );
+                      if (!column) return null;
+                      return (
+                        <th
+                          key={colId}
+                          className="px-4 py-2 text-left text-sm font-medium border border-gray-200"
                         >
-                          {visibleColumns.map((colId) => {
-                            if (
-                              colId in contract &&
-                              typeof contract[colId as keyof Contract] !==
-                                "object"
-                            ) {
-                              const value = contract[colId as keyof Contract];
-                              return (
-                                <td
-                                  key={colId}
-                                  className="px-4 py-2 text-sm border border-gray-200 whitespace-nowrap"
-                                >
-                                  {progressIdx === 0
-                                    ? colId.includes("nilai")
-                                      ? formatCurrency(value as number)
-                                      : String(value)
-                                    : ""}
-                                </td>
-                              );
-                            }
-
-                            const progressValue =
-                              progress[colId as keyof typeof progress];
+                          {column.label}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {exportData.contracts.flatMap((contract, contractIdx) =>
+                    contract.progressData.map((progress, progressIdx) => (
+                      <tr
+                        key={`${contractIdx}-${progressIdx}`}
+                        className={
+                          progressIdx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        }
+                      >
+                        {visibleColumns.map((colId) => {
+                          if (
+                            colId in contract &&
+                            typeof contract[colId as keyof Contract] !==
+                              "object"
+                          ) {
+                            const value = contract[colId as keyof Contract];
                             return (
                               <td
                                 key={colId}
                                 className="px-4 py-2 text-sm border border-gray-200 whitespace-nowrap"
                               >
-                                {progressValue !== undefined &&
-                                progressValue !== null
-                                  ? String(progressValue)
+                                {progressIdx === 0
+                                  ? colId.includes("nilai")
+                                    ? formatCurrency(value as number)
+                                    : String(value)
                                   : ""}
                               </td>
                             );
-                          })}
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                          }
+  
+                          const progressValue =
+                            progress[colId as keyof typeof progress];
+                          return (
+                            <td
+                              key={colId}
+                              className="px-4 py-2 text-sm border border-gray-200 whitespace-nowrap"
+                            >
+                              {progressValue !== undefined &&
+                              progressValue !== null
+                                ? String(progressValue)
+                                : ""}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-
-        <div className={`${isSmallScreen ? "w-full" : "lg:w-1/2"}`}>
-          <div className="bg-gray-100 rounded-lg p-4 h-full">
-            <h2 className="text-lg font-semibold mb-2">Preview PDF</h2>
-            <div ref={previewRef} className="bg-white rounded h-96">
-              {isGenerating ? (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                  <p>Generating preview...</p>
-                </div>
-              ) : previewUrl ? (
-                <iframe
-                  src={previewUrl}
-                  className="w-full h-full"
-                  style={{ border: "none" }}
-                  title="PDF Preview"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">
-                    Click &quot;Preview PDF&quot; to generate a preview
-                  </p>
-                </div>
-              )}
-            </div>
+  
+        {/* Preview PDF - sekarang di bawah tabel */}
+        <div className="bg-gray-100 rounded-lg p-4">
+          <h2 className="text-lg font-semibold mb-2">Preview PDF</h2>
+          <div ref={previewRef} className="bg-white rounded h-96">
+            {isGenerating ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <p>Generating preview...</p>
+              </div>
+            ) : previewUrl ? (
+              <iframe
+                src={previewUrl}
+                className="w-full h-full"
+                style={{ border: "none" }}
+                title="PDF Preview"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500">
+                  Click &quot;Preview PDF&quot; to generate a preview
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
-  );
-}
+  );}

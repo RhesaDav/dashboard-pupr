@@ -60,7 +60,7 @@ function ProgressTable() {
         limit: parseInt(searchParams.get("pageSize") || "10"),
         search: searchParams.get("search") || "",
       }),
-    placeholderData: keepPreviousData,
+    // placeholderData: keepPreviousData,
   });
 
   const columns: ColumnDef<Contract & {physicalProgress: PhysicalProgress[]}>[] = [
