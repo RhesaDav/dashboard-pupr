@@ -42,7 +42,7 @@ async function ContractProgressPage({
       {/* Back button */}
       <div className="mb-4">
         <Link
-          href="/dashboard/progress"
+          href="/dashboard/physical-progress"
           className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
@@ -57,7 +57,7 @@ async function ContractProgressPage({
           <span>Dashboard</span>
         </Link>
         <ChevronRight className="h-4 w-4 mx-2" />
-        <Link href="/dashboard/progress" className="hover:text-blue-600">
+        <Link href="/dashboard/physical-progress" className="hover:text-blue-600">
           Progress Kontrak
         </Link>
         <ChevronRight className="h-4 w-4 mx-2" />

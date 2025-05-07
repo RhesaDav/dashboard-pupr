@@ -176,7 +176,7 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
               variant="outline"
               size="sm"
               onClick={() =>
-                router.push(`/dashboard/progress/${contractId}/edit`)
+                router.push(`/dashboard/physical-progress/${contractId}/edit`)
               }
               className="flex items-center gap-1"
             >
@@ -476,7 +476,7 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
           </Button>
           <Button
             onClick={() =>
-              router.push(`/dashboard/progress/${contractId}/edit`)
+              router.push(`/dashboard/physical-progress/${contractId}/edit`)
             }
           >
             Edit Progress
