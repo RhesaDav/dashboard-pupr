@@ -330,6 +330,9 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
                   <th className="px-4 py-3 text-right font-medium text-gray-700 border-b">
                     Realisasi
                   </th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-700 border-b">
+                    Deviasi
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -363,6 +366,17 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
                           }`}
                         >
                           {item.realisasi.toFixed(2)}%
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right border-b">
+                        <span
+                          className={`inline-block w-16 ${
+                            item.deviasi < 0
+                              ? "text-red-600"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {item.deviasi.toFixed(2)}%
                         </span>
                       </td>
                     </tr>
