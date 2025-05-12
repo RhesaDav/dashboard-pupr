@@ -170,10 +170,26 @@ model User {
   password     String
   role         Role      @default(SUPERADMIN)
   lastLoggedIn DateTime?
+  passwordReset PasswordReset[]
 
   contractAccess ContractAccess[]
 
   @@map("users")
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  token     String   @unique
+  expiresAt DateTime
+  
+  @@index([token])
+  @@index([userId])
+  @@map("password_resets")
 }
 
 enum Role {

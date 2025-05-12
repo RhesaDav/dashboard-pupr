@@ -128,6 +128,7 @@ export default function BasicInfoStep() {
                     selected={field.value ? new Date(field.value) : undefined}
                     onSelect={(date) => field.onChange(date)}
                     initialFocus
+                    defaultMonth={field.value ? new Date(field.value) : undefined}
                   />
                 </PopoverContent>
               </Popover>

@@ -1,8 +1,13 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  const handleWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+    if (type === "number") {
+      e.currentTarget.blur()
+    }
+  }
+
   return (
     <input
       type={type}
@@ -14,6 +19,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         " [&::-webkit-inner-spin-button]:appearance-none",
         className
       )}
+      onWheel={handleWheel}
       {...props}
     />
   )

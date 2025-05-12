@@ -107,14 +107,12 @@ const transformToPdfData = (data: any): PdfData => {
   };
 
   return {
-    lebar: "-",
-    panjang: "-",
-    tebal: "-",
+    dimensi: "-",
     tahun: new Date(data.tanggalKontrak).getFullYear() || 2025,
     sasaran: data.namaPaket || "-",
     indikator: data.namaPaket || "-",
     pekerjaan: data.namaPaket || "-",
-    deskripsi: data.deskripsi || "-",
+    deskripsi: data.namaPaket || "-",
     lingkupPekerjaan: data.hasilProdukAkhir || "-",
     lokasi: {
       kabupaten: data.location?.kota || "-",
@@ -162,6 +160,9 @@ const transformToPdfData = (data: any): PdfData => {
       backUpQuality: "-",
     },
     manfaat: [],
+    // foto0: "https://dummyimage.com/600x400/000/fff",
+    // foto50: "https://dummyimage.com/600x400/000/fff",
+    // foto100: "https://dummyimage.com/600x400/000/fff",
     foto0: data.dokumentasiAwal || "-",
     foto50: data.dokumentasiTengah || "-",
     foto100: data.dokumentasiAkhir || "-",

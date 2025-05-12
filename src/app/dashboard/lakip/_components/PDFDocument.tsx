@@ -10,9 +10,10 @@ export interface PdfData {
   pekerjaan: string;
   deskripsi: string;
   lingkupPekerjaan: string;
-  panjang?: number | string;
-  lebar?: number | string;
-  tebal?: number | string;
+  dimensi: number | string;
+  // panjang?: number | string;
+  // lebar?: number | string;
+  // tebal?: number | string;
   lokasi: {
     kabupaten: string;
     distrik: string;
@@ -221,9 +222,14 @@ const PdfDocument: React.FC<{ data: PdfData }> = ({ data }) => (
             <Text style={styles.colon}>:</Text>
             <Text style={styles.value}>{data.lingkupPekerjaan}</Text>
           </View>
+          <View style={styles.rowWithLabel}>
+            <Text style={styles.label}>Dimensi</Text>
+            <Text style={styles.colon}>:</Text>
+            <Text style={styles.value}>{data.dimensi}</Text>
+          </View>
           
           {/* Panjang, Lebar, Tebal dengan bullet points */}
-          <View style={styles.bulletItem}>
+          {/* <View style={styles.bulletItem}>
             <Text style={styles.bullet}>-</Text>
             <Text style={styles.label}>Panjang</Text>
             <Text style={styles.colon}>:</Text>
@@ -251,7 +257,7 @@ const PdfDocument: React.FC<{ data: PdfData }> = ({ data }) => (
               <Text>{data.tebal}</Text>
               <Text style={styles.unit}>Meter</Text>
             </View>
-          </View>
+          </View> */}
           
           {/* Lokasi dan koordinat */}
           <View style={styles.rowWithLabel}>

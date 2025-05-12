@@ -431,11 +431,11 @@ export default function AddendumStep() {
                         <div className="grid gap-4 md:grid-cols-3">
                           <FormItem>
                             <FormLabel className="text-sm font-medium">
-                              Nama Addendum
+                              Nomor Addendum
                             </FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="Contoh: Addendum Perpanjangan Waktu"
+                                placeholder="Masukkan nomor addendum"
                                 value={item.name || ""}
                                 onChange={(e) =>
                                   updateAddendumItem(

@@ -603,7 +603,7 @@ export default function ReportTable() {
       };
 
       sessionStorage.setItem("pdfExportData", JSON.stringify(pdfData));
-      router.push("/dashboard/report/a/pdf");
+      router.push("/dashboard/report/pdf");
     } catch (error) {
       console.error("Export error:", error);
       toast.error("Gagal melakukan ekspor PDF");

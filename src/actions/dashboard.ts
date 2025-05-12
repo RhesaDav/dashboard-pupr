@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { Contract, PhysicalProgress, Role } from "@prisma/client";
 import { addDays, format, subMonths, isBefore, isAfter } from "date-fns";
+import { cookies } from "next/headers";
 
 export interface DashboardReport {
   // Ringkasan Kontrak
@@ -15,7 +16,7 @@ export interface DashboardReport {
   // Progress
   avgPhysicalProgress: number;
   avgFinancialProgress: number;
-  physicalProgressTrend: { month: string; value: number }[];
+  physicalProgressTrend: { month: string; value: string }[];
 
   // Distribusi
   statusDistribution: { status: string; count: number }[];
@@ -77,8 +78,21 @@ export interface DashboardReport {
 }
 
 export async function getDashboardReport(): Promise<DashboardReport> {
+  const cookieStore = await cookies();
+  const budgetYear = cookieStore.get("budgetYear")?.value;
+  if (!budgetYear) throw Error("budget year not found")
+  const budgetYearNum = parseInt(budgetYear);
+  const startOfYear = new Date(budgetYearNum, 0, 1);
+  const endOfYear = new Date(budgetYearNum, 11, 31, 23, 59, 59, 999);
+
   // Fetch all contracts with related data
   const contracts = await prisma.contract.findMany({
+    where: {
+      tanggalKontrak: {
+        gte: startOfYear,
+        lte: endOfYear,
+      },
+    },
     include: {
       physicalProgress: true,
       financialProgress: true,
@@ -155,7 +169,9 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     `Jumlah kontrak yang dihitung rata-ratanya: ${contractsWithPhysicalProgress.length}`
   );
   console.log(
-    `Rata-rata Progress Fisik (berdasarkan Realisasi Tertinggi): ${avgPhysicalProgress.toFixed(2)}%`
+    `Rata-rata Progress Fisik (berdasarkan Realisasi Tertinggi): ${avgPhysicalProgress.toFixed(
+      2
+    )}%`
   );
 
   // Fixed avgFinancialProgress calculation - similar approach to physical progress
@@ -169,7 +185,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     // For financial progress, we'll use totalProgress if available
     const financialProgress = contract.financialProgress?.totalProgress || 0;
     totalOfMaxFinancialProgress += financialProgress;
-    
+
     console.log(
       `Kontrak ID: ${contract.id}, Progress Keuangan: ${financialProgress}%`
     );
@@ -180,9 +196,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
       ? totalOfMaxFinancialProgress / contractsWithFinancialProgress.length
       : 0;
 
-  console.log(
-    `Total Progress Keuangan: ${totalOfMaxFinancialProgress}`
-  );
+  console.log(`Total Progress Keuangan: ${totalOfMaxFinancialProgress}`);
   console.log(
     `Jumlah kontrak dengan progress keuangan: ${contractsWithFinancialProgress.length}`
   );
@@ -205,7 +219,9 @@ export async function getDashboardReport(): Promise<DashboardReport> {
   const physicalProgressTrend = Array.from(physicalProgressByMonth.entries())
     .map(([month, values]) => ({
       month,
-      value: values.reduce((sum, val) => sum + val, 0) / values.length,
+      value: (
+        values.reduce((sum, val) => sum + val, 0) / values.length
+      ).toFixed(2),
     }))
     .sort((a, b) => {
       // Sort by month (assuming month format is "MMM YYYY")
@@ -362,7 +378,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
 
   contracts.forEach((contract) => {
     const subkegiatan = contract.subKegiatan || "Lainnya";
-    
+
     // Get or initialize data for this subkegiatan
     const current = subkegiatanMap.get(subkegiatan) || {
       totalContracts: 0,
@@ -382,7 +398,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     // Find max physical progress for this contract (similar to the avgPhysicalProgress calculation)
     let maxPhysicalProgress = 0;
     let hasPhysicalProgress = false;
-    
+
     if (contract.physicalProgress && contract.physicalProgress.length > 0) {
       hasPhysicalProgress = true;
       contract.physicalProgress.forEach((progressEntry) => {
@@ -416,18 +432,16 @@ export async function getDashboardReport(): Promise<DashboardReport> {
       totalRealisasiKeuangan:
         current.totalRealisasiKeuangan +
         (contract.financialProgress?.totalPayment || 0),
-      contractsWithPhysicalProgress: 
+      contractsWithPhysicalProgress:
         current.contractsWithPhysicalProgress + (hasPhysicalProgress ? 1 : 0),
-      contractsWithFinancialProgress: 
+      contractsWithFinancialProgress:
         current.contractsWithFinancialProgress + (hasFinancialProgress ? 1 : 0),
-      maxPhysicalProgressValues: 
-        hasPhysicalProgress 
-          ? [...current.maxPhysicalProgressValues, maxPhysicalProgress] 
-          : current.maxPhysicalProgressValues,
-      financialProgressValues: 
-        hasFinancialProgress 
-          ? [...current.financialProgressValues, financialProgress] 
-          : current.financialProgressValues,
+      maxPhysicalProgressValues: hasPhysicalProgress
+        ? [...current.maxPhysicalProgressValues, maxPhysicalProgress]
+        : current.maxPhysicalProgressValues,
+      financialProgressValues: hasFinancialProgress
+        ? [...current.financialProgressValues, financialProgress]
+        : current.financialProgressValues,
       contracts: [
         ...current.contracts,
         {
@@ -445,21 +459,33 @@ export async function getDashboardReport(): Promise<DashboardReport> {
   const subkegiatanDistribution = Array.from(subkegiatanMap.entries()).map(
     ([subkegiatan, data]) => {
       // Calculate average physical progress for this subkegiatan
-      const avgProgressFisik = data.maxPhysicalProgressValues.length > 0
-        ? data.maxPhysicalProgressValues.reduce((sum, val) => sum + val, 0) / data.maxPhysicalProgressValues.length
-        : 0;
-      
+      const avgProgressFisik =
+        data.maxPhysicalProgressValues.length > 0
+          ? data.maxPhysicalProgressValues.reduce((sum, val) => sum + val, 0) /
+            data.maxPhysicalProgressValues.length
+          : 0;
+
       // Calculate average financial progress for this subkegiatan
-      const avgProgressKeuangan = data.financialProgressValues.length > 0
-        ? data.financialProgressValues.reduce((sum, val) => sum + val, 0) / data.financialProgressValues.length
-        : 0;
-      
+      const avgProgressKeuangan =
+        data.financialProgressValues.length > 0
+          ? data.financialProgressValues.reduce((sum, val) => sum + val, 0) /
+            data.financialProgressValues.length
+          : 0;
+
       console.log(`Subkegiatan: ${subkegiatan}`);
-      console.log(`  Contracts with physical progress: ${data.contractsWithPhysicalProgress}`);
-      console.log(`  Average physical progress: ${avgProgressFisik.toFixed(2)}%`);
-      console.log(`  Contracts with financial progress: ${data.contractsWithFinancialProgress}`);
-      console.log(`  Average financial progress: ${avgProgressKeuangan.toFixed(2)}%`);
-      
+      console.log(
+        `  Contracts with physical progress: ${data.contractsWithPhysicalProgress}`
+      );
+      console.log(
+        `  Average physical progress: ${avgProgressFisik.toFixed(2)}%`
+      );
+      console.log(
+        `  Contracts with financial progress: ${data.contractsWithFinancialProgress}`
+      );
+      console.log(
+        `  Average financial progress: ${avgProgressKeuangan.toFixed(2)}%`
+      );
+
       return {
         subkegiatan,
         totalContracts: data.totalContracts,
@@ -502,15 +528,15 @@ function isContractCompleted(
   if (!contract.physicalProgress || contract.physicalProgress.length === 0) {
     return false;
   }
-  
+
   // Find maximum realization across all progress entries
   let maxRealisasi = 0;
-  contract.physicalProgress.forEach(progress => {
+  contract.physicalProgress.forEach((progress) => {
     if (progress.realisasi > maxRealisasi) {
       maxRealisasi = progress.realisasi;
     }
   });
-  
+
   return maxRealisasi >= 100;
 }
 
@@ -522,7 +548,7 @@ function getContractStatus(
   // Find maximum realization across all progress entries
   let maxRealisasi = 0;
   if (contract.physicalProgress && contract.physicalProgress.length > 0) {
-    contract.physicalProgress.forEach(progress => {
+    contract.physicalProgress.forEach((progress) => {
       if (progress.realisasi > maxRealisasi) {
         maxRealisasi = progress.realisasi;
       }

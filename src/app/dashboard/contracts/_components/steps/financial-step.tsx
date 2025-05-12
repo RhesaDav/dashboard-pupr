@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { formatRupiah } from "@/lib/utils";
+import { InputCurrency } from "@/components/input-currency";
 
 interface TerminPercentages {
   uangMuka: number;
@@ -28,7 +29,7 @@ interface TerminItem {
 export default function FinancialStep() {
   const form = useFormContext();
   const nilaiKontrak: number = form.watch("nilaiKontrak") || 0;
-  
+
   // Ambil nilai persentase dari form
   const initialFinancialProgress = form.watch("financialProgress") || {
     uangMuka: 0,
@@ -37,7 +38,7 @@ export default function FinancialStep() {
     termin3: 0,
     termin4: 0,
     totalProgress: 0,
-    totalPayment: 0
+    totalPayment: 0,
   };
 
   const [percentages, setPercentages] = useState<TerminPercentages>({
@@ -69,7 +70,7 @@ export default function FinancialStep() {
     form.setValue("financialProgress", {
       ...percentages,
       totalProgress: totalPercentage,
-      totalPayment: totalPayment
+      totalPayment: totalPayment,
     });
   }, [percentages, nilaiKontrak]);
 
@@ -105,7 +106,12 @@ export default function FinancialStep() {
                 <FormItem>
                   <FormLabel>Pagu Anggaran</FormLabel>
                   <FormControl>
-                    <Input
+                    <InputCurrency
+                      placeholder="Masukkan pagu anggaran"
+                      value={field.value}
+                      onValueChange={(value) => field.onChange(value)}
+                    />
+                    {/* <Input
                     type="number"
                     placeholder="Masukkan pagu anggaran"
                     {...field}
@@ -117,7 +123,7 @@ export default function FinancialStep() {
                           : Number.parseFloat(e.target.value);
                       field.onChange(value);
                     }}
-                    />
+                    /> */}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -131,7 +137,12 @@ export default function FinancialStep() {
                 <FormItem>
                   <FormLabel>Nilai Kontrak</FormLabel>
                   <FormControl>
-                    <Input
+                    <InputCurrency
+                      placeholder="Masukkan nilai kontrak"
+                      value={field.value}
+                      onValueChange={(value) => field.onChange(value)}
+                    />
+                    {/* <Input
                       type="number"
                       placeholder="Masukkan nilai kontrak"
                       {...field}
@@ -143,7 +154,7 @@ export default function FinancialStep() {
                             : Number.parseFloat(e.target.value);
                         field.onChange(value);
                       }}
-                    />
+                    /> */}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -172,7 +183,7 @@ export default function FinancialStep() {
       </Card>
 
       {/* Termins */}
-      <Card className="bg-gray-50">
+      {/* <Card className="bg-gray-50">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Ringkasan Finansial</CardTitle>
         </CardHeader>
@@ -186,17 +197,15 @@ export default function FinancialStep() {
             <p className="text-xl font-bold">{formatRupiah(totalPayment)}</p>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Termins */}
-      <Card>
+      {/* <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Detail Pembayaran</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Total Progress dan Payment - tetap sama */}
 
-          {/* Table-like layout for termins */}
           <div className="rounded-md border">
             <div className="grid grid-cols-12 border-b bg-gray-50 text-sm font-medium">
               <div className="col-span-4 p-3">Termin</div>
@@ -205,7 +214,10 @@ export default function FinancialStep() {
             </div>
 
             {terminItems.map(({ key, label }) => (
-              <div key={key} className="grid grid-cols-12 border-b last:border-0">
+              <div
+                key={key}
+                className="grid grid-cols-12 border-b last:border-0"
+              >
                 <div className="col-span-4 flex items-center p-3 font-medium">
                   {label}
                 </div>
@@ -221,7 +233,10 @@ export default function FinancialStep() {
                         {...field}
                         value={field.value === 0 ? "" : field.value}
                         onChange={(e) => {
-                          const value = e.target.value === "" ? 0 : Number.parseFloat(e.target.value);
+                          const value =
+                            e.target.value === ""
+                              ? 0
+                              : Number.parseFloat(e.target.value);
                           field.onChange(value);
                           handlePercentageChange(key, e.target.value);
                         }}
@@ -229,20 +244,16 @@ export default function FinancialStep() {
                     )}
                   />
                 </div>
-                <div className="col-span-4 p-2">
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    className="h-9 bg-gray-50"
-                    value={calculateNominal(percentages[key]) || ""}
-                    disabled
-                  />
+                <div className="col-span-4 p-2 flex items-center space-x-2">
+                  <span className="h-9 flex items-center px-3 rounded text-sm text-gray-700">
+                    {formatRupiah(calculateNominal(percentages[key]) || 0)}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

@@ -26,6 +26,7 @@ import {
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { Role } from "@prisma/client";
 import { useState } from "react";
+import Image from "next/image";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -112,15 +113,22 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
         "md:h-screen md:overflow-y-auto"
       )}
     >
-      <div className="flex items-center gap-2 mb-6 flex-shrink-0"> 
-        <h1 className="text-xl md:text-2xl font-semibold">Bina Marga</h1>
-        {user && (
-          <span className="text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
-            {user.role.toLowerCase()}
-          </span>
-        )}
+<div className="flex items-center gap-3 mb-6 flex-shrink-0">
+        <div className="relative w-10 h-10">
+          <Image
+            src="/img/logo-papua.png"
+            alt="Logo Bina Marga Papua"
+            fill
+            className="object-contain"
+            sizes="40px"
+            priority
+          />
+        </div>
+        <div className="flex flex-col">
+          <h1 className="text-xl font-semibold leading-tight">Bina Marga</h1>
+          <span className="text-xs text-muted-foreground">Provinsi Papua</span>
+        </div>
       </div>
-
       <nav className="flex-grow overflow-y-auto"> 
         <ul className="space-y-1.5 md:space-y-2">
           {filteredMenuItems.map((item) => {

@@ -20,6 +20,8 @@ import {
 } from "@/lib/utils";
 import { IdSchema } from "@/schemas/id.schema";
 import { format } from "date-fns";
+import { getCurrentUser } from "./auth";
+import { cookies } from "next/headers";
 
 interface ProgressItem {
   week: number;
@@ -253,6 +255,9 @@ export async function getAllContracts(filterParams: any = {}) {
       limit: 10,
       ...filterParams,
     };
+    const user = await getCurrentUser();
+    const cookieStore = await cookies();
+    const budgetYear = cookieStore.get("budgetYear")?.value || null;
 
     const validatedFilter = await validateSchema(ContractFilterSchema, filter);
 
@@ -262,6 +267,26 @@ export async function getAllContracts(filterParams: any = {}) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
+
+    if (user?.role === "CONSULTANT") {
+      where.contractAccess = {
+        some: {
+          userId: user.id,
+        },
+      };
+    }
+
+    if (budgetYear) {
+      const budgetYearNum = parseInt(budgetYear);
+      const startOfYear = new Date(budgetYearNum, 0, 1);
+      const endOfYear = new Date(budgetYearNum, 11, 31, 23, 59, 59, 999);
+      
+      where.tanggalKontrak = {
+        ...where.tanggalKontrak,
+        gte: startOfYear,
+        lte: endOfYear
+      };
+    }
 
     if (search) {
       where.OR = [

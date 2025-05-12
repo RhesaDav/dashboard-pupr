@@ -1,5 +1,6 @@
 "use client";
 import { format } from "date-fns";
+import { id as indonesianLocale } from 'date-fns/locale';
 import { useEffect, useState } from "react";
 import {
   DashboardReport,
@@ -19,7 +20,7 @@ import { SubkegiatanDistribution } from "./SubkegiatanDistribution";
 import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
-  const { user, loading: userLoading } = useCurrentUser();
+  const { user, loading: userLoading, budgetYear } = useCurrentUser();
   const [time, setTime] = useState({
     greeting: "",
     currentTime: "",
@@ -48,7 +49,7 @@ export default function DashboardPage() {
     const greeting =
       hour < 12 ? "Pagi" : hour < 15 ? "Siang" : hour < 19 ? "Sore" : "Malam";
 
-    const currentTime = format(now, "EEEE, d MMMM yyyy HH:mm");
+    const currentTime = format(now, "EEEE, d MMMM yyyy HH:mm", { locale: indonesianLocale });
 
     setTime({ greeting, currentTime });
 
@@ -65,8 +66,6 @@ export default function DashboardPage() {
     return <DashboardError />;
   }
 
-  console.log(dashboardData.physicalProgressTrend)
-
   return (
     <div className="p-6 space-y-6">
       <DashboardHeader
@@ -80,7 +79,7 @@ export default function DashboardPage() {
       <SubkegiatanDistribution data={dashboardData.subkegiatanDistribution} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProgressTrendChart data={dashboardData.physicalProgressTrend} />
+        <ProgressTrendChart budgetYear={budgetYear} data={dashboardData.physicalProgressTrend} />
         <LocationDistributionChart data={dashboardData.locationDistribution} />
       </div>
 

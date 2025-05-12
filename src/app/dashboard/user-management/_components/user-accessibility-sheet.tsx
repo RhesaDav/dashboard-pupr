@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, ReactNode } from "react"; // Import ReactNode
+import { useEffect, useState, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-// Hapus Input jika tidak digunakan di file ini
+
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area"; // Tetap gunakan untuk list jika perlu
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -18,16 +18,16 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Eye, Loader2 } from "lucide-react";
-import { Contract, User } from "@prisma/client"; // Asumsi path @prisma/client benar
-import { getAllContracts } from "@/actions/contract"; // Sesuaikan path
+import { Contract, User } from "@prisma/client";
+import { getAllContracts } from "@/actions/contract";
 import {
   getUserContractAccess,
   updateContractAccess,
-} from "@/actions/contract-access"; // Sesuaikan path
+} from "@/actions/contract-access";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge"; // Sesuaikan path
-import { toast } from "sonner"; // Impor toast jika ingin digunakan
-import { cn } from "@/lib/utils"; // Impor cn jika belum ada
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface UserAccessibilitySheetProps {
   user: User;
@@ -39,40 +39,35 @@ export default function UserAccessibilitySheet({
   const [contractData, setContractData] = useState<Contract[]>([]);
   const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false); // State terpisah untuk saving
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Gunakan flag untuk mencegah fetch ganda di StrictMode (development)
   const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
-    // Hanya fetch jika user ada dan belum fetch sebelumnya
     if (user?.id && !hasFetched) {
       const fetchData = async () => {
         setIsLoading(true);
-        setHasFetched(true); // Tandai sudah fetch
+        setHasFetched(true);
         try {
-          // Fetch semua kontrak
           const contractsRes = await getAllContracts();
-          // Sortir kontrak berdasarkan nama paket atau tanggal (opsional)
-          const sortedContracts = (contractsRes.contracts || []).sort((a, b) =>
+
+          const sortedContracts = (contractsRes.data || []).sort((a, b) =>
             (a.namaPaket || "").localeCompare(b.namaPaket || "")
           );
           setContractData(sortedContracts);
 
-          // Fetch akses user yang sudah ada
           const accessRes = await getUserContractAccess(user.id);
           setSelectedContracts(accessRes.map((access) => access.contractId));
         } catch (error) {
           console.error("Failed to fetch data:", error);
-          toast.error("Gagal memuat data hak akses."); // Tampilkan error toast
+          toast.error("Gagal memuat data hak akses.");
         } finally {
           setIsLoading(false);
         }
       };
       fetchData();
     }
-    // Reset fetch flag jika user berubah (misal sheet dibuka untuk user berbeda)
-  }, [user, hasFetched]); // Tambahkan hasFetched ke dependency array
+  }, [user, hasFetched]);
 
   const handleContractToggle = (contractId: string) => {
     setSelectedContracts((prev) =>
@@ -83,25 +78,22 @@ export default function UserAccessibilitySheet({
   };
 
   const handleSave = async () => {
-    setIsSaving(true); // Mulai loading simpan
+    setIsSaving(true);
     try {
       await updateContractAccess(user.id, selectedContracts);
-      toast.success("Hak akses berhasil diperbarui."); // Tampilkan success toast
-      // Biasanya sheet ditutup otomatis oleh SheetClose,
-      // tapi Anda bisa tambahkan logika penutupan manual jika perlu
+      toast.success("Hak akses berhasil diperbarui.");
     } catch (error) {
       console.error("Failed to update access:", error);
-      toast.error("Gagal menyimpan perubahan hak akses."); // Tampilkan error toast
+      toast.error("Gagal menyimpan perubahan hak akses.");
     } finally {
-      setIsSaving(false); // Selesai loading simpan
+      setIsSaving(false);
     }
   };
 
   const isAdminRole = user.role === "ADMIN" || user.role === "SUPERADMIN";
 
-  // Hitung jumlah kontrak terpilih (selain oleh admin)
   const selectedCount = isAdminRole
-    ? contractData.length // Admin dianggap memilih semua
+    ? contractData.length
     : selectedContracts.length;
 
   return (
