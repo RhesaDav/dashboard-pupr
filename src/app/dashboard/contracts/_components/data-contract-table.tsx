@@ -202,7 +202,7 @@ function DataContractTable() {
             </TooltipProvider>
 
             {/* Delete Button (conditional) */}
-            {user?.role !== "CONSULTANT" && (
+            {user?.role === "SUPERADMIN" && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

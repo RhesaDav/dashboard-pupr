@@ -19,25 +19,25 @@ export const createUser = async (formData: FormData) => {
 
     const checkUser = await prisma.user.findFirst({
       where: {
-        email: validatedData.email
-      }
-    })
+        email: validatedData.email,
+      },
+    });
 
     if (checkUser) {
       return {
         success: false,
-        error: "Email registered"
-      }
+        error: "Email registered",
+      };
     }
 
     const newUser = await prisma.user.create({
       data: {
         ...validatedData,
-        password: await bcrypt.hash(validatedData.password, 10)
+        password: await bcrypt.hash(validatedData.password, 10),
       },
     });
 
-    revalidatePath("/dashboard/user-management","page")
+    revalidatePath("/dashboard/user-management", "page");
 
     return { success: true, user: newUser };
   } catch (error) {
@@ -55,36 +55,55 @@ export const createUser = async (formData: FormData) => {
   }
 };
 
-export const getAllUsers = async (
-  page = 1,
-  limit = 10,
-  search = "",
-) => {
+export const getAllUsers = async (filterParams: any = {}) => {
   try {
+    const filter = {
+      page: 1,
+      limit: 10,
+      ...filterParams,
+    };
+    const { page, limit, search } = filter;
     const skip = (page - 1) * limit;
-    
+
     const searchCondition: Prisma.UserWhereInput = search
       ? {
           OR: [
-            { name: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
-            { email: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
+            {
+              name: {
+                contains: search,
+                mode: "insensitive" as Prisma.QueryMode,
+              },
+            },
+            {
+              email: {
+                contains: search,
+                mode: "insensitive" as Prisma.QueryMode,
+              },
+            },
           ],
+          role: {
+            not: "SUPERADMIN",
+          },
         }
-      : {};
-    
+      : {
+          role: {
+            not: "SUPERADMIN",
+          },
+        };
+
     const users = await prisma.user.findMany({
       where: searchCondition,
       skip,
       take: limit,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
-    
+
     const totalUsers = await prisma.user.count({
       where: searchCondition,
     });
-    
+
     const totalPages = Math.ceil(totalUsers / limit);
-    
+
     return {
       success: true,
       users,
@@ -104,14 +123,14 @@ export const getAllUsers = async (
         error: error.errors.map((err) => err.message).join(", "),
       };
     }
-    
+
     if (error instanceof Error) {
       return {
         success: false,
         error: error.message,
       };
     }
-    
+
     return {
       success: false,
       error: "Something wrong",
@@ -151,15 +170,31 @@ export const updateUser = async (formData: FormData) => {
 
     const validatedData = UpdateUserSchema.parse(data);
 
-    const updatedUser = await prisma.user.update({
+    const currentUser = await prisma.user.findUnique({
       where: { id: validatedData.id },
-      data: {
-        ...validatedData,
-        password: await bcrypt.hash(validatedData.password, 10)
-      },
+      select: { password: true },
     });
 
-    revalidatePath("/dashboard/user-management","page")
+    if (!currentUser) {
+      return { success: false, error: "User not found" };
+    }
+
+    const updateData: any = {
+      email: validatedData.email,
+      name: validatedData.name,
+      role: validatedData.role,
+    };
+
+    updateData.password = validatedData.password
+      ? await bcrypt.hash(validatedData.password, 10)
+      : currentUser.password;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: validatedData.id },
+      data: updateData,
+    });
+
+    revalidatePath("/dashboard/user-management", "page");
 
     return { success: true, user: updatedUser };
   } catch (error) {
@@ -172,13 +207,12 @@ export const updateUser = async (formData: FormData) => {
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-
-    return { success: false, error: "Something wrong" };
+    return { success: false, error: "Something went wrong" };
   }
 };
 
 export const deleteUser = async (id: string) => {
-  console.log(id)
+  console.log(id);
   try {
     const validatedId = UserIdSchema.parse({ id });
 
@@ -186,7 +220,7 @@ export const deleteUser = async (id: string) => {
       where: { id: validatedId.id },
     });
 
-    revalidatePath("/dashboard/user-management","page")
+    revalidatePath("/dashboard/user-management", "page");
 
     return { success: true, message: "User deleted successfully" };
   } catch (error) {

@@ -113,6 +113,7 @@ function generateWeeks(startDate: Date, durationDays: number) {
 
 export async function createContract(data: CompleteContractCreate) {
   try {
+    const user = await getCurrentUser()
     const validatedData = await validateSchema(
       CompleteContractCreateSchema,
       data
@@ -145,6 +146,15 @@ export async function createContract(data: CompleteContractCreate) {
           hasAddendum: addendum && addendum.length > 0 ? true : false,
         },
       });
+
+      if (user && (user.role === 'ADMIN' || user.role === 'CONSULTANT')) {
+        await tx.contractAccess.create({
+          data: {
+            contractId: contract.id,
+            userId: user.id,
+          },
+        });
+      }
 
       if (financialProgress) {
         await tx.financialProgress.create({
@@ -268,7 +278,7 @@ export async function getAllContracts(filterParams: any = {}) {
 
     const where: any = {};
 
-    if (user?.role === "CONSULTANT") {
+    if (user?.role === "CONSULTANT" || user?.role === "ADMIN") {
       where.contractAccess = {
         some: {
           userId: user.id,

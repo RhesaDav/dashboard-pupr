@@ -40,6 +40,7 @@ import {
 } from "@prisma/client";
 import { useQuery } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
 interface ExtendedContract extends Contract {
   addendum?: Addendum[];
@@ -619,7 +620,6 @@ export default function ContractDetailsPage() {
                 )}
               </CardContent>
             </Card>
-
             {/* Documentation Card */}
             <Card>
               <CardHeader>
@@ -630,31 +630,46 @@ export default function ContractDetailsPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {["awal", "tengah", "akhir"].map((type) => (
-                    <div key={type}>
-                      <h3 className="font-medium mb-2 capitalize">
-                        Dokumentasi {type}
-                      </h3>
-                      {contract?.[
-                        `dokumentasi${
-                          type.charAt(0).toUpperCase() + type.slice(1)
-                        }` as keyof typeof contract
-                      ] ? (
-                        <div className="bg-gray-100 rounded-md h-48 flex items-center justify-center">
-                          <p className="text-gray-500">
-                            Dokumentasi {type} tersedia
-                          </p>
+                  {["awal", "tengah", "akhir"].map((type) => {
+                    const docKey =
+                      `dokumentasi${type.charAt(0).toUpperCase() + type.slice(1)}` as
+                        | "dokumentasiAwal"
+                        | "dokumentasiTengah"
+                        | "dokumentasiAkhir";
+                    const imageUrl = contract?.[docKey];
+
+                    return (
+                      <div key={type} className="space-y-2">
+                        <h3 className="font-medium mb-2 capitalize">
+                          Dokumentasi {type}
+                        </h3>
+                        <div className="relative aspect-video rounded-md overflow-hidden border bg-gray-100">
+                          {imageUrl ? (
+                            <Image
+                              src={imageUrl}
+                              alt={`Dokumentasi ${type}`}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
+                              }}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <p className="text-sm text-gray-500 text-center p-4">
+                                Belum ada dokumentasi {type}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <p className="text-sm text-gray-500">
-                          Belum ada dokumentasi {type}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
-            </Card>
+            </Card>{" "}
           </div>
         </TabsContent>
       </Tabs>

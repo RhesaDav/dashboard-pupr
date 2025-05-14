@@ -1,11 +1,7 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type React from "react";
-
-import { useForm, useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
-  Form,
   FormControl,
   FormField,
   FormItem,
@@ -13,11 +9,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useState } from "react";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { toast } from "sonner";
 
 export default function DocumentationStep() {
   const form = useFormContext();
+
   const [dokumentasiAwalPreview, setDokumentasiAwalPreview] = useState<
     string | null
   >(form.watch("dokumentasiAwal") || null);
@@ -28,237 +27,223 @@ export default function DocumentationStep() {
     string | null
   >(form.watch("dokumentasiAkhir") || null);
 
-  // For demonstration purposes, we're using base64 strings
-  // In a real application, you would upload these to a server
-  const handleFileChange = (
+  const [isUploading, setIsUploading] = useState({
+    dokumentasiAwal: false,
+    dokumentasiTengah: false,
+    dokumentasiAkhir: false,
+  });
+
+  const s3Client = new S3Client({
+    region: process.env.NEXT_PUBLIC_AWS_REGION || "us-east-1",
+    credentials: {
+      accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || "",
+      secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || "",
+    },
+    requestChecksumCalculation: "WHEN_REQUIRED",
+  });
+
+  const uploadToS3 = async (file: File) => {
+    try {
+      const fileKey = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+
+      const params = {
+        Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME,
+        Key: fileKey,
+        Body: file,
+        ContentType: file.type,
+      };
+
+      if (!params.Bucket) {
+        throw new Error("AWS_S3_BUCKET_NAME tidak terkonfigurasi");
+      }
+
+      await s3Client.send(new PutObjectCommand(params));
+
+      return `https://${params.Bucket}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${fileKey}`;
+    } catch (error: any) {
+      let errorMessage = "Gagal mengunggah ke S3";
+
+      if (error.name === "CredentialsProviderError") {
+        errorMessage = "Kredensial AWS tidak valid atau hilang";
+      } else if (error.name === "NoSuchBucket") {
+        errorMessage = "Bucket S3 tidak ditemukan";
+      } else if (error.name === "AccessDenied") {
+        errorMessage = "Akses ditolak ke bucket S3";
+      } else if (error.$metadata?.httpStatusCode === 403) {
+        errorMessage =
+          "Tidak memiliki izin untuk mengunggah ke S3 (403 Forbidden)";
+      } else if (error.message) {
+        errorMessage = `Error S3: ${error.message}`;
+      }
+
+      console.error("Error uploading to S3:", {
+        message: errorMessage,
+        originalError: error,
+        config: {
+          region: process.env.NEXT_PUBLIC_AWS_REGION || "unset",
+          bucketName: process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME || "unset",
+          hasAccessKey: !!process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
+          hasSecretKey: !!process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
+        },
+      });
+
+      throw { message: errorMessage, originalError: error };
+    }
+  };
+
+  const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
     field: string
   ) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        if (field === "dokumentasiAwal") {
-          setDokumentasiAwalPreview(base64String);
-          form.setValue("dokumentasiAwal", base64String);
-        } else if (field === "dokumentasiTengah") {
-          setDokumentasiTengahPreview(base64String);
-          form.setValue("dokumentasiTengah", base64String);
-        } else if (field === "dokumentasiAkhir") {
-          setDokumentasiAkhirPreview(base64String);
-          form.setValue("dokumentasiAkhir", base64String);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(
+        `File terlalu besar. Maksimum ukuran adalah 5MB. File Anda: ${(file.size / (1024 * 1024)).toFixed(2)}MB`
+      );
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setIsUploading((prev) => ({ ...prev, [field]: true }));
+
+      const previewUrl = URL.createObjectURL(file);
+      if (field === "dokumentasiAwal") {
+        setDokumentasiAwalPreview(previewUrl);
+      } else if (field === "dokumentasiTengah") {
+        setDokumentasiTengahPreview(previewUrl);
+      } else if (field === "dokumentasiAkhir") {
+        setDokumentasiAkhirPreview(previewUrl);
+      }
+
+      const fileUrl = await uploadToS3(file);
+      console.log(fileUrl);
+      form.setValue(field, fileUrl);
+    } catch (error: any) {
+      const errorMessage =
+        error.message || "Gagal mengunggah gambar. Silakan coba lagi.";
+
+      if (field === "dokumentasiAwal") {
+        setDokumentasiAwalPreview(null);
+      } else if (field === "dokumentasiTengah") {
+        setDokumentasiTengahPreview(null);
+      } else if (field === "dokumentasiAkhir") {
+        setDokumentasiAkhirPreview(null);
+      }
+      
+      toast.error(`Upload gagal: ${errorMessage}`);
+
+      console.error("Upload failed details:", error);
+    } finally {
+      setIsUploading((prev) => ({ ...prev, [field]: false }));
+      e.target.value = ""; // Reset input
     }
   };
 
   const removeImage = (field: string) => {
-    if (field === "dokumentasiAwal") {
-      setDokumentasiAwalPreview(null);
-      form.setValue("dokumentasiAwal", "");
-    } else if (field === "dokumentasiTengah") {
-      setDokumentasiTengahPreview(null);
-      form.setValue("dokumentasiTengah", "");
-    } else if (field === "dokumentasiAkhir") {
-      setDokumentasiAkhirPreview(null);
-      form.setValue("dokumentasiAkhir", "");
-    }
+    const previewFields = {
+      dokumentasiAwal: setDokumentasiAwalPreview,
+      dokumentasiTengah: setDokumentasiTengahPreview,
+      dokumentasiAkhir: setDokumentasiAkhirPreview,
+    };
+
+    previewFields[field as keyof typeof previewFields](null);
+    form.setValue(field, "");
   };
+  console.log(dokumentasiAwalPreview);
+
+  const UploadComponent = ({
+    field,
+    preview,
+    label,
+  }: {
+    field: keyof typeof isUploading;
+    preview: string | null;
+    label: string;
+  }) => (
+    <FormField
+      control={form.control}
+      name={field}
+      render={() => (
+        <FormItem className="flex-1">
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <div className="border-2 border-dashed rounded-lg p-2 text-center h-60 relative">
+              {preview ? (
+                <div className="relative w-full h-full">
+                  <Image
+                    src={preview}
+                    alt={`${label} preview`}
+                    fill
+                    className="object-contain"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6 rounded-full"
+                    onClick={() => removeImage(field)}
+                    disabled={isUploading[field]}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center h-full cursor-pointer">
+                  {isUploading[field] ? (
+                    <>
+                      <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+                      <p className="text-sm">Mengunggah...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                      <p className="text-xs font-medium mb-1">{label}</p>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        PNG, JPG (max 5MB)
+                      </p>
+                      <div className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground shadow hover:bg-primary/90">
+                        Pilih File
+                      </div>
+                      <input
+                        type="file"
+                        className="sr-only"
+                        accept="image/png,image/jpeg,image/jpg"
+                        onChange={(e) => handleFileChange(e, field)}
+                        disabled={isUploading[field]}
+                      />
+                    </>
+                  )}
+                </label>
+              )}
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
 
   return (
-    <div className="space-y-6">
-      <FormField
-        control={form.control}
-        name="dokumentasiAwal"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Dokumentasi Awal</FormLabel>
-            <FormControl>
-              <div className="space-y-4">
-                <div className="border-2 border-dashed rounded-lg p-4 text-center">
-                  {dokumentasiAwalPreview ? (
-                    <div className="relative mx-auto w-full h-48">
-                      <Image
-                        src={dokumentasiAwalPreview || "/placeholder.svg"}
-                        alt="Dokumentasi awal preview"
-                        fill
-                        className="object-contain"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 h-6 w-6 rounded-full"
-                        onClick={() => removeImage("dokumentasiAwal")}
-                      >
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Remove</span>
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-4">
-                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="mb-1 text-sm font-medium">
-                        Upload dokumentasi awal
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        PNG, JPG or JPEG
-                      </p>
-                      <label
-                        htmlFor="dokumentasi-awal"
-                        className="cursor-pointer"
-                      >
-                        <div className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90">
-                          Pilih Gambar
-                        </div>
-                        <input
-                          id="dokumentasi-awal"
-                          type="file"
-                          className="sr-only"
-                          accept="image/png,image/jpeg,image/jpg"
-                          onChange={(e) =>
-                            handleFileChange(e, "dokumentasiAwal")
-                          }
-                        />
-                      </label>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <UploadComponent
+        field="dokumentasiAwal"
+        preview={dokumentasiAwalPreview}
+        label="Dokumentasi Awal"
       />
 
-      <FormField
-        control={form.control}
-        name="dokumentasiTengah"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Dokumentasi Tengah</FormLabel>
-            <FormControl>
-              <div className="space-y-4">
-                <div className="border-2 border-dashed rounded-lg p-4 text-center">
-                  {dokumentasiTengahPreview ? (
-                    <div className="relative mx-auto w-full h-48">
-                      <Image
-                        src={dokumentasiTengahPreview || "/placeholder.svg"}
-                        alt="Dokumentasi tengah preview"
-                        fill
-                        className="object-contain"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 h-6 w-6 rounded-full"
-                        onClick={() => removeImage("dokumentasiTengah")}
-                      >
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Remove</span>
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-4">
-                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="mb-1 text-sm font-medium">
-                        Upload dokumentasi tengah
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        PNG, JPG or JPEG
-                      </p>
-                      <label
-                        htmlFor="dokumentasi-tengah"
-                        className="cursor-pointer"
-                      >
-                        <div className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90">
-                          Pilih Gambar
-                        </div>
-                        <input
-                          id="dokumentasi-tengah"
-                          type="file"
-                          className="sr-only"
-                          accept="image/png,image/jpeg,image/jpg"
-                          onChange={(e) =>
-                            handleFileChange(e, "dokumentasiTengah")
-                          }
-                        />
-                      </label>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+      <UploadComponent
+        field="dokumentasiTengah"
+        preview={dokumentasiTengahPreview}
+        label="Dokumentasi Tengah"
       />
 
-      <FormField
-        control={form.control}
-        name="dokumentasiAkhir"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Dokumentasi Akhir</FormLabel>
-            <FormControl>
-              <div className="space-y-4">
-                <div className="border-2 border-dashed rounded-lg p-4 text-center">
-                  {dokumentasiAkhirPreview ? (
-                    <div className="relative mx-auto w-full h-48">
-                      <Image
-                        src={dokumentasiAkhirPreview || "/placeholder.svg"}
-                        alt="Dokumentasi akhir preview"
-                        fill
-                        className="object-contain"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 h-6 w-6 rounded-full"
-                        onClick={() => removeImage("dokumentasiAkhir")}
-                      >
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Remove</span>
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-4">
-                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="mb-1 text-sm font-medium">
-                        Upload dokumentasi akhir
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        PNG, JPG or JPEG
-                      </p>
-                      <label
-                        htmlFor="dokumentasi-akhir"
-                        className="cursor-pointer"
-                      >
-                        <div className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90">
-                          Pilih Gambar
-                        </div>
-                        <input
-                          id="dokumentasi-akhir"
-                          type="file"
-                          className="sr-only"
-                          accept="image/png,image/jpeg,image/jpg"
-                          onChange={(e) =>
-                            handleFileChange(e, "dokumentasiAkhir")
-                          }
-                        />
-                      </label>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+      <UploadComponent
+        field="dokumentasiAkhir"
+        preview={dokumentasiAkhirPreview}
+        label="Dokumentasi Akhir"
       />
     </div>
   );

@@ -12,6 +12,7 @@ export const CreateUserSchema = z.object({
 
 export const UpdateUserSchema = CreateUserSchema.extend({
   id: z.string().uuid(),
+  password: z.string().optional()
 });
 
 export const UserIdSchema = z.object({
