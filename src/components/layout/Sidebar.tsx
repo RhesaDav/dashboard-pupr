@@ -75,7 +75,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     },
     { label: "Laporan", icon: FileBarChart2, href: "/dashboard/report", roles: ["ADMIN", "SUPERADMIN"] },
     { label: "Lakip", icon: ClipboardList, href: "/dashboard/lakip", roles: ["ADMIN", "SUPERADMIN"] },
-    { label: "Management User", icon: Users, href: "/dashboard/user-management", roles: ["ADMIN", "SUPERADMIN"] },
+    { label: "Kelola Pengguna", icon: Users, href: "/dashboard/user-management", roles: ["ADMIN", "SUPERADMIN"] },
   ];
 
   if (loading) {
@@ -126,7 +126,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
         </div>
         <div className="flex flex-col">
           <h1 className="text-xl font-semibold leading-tight">Bina Marga</h1>
-          <span className="text-xs text-muted-foreground">Provinsi Papua</span>
+          <span className="text-xs text-muted-foreground">Provinsi Papua Barat</span>
         </div>
       </div>
       <nav className="flex-grow overflow-y-auto"> 

@@ -107,9 +107,9 @@ const transformToPdfData = (data: any): PdfData => {
   };
 
   return {
-    dimensi: "-",
+    dimensi: data.dimensi,
     tahun: new Date(data.tanggalKontrak).getFullYear() || 2025,
-    sasaran: data.namaPaket || "-",
+    sasaran: "-",
     indikator: data.namaPaket || "-",
     pekerjaan: data.namaPaket || "-",
     deskripsi: data.namaPaket || "-",
@@ -140,8 +140,11 @@ const transformToPdfData = (data: any): PdfData => {
       ppk: data.ppk || "-",
     },
     realisasi: {
+      // rencanaFisik: data.financialProgress?.totalProgress
+      //   ? `${data.financialProgress.totalProgress}%`
+      //   : "-",
       rencanaFisik: data.financialProgress?.totalProgress
-        ? `${data.financialProgress.totalProgress}%`
+        ? `100%`
         : "-",
       realisasiFisik: data.financialProgress?.totalProgress
         ? `${data.financialProgress.totalProgress}%`
@@ -156,7 +159,7 @@ const transformToPdfData = (data: any): PdfData => {
     dataPendukung: {
       laporan: "-",
       gambar: "-",
-      dokumentasi: data.dokumentasiAkhir || "-",
+      dokumentasi: "-",
       backUpQuality: "-",
     },
     manfaat: [],

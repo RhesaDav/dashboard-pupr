@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DateDayPicker } from "@/components/date-day-picker";
 
 export default function BasicInfoStep() {
   const form = useFormContext();
@@ -103,7 +104,11 @@ export default function BasicInfoStep() {
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Tanggal Kontrak</FormLabel>
-              <Popover>
+              <DateDayPicker
+                selectedDate={field.value}
+                onChange={(value)=>field.onChange(value)}
+              />
+              {/* <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -131,7 +136,7 @@ export default function BasicInfoStep() {
                     defaultMonth={field.value ? new Date(field.value) : undefined}
                   />
                 </PopoverContent>
-              </Popover>
+              </Popover> */}
               <FormMessage />
             </FormItem>
           )}

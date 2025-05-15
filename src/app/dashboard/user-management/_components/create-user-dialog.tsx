@@ -27,8 +27,10 @@ import {
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
 import { Role } from "@prisma/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function CreateUserDialog() {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -51,6 +53,9 @@ export default function CreateUserDialog() {
     formData.append("role", values.role);
 
     const res = await createUser(formData);
+    queryClient.refetchQueries({
+      queryKey: ['users']
+    })
     setLoading(false);
 
     if (res.success) {
@@ -78,6 +83,7 @@ export default function CreateUserDialog() {
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
+              autoComplete="new-password"
               id="email"
               type="email"
               placeholder="you@example.com"
@@ -94,6 +100,7 @@ export default function CreateUserDialog() {
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
             <Input
+              autoComplete="new-password"
               id="password"
               type="password"
               placeholder="••••••••"
@@ -121,8 +128,8 @@ export default function CreateUserDialog() {
           <div className="grid gap-2">
             <Label htmlFor="role">Role</Label>
             <Select
-              onValueChange={form.setValue.bind(null, "role")}
-              defaultValue="ADMIN"
+              value={form.watch("role")}
+              onValueChange={(value) => form.setValue("role", value as Role)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih role" />

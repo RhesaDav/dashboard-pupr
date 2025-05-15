@@ -10,6 +10,7 @@ import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
+import { getCurrentUser } from "./auth";
 
 export const createUser = async (formData: FormData) => {
   try {
@@ -65,41 +66,42 @@ export const getAllUsers = async (filterParams: any = {}) => {
     const { page, limit, search } = filter;
     const skip = (page - 1) * limit;
 
-    const searchCondition: Prisma.UserWhereInput = search
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const baseSearchCondition: Prisma.UserWhereInput = search
       ? {
           OR: [
-            {
-              name: {
-                contains: search,
-                mode: "insensitive" as Prisma.QueryMode,
-              },
-            },
-            {
-              email: {
-                contains: search,
-                mode: "insensitive" as Prisma.QueryMode,
-              },
-            },
+            { name: { contains: search, mode: "insensitive" } },
+            { email: { contains: search, mode: "insensitive" } },
           ],
-          role: {
-            not: "SUPERADMIN",
-          },
         }
-      : {
-          role: {
-            not: "SUPERADMIN",
-          },
-        };
+      : {};
+
+    let roleCondition: Prisma.UserWhereInput = {};
+
+    if (currentUser.role !== "SUPERADMIN") {
+      roleCondition = {
+        role: { not: "SUPERADMIN" },
+      };
+    }
+
+    const whereCondition: Prisma.UserWhereInput = {
+      ...baseSearchCondition,
+      ...roleCondition,
+    };
 
     const users = await prisma.user.findMany({
-      where: searchCondition,
+      where: whereCondition,
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
     });
 
     const totalUsers = await prisma.user.count({
-      where: searchCondition,
+      where: whereCondition,
     });
 
     const totalPages = Math.ceil(totalUsers / limit);
@@ -133,7 +135,7 @@ export const getAllUsers = async (filterParams: any = {}) => {
 
     return {
       success: false,
-      error: "Something wrong",
+      error: "Something went wrong",
     };
   }
 };

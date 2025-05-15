@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { InputCurrency } from "@/components/input-currency";
+import { DateDayPicker } from "@/components/date-day-picker";
 
 export default function SupervisorStep() {
   const form = useFormContext();
@@ -219,7 +220,11 @@ export default function SupervisorStep() {
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Tanggal Kontrak</FormLabel>
-                <Popover>
+                <DateDayPicker
+                  selectedDate={field.value}
+                  onChange={(value) => field.onChange(value)}
+                />
+                {/* <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
@@ -247,7 +252,7 @@ export default function SupervisorStep() {
                       defaultMonth={field.value ? new Date(field.value) : undefined}
                     />
                   </PopoverContent>
-                </Popover>
+                </Popover> */}
                 <FormMessage />
               </FormItem>
             )}

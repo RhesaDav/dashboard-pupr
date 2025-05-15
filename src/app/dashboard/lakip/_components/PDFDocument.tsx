@@ -298,7 +298,7 @@ const PdfDocument: React.FC<{ data: PdfData }> = ({ data }) => (
           <View style={styles.rowWithLabel}>
             <Text style={styles.label}>Nilai Kontrak Fisik</Text>
             <Text style={styles.colon}>:</Text>
-            <Text style={styles.value}>Rp {data.kontrakFisik.nilai}</Text>
+            <Text style={styles.value}>{data.kontrakFisik.nilai}</Text>
           </View>
           <View style={styles.rowWithLabel}>
             <Text style={styles.label}>Nama Kontraktor</Text>
@@ -327,7 +327,7 @@ const PdfDocument: React.FC<{ data: PdfData }> = ({ data }) => (
           <View style={styles.rowWithLabel}>
             <Text style={styles.label}>Nilai Kontrak Pengawasan</Text>
             <Text style={styles.colon}>:</Text>
-            <Text style={styles.value}>Rp {data.kontrakPengawasan.nilai}</Text>
+            <Text style={styles.value}>{data.kontrakPengawasan.nilai}</Text>
           </View>
           <View style={styles.rowWithLabel}>
             <Text style={styles.label}>Nama Konsultan</Text>
@@ -362,7 +362,7 @@ const PdfDocument: React.FC<{ data: PdfData }> = ({ data }) => (
             <Text style={styles.colon}>:</Text>
             <View style={styles.valueWithUnit}>
               <Text>{data.realisasi.rencanaFisik}</Text>
-              <Text style={styles.unit}>Meter</Text>
+              {/* <Text style={styles.unit}>Meter</Text> */}
             </View>
           </View>
           <View style={styles.rowWithLabel}>
@@ -370,18 +370,18 @@ const PdfDocument: React.FC<{ data: PdfData }> = ({ data }) => (
             <Text style={styles.colon}>:</Text>
             <View style={styles.valueWithUnit}>
               <Text>{data.realisasi.realisasiFisik}</Text>
-              <Text style={styles.unit}>Meter</Text>
+              {/* <Text style={styles.unit}>Meter</Text> */}
             </View>
           </View>
           <View style={styles.rowWithLabel}>
             <Text style={styles.label}>Rencana Keuangan</Text>
             <Text style={styles.colon}>:</Text>
-            <Text style={styles.value}>Rp {data.realisasi.rencanaKeuangan}</Text>
+            <Text style={styles.value}>{data.realisasi.rencanaKeuangan}</Text>
           </View>
           <View style={styles.rowWithLabel}>
             <Text style={styles.label}>Realisasi Keuangan</Text>
             <Text style={styles.colon}>:</Text>
-            <Text style={styles.value}>Rp {data.realisasi.realisasiKeuangan}</Text>
+            <Text style={styles.value}>{data.realisasi.realisasiKeuangan}</Text>
           </View>
           
           <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Data Pendukung</Text>

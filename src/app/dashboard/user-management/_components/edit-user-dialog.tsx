@@ -39,11 +39,10 @@ export default function EditUserDialog({ user }: { user: User }) {
       formData.append("id", values.id);
       formData.append("email", values.email);
       
-      // Hanya update password jika diisi
       if (values.password) {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(values.password, salt);
-        formData.append("password", hashedPassword);
+        // const salt = await bcrypt.genSalt(10);
+        // const hashedPassword = await bcrypt.hash(values.password, salt);
+        formData.append("password", values.password);
       }
       
       if (values.name) formData.append("name", values.name);

@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader, Trash } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface DeleteUserDialogProps {
   userId: string;
@@ -23,12 +24,16 @@ interface DeleteUserDialogProps {
 }
 
 export function DeleteUserDialog({ userId, userName }: DeleteUserDialogProps) {
+  const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
     setLoading(true);
     const res = await deleteUser(userId);
     setLoading(false);
+    queryClient.refetchQueries({
+      queryKey: ['users']
+    })
 
     if (res.success) {
       toast.success(`User ${userName} berhasil dihapus`);

@@ -99,6 +99,7 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [tabErrors, setTabErrors] = useState<Record<string, boolean>>({});
+  const [isAnyImageUploading, setIsAnyImageUploading] = useState(false);
 
   const defaultValues = {
     namaPaket: "",
@@ -316,6 +317,10 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
     form.handleSubmit(handleSubmit)();
   };
 
+  const handleImageUploadStatusChange = (isUploading: boolean) => {
+    setIsAnyImageUploading(isUploading);
+  };
+
   return (
     <FormProvider {...form}>
       <Card className="w-full mx-auto shadow-lg">
@@ -378,7 +383,9 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
               </TabsContent>
 
               <TabsContent value="documentation">
-                <DocumentationStep />
+                <DocumentationStep
+                  onUploadStatusChange={handleImageUploadStatusChange}
+                />
               </TabsContent>
 
               <TabsContent value="location">
@@ -393,7 +400,7 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
             <Button
               type="button"
               className="min-w-[120px]"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isAnyImageUploading || isLoading}
               onClick={handleFormSubmit}
             >
               {isSubmitting ? (

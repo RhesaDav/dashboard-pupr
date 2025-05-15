@@ -22,7 +22,7 @@ function UserManagementTable() {
   const pageParam = parseInt(searchParams.get("page") || "1");
   const pageSizeParam = parseInt(searchParams.get("pageSize") || "10");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["users", pageParam, pageSizeParam, searchQuery],
     queryFn: () =>
       getAllUsers({
@@ -146,7 +146,7 @@ function UserManagementTable() {
               aria-label="Search users"
             />
           </div>
-          <CreateUserDialog aria-label="Create new user" />
+          <CreateUserDialog />
         </div>
       </div>
 
