@@ -112,12 +112,14 @@ export async function loginAction(formData: FormData) {
 
     cookiesHeaders.set("session", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      // secure: process.env.NODE_ENV === "production",
+      secure: false
     });
 
     cookiesHeaders.set("budgetYear", budgetYear, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
+      // secure: process.env.NODE_ENV === "production",
+      secure: false
     });
 
     return {
