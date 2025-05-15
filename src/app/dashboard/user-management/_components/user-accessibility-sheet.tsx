@@ -98,8 +98,8 @@ export default function UserAccessibilitySheet({
   });
 
   const contracts = contractsResponse?.data || [];
-  const totalContracts = contractsResponse?.pagination.total || 0;
-  const totalPages = contractsResponse?.pagination.pageCount || 1;
+  const totalContracts = contractsResponse?.pagination?.total || 0;
+  const totalPages = contractsResponse?.pagination?.pageCount || 1;
 
   const isLoading = isLoadingContracts || isLoadingAccess;
   const isError = isErrorContracts || isErrorAccess;
