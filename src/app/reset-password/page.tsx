@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,7 +44,14 @@ const ResetPasswordSchema = z
 
 type ResetPasswordFormData = z.infer<typeof ResetPasswordSchema>;
 
-export default function ResetPasswordPage() {
+export default function Page() {
+  return (
+    <Suspense>
+      <ResetPasswordPage/>
+    </Suspense>
+  )
+}
+function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");

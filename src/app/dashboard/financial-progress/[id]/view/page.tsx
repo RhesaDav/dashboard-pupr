@@ -1,12 +1,8 @@
 import { getContractById } from "@/actions/contract";
 import { FinancialProgressDetail } from "../../_components/financial-progress-detail";
 
-export default async function FinancialProgressPage({
-  params
-}: {
-  params: { id: string }
-}) {
-  const contract = await getContractById(params.id);
+export default async function FinancialProgressPage({ params }: { params: Promise<{ id: string }> }) {
+  const contract = await getContractById((await params).id as string);
 
   if (!contract) {
     return <div>Kontrak tidak ditemukan</div>;

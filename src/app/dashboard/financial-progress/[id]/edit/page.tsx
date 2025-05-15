@@ -1,27 +1,12 @@
 import { getContractById } from "@/actions/contract";
 import { FinancialProgressForm } from "../../_components/financial-progress-form";
 
-export default async function FinancialProgressPage({
-  params
-}: {
-  params: { id: string }
-}) {
-  const contract = await getContractById(params.id);
+export default async function FinancialProgressPage({ params }: { params: Promise<{ id: string }> }) {
+  const contract = await getContractById((await params).id as string);
 
   if (!contract) {
     return <div>Kontrak tidak ditemukan</div>;
   }
-
-  const handleSave = async (data: {
-    uangMuka: number;
-    termin1: number;
-    termin2: number;
-    termin3: number;
-    termin4: number;
-  }) => {
-    "use server";
-    // await updateFinancialProgress(contract.id, data);
-  };
 
   return (
     <div className="container mx-auto py-8">

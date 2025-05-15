@@ -1,6 +1,5 @@
 import React from "react";
 import { getContractById } from "../../../../../actions/contract";
-import ContractForm from "../../_components/new-create-contract-form";
 import { format } from "date-fns";
 import MultiStepForm from "../../_components/multi-step-form";
 
