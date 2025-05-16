@@ -54,7 +54,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   };
 
   const menuItems: MenuItem[] = [
-    { label: "Home", icon: Home, href: "/dashboard/home", roles: ["ADMIN", "SUPERADMIN"] },
+    { label: "Home", icon: Home, href: "/dashboard/home", roles: [ "SUPERADMIN"] },
     { label: "Data Kontrak", icon: FileText, href: "/dashboard/contracts", roles: ["ADMIN", "SUPERADMIN", "CONSULTANT"] },
     { 
       label: "Progress", 
@@ -73,8 +73,8 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
         },
       ] 
     },
-    { label: "Laporan", icon: FileBarChart2, href: "/dashboard/report", roles: ["ADMIN", "SUPERADMIN"] },
-    { label: "Lakip", icon: ClipboardList, href: "/dashboard/lakip", roles: ["ADMIN", "SUPERADMIN"] },
+    { label: "Laporan", icon: FileBarChart2, href: "/dashboard/report", roles: [ "SUPERADMIN"] },
+    { label: "Lakip", icon: ClipboardList, href: "/dashboard/lakip", roles: [ "SUPERADMIN"] },
     { label: "Kelola Pengguna", icon: Users, href: "/dashboard/user-management", roles: ["ADMIN", "SUPERADMIN"] },
   ];
 

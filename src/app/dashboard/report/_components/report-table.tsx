@@ -460,8 +460,6 @@ export default function ReportTable() {
         })
         .filter(Boolean);
 
-      console.log(contractsToExport);
-
       if (contractsWithFilteredProgress.length === 0) {
         toast.warning(
           "Tidak ada data progress ditemukan untuk kontrak terpilih pada periode minggu tersebut."
@@ -601,6 +599,8 @@ export default function ReportTable() {
           "keterangan",
         ],
       };
+
+      console.log({contractsToExport, pdfData})
 
       sessionStorage.setItem("pdfExportData", JSON.stringify(pdfData));
       router.push("/dashboard/report/pdf");
