@@ -18,6 +18,7 @@ async function ContractProgressPage({ params }: { params: Promise<{ id: string }
     nilaiKontrak: contractData.contractDetails.nilaiKontrak || 0,
     tanggalKontrak: format(contractData.contractDetails.tanggalKontrak || new Date(), "dd-MM-yyyy"),
     masaPelaksanaan: contractData.contractDetails.masaPelaksanaan || 0,
+    totalAddendumWaktu: contractData.contractDetails.totalAddendumWaktu || 0,
     volumeKontrak: contractData.contractDetails.volumeKontrak || "",
     satuanKontrak: contractData.contractDetails.satuanKontrak || "",
     startDate: format(startDate, "dd-MM-yyyy"),

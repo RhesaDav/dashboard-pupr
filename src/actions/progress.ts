@@ -116,6 +116,7 @@ export async function getContractWithProgress(contractId: string) {
         masaPelaksanaan: true,
         volumeKontrak: true,
         satuanKontrak: true,
+        totalAddendumWaktu: true
       },
     });
 
@@ -196,6 +197,7 @@ export async function getContractWithProgress(contractId: string) {
         namaPaket: contract.namaPaket,
         nilaiKontrak: contract.nilaiKontrak,
         tanggalKontrak: contract.tanggalKontrak,
+        totalAddendumWaktu: contract.totalAddendumWaktu,
         masaPelaksanaan: contract.masaPelaksanaan,
         volumeKontrak: contract.volumeKontrak,
         satuanKontrak: contract.satuanKontrak,

@@ -26,6 +26,7 @@ async function ContractProgressPage({
     id: id,
     namaPaket: contractData.contractDetails.namaPaket || "",
     nilaiKontrak: contractData.contractDetails.nilaiKontrak || 0,
+    totalAddendumWaktu: contractData.contractDetails.totalAddendumWaktu || 0,
     tanggalKontrak: format(
       contractData.contractDetails.tanggalKontrak || new Date(),
       "dd-MM-yyyy"

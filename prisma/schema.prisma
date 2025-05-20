@@ -30,12 +30,15 @@ model Contract {
   sumberDana   String?
 
   // Contract details
-  nomorKontrak    String?
-  tanggalKontrak  DateTime?
-  masaPelaksanaan Int?      @default(0)
-  subKegiatan     String?
-  volumeKontrak   String?
-  satuanKontrak   String?
+  nomorKontrak        String?
+  tanggalKontrak      DateTime?
+  masaPelaksanaan     Int?      @default(0)
+  tanggalSelesaiAwal  DateTime? // calculated field: tanggalKontrak + masaPelaksanaan
+  tanggalSelesaiAkhir DateTime? // calculated field: tanggalSelesaiAwal + total days from time-based addendums
+  totalAddendumWaktu  Int?      @default(0) // accumulated days from time addendums
+  volumeKontrak       String?
+  satuanKontrak       String?
+  subKegiatan         String?
 
   // Supervision details
   konsultanSupervisi       String?
@@ -47,9 +50,6 @@ model Contract {
   // Project status and completion
   hasilProdukAkhir String?
   dimensi          String?
-  kendala          Boolean? @default(false)
-  permasalahan     String?
-  keterangan       String?
 
   // Documentation
   dokumentasiAwal   String?
@@ -134,7 +134,8 @@ model Addendum {
 
   name                String?
   tipe                String?
-  hari                String?
+  tanggal             DateTime?
+  hari                Int?
   volume              String?
   satuan              String?
   pemberianKesempatan Boolean
@@ -165,11 +166,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name         String
-  email        String    @unique
-  password     String
-  role         Role      @default(SUPERADMIN)
-  lastLoggedIn DateTime?
+  name          String
+  email         String          @unique
+  password      String
+  role          Role            @default(SUPERADMIN)
+  lastLoggedIn  DateTime?
   passwordReset PasswordReset[]
 
   contractAccess ContractAccess[]
@@ -180,13 +181,13 @@ model User {
 model PasswordReset {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   token     String   @unique
   expiresAt DateTime
-  
+
   @@index([token])
   @@index([userId])
   @@map("password_resets")

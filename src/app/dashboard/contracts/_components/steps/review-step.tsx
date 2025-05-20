@@ -146,7 +146,7 @@ export default function ReviewStep() {
             <p className="text-sm font-medium text-muted-foreground">Dimensi</p>
             <p className="text-sm sm:text-base">{data.dimensi || "-"}</p>
           </div>
-          <div>
+          {/* <div>
             <p className="text-sm font-medium text-muted-foreground">Ada Kendala</p>
             <p className="text-sm sm:text-base flex items-center">
               {data.kendala ? (
@@ -167,7 +167,7 @@ export default function ReviewStep() {
           <div className="col-span-1 sm:col-span-2">
             <p className="text-sm font-medium text-muted-foreground">Keterangan</p>
             <p className="text-sm sm:text-base">{data.keterangan || "-"}</p>
-          </div>
+          </div> */}
         </div>
       </div>
 

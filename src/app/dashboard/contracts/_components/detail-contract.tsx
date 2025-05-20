@@ -334,7 +334,7 @@ export default function ContractDetailsPage() {
                       {contract?.pemberianKesempatan ? "Ya" : "Tidak"}
                     </Badge>
                   </div> */}
-                  <div>
+                  {/* <div>
                     <h3 className="font-medium text-sm text-gray-500">
                       Kendala
                     </h3>
@@ -343,7 +343,7 @@ export default function ContractDetailsPage() {
                     >
                       {contract?.kendala ? "Ada" : "Tidak Ada"}
                     </Badge>
-                  </div>
+                  </div> */}
                   <div>
                     <h3 className="font-medium text-sm text-gray-500">
                       Hasil Produk Akhir
@@ -356,7 +356,7 @@ export default function ContractDetailsPage() {
                     </h3>
                     <p>{contract?.dimensi || "Tidak tersedia"}</p>
                   </div>
-                  <div className="md:col-span-2">
+                  {/* <div className="md:col-span-2">
                     <h3 className="font-medium text-sm text-gray-500">
                       Permasalahan
                     </h3>
@@ -367,7 +367,7 @@ export default function ContractDetailsPage() {
                       Keterangan
                     </h3>
                     <p>{contract?.keterangan || "Tidak ada keterangan"}</p>
-                  </div>
+                  </div> */}
                 </div>
               </CardContent>
             </Card>

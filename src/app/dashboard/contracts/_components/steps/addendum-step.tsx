@@ -34,10 +34,8 @@ import { cn, romanize } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/datepicker";
 import { Addendum } from "@prisma/client";
 import { addDays, format } from "date-fns";
-
-const Divider = ({ className }: { className?: string }) => (
-  <div className={cn("h-px bg-slate-200", className)} />
-);
+import { DateDayPicker } from "@/components/date-day-picker";
+import { Separator } from "@/components/ui/separator";
 
 const ADDENDUM_TYPES = [
   { value: "waktu", label: "Perubahan Waktu" },
@@ -46,7 +44,6 @@ const ADDENDUM_TYPES = [
 
 export default function AddendumStep() {
   const form = useFormContext();
-  console.log(form.getValues("addendum"));
 
   const [addendumItems, setAddendumItems] = useState<Partial<Addendum>[]>(
     () => {
@@ -90,7 +87,7 @@ export default function AddendumStep() {
               id: uuidv4(),
               name: "",
               tipe: "",
-              hari: "",
+              hari: undefined,
               volume: "",
               satuan: "",
               pemberianKesempatan: false,
@@ -113,7 +110,7 @@ export default function AddendumStep() {
         id: uuidv4(),
         name: "",
         tipe: "",
-        hari: "",
+        hari: undefined,
         volume: "",
         satuan: "",
         pemberianKesempatan: false,
@@ -171,7 +168,7 @@ export default function AddendumStep() {
                   ? format(
                       addDays(
                         form.watch("tanggalKontrak"),
-                        form.watch("masaPelaksanaan") || 0
+                        form.watch("masaPelaksanaan") - 1 || 0
                       ),
                       "dd MMMM yyyy"
                     )
@@ -179,7 +176,7 @@ export default function AddendumStep() {
               </div>
               <div className="col-span-3 text-right">
                 <Badge variant="outline" className="font-normal">
-                  {1 + form.watch("masaPelaksanaan") || "0"} Hari
+                  {form.watch("masaPelaksanaan")|| "0"} Hari
                 </Badge>
               </div>
             </div>
@@ -195,7 +192,7 @@ export default function AddendumStep() {
                   array: Partial<Addendum>[]
                 ) => {
                   const totalDays =
-                    (form.watch("masaPelaksanaan") || 0) +
+                    (form.watch("masaPelaksanaan") -1 || 0) +
                     array
                       .slice(0, index + 1)
                       .reduce(
@@ -222,7 +219,7 @@ export default function AddendumStep() {
                       </div>
                       <div className="col-span-3 text-right">
                         <Badge variant="outline" className="font-normal">
-                          {item.hari} Hari
+                          {item.hari || 0} Hari
                         </Badge>
                       </div>
                     </div>
@@ -234,7 +231,7 @@ export default function AddendumStep() {
             {form
               .watch("addendum")
               ?.some((item: Partial<Addendum>) => item.pemberianKesempatan) && (
-              <Divider className="my-3" />
+              <Separator className="my-3" />
             )}
 
             {/* Addendum Pemberian Kesempatan */}
@@ -407,8 +404,8 @@ export default function AddendumStep() {
                                 item.tipe === "waktu"
                                   ? "border-blue-500 text-blue-600 bg-blue-50"
                                   : item.tipe === "volume"
-                                  ? "border-green-500 text-green-600 bg-green-50"
-                                  : "border-slate-500 text-slate-600 bg-slate-50"
+                                    ? "border-green-500 text-green-600 bg-green-50"
+                                    : "border-slate-500 text-slate-600 bg-slate-50"
                               )}
                             >
                               {ADDENDUM_TYPES.find((t) => t.value === item.tipe)
@@ -428,7 +425,7 @@ export default function AddendumStep() {
                       </CardHeader>
 
                       <CardContent className="p-4 space-y-4">
-                        <div className="grid gap-4 md:grid-cols-3">
+                        <div className="grid gap-4 md:grid-cols-2">
                           <FormItem>
                             <FormLabel className="text-sm font-medium">
                               Nomor Addendum
@@ -480,58 +477,49 @@ export default function AddendumStep() {
                               </SelectContent>
                             </Select>
                           </FormItem>
-
-                          <div className="flex items-center pt-6">
-                            <Checkbox
-                              id={`pemberian-kesempatan-${index}`}
-                              checked={item.pemberianKesempatan}
-                              onCheckedChange={(
-                                checked: boolean | "indeterminate"
-                              ) =>
-                                updateAddendumItem(
-                                  index,
-                                  "pemberianKesempatan",
-                                  checked === true
-                                )
-                              }
-                              className="data-[state=checked]:bg-blue-600"
-                            />
-                            <label
-                              htmlFor={`pemberian-kesempatan-${index}`}
-                              className="text-sm font-medium leading-none ml-2 cursor-pointer"
-                            >
-                              Pemberian Kesempatan
-                            </label>
-                          </div>
                         </div>
 
-                        {/* Field untuk tipe waktu */}
+                        {/* Waktu Addendum Fields */}
                         {item.tipe === "waktu" && (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium">
-                              Jumlah Hari
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="Contoh: 30"
-                                value={item.hari || ""}
-                                onChange={(e) =>
-                                  updateAddendumItem(
-                                    index,
-                                    "hari",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </FormControl>
-                            <FormDescription className="text-xs">
-                              Tambahan hari kerja
-                            </FormDescription>
-                          </FormItem>
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">
+                                Jumlah Hari
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  placeholder="Contoh: 30"
+                                  value={item.hari || ""}
+                                  onChange={(e) =>
+                                    updateAddendumItem(
+                                      index,
+                                      "hari",
+                                      Number(e.target.value)
+                                    )
+                                  }
+                                />
+                              </FormControl>
+                            </FormItem>
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">
+                                Tanggal Mulai
+                              </FormLabel>
+                              <FormControl>
+                                <DateDayPicker
+                                  selectedDate={item.tanggal}
+                                  onChange={(value) => updateAddendumItem(
+                                      index,
+                                      "tanggal",
+                                      value || null
+                                    )}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          </div>
                         )}
 
-                        {/* Field untuk tipe volume */}
+                        {/* Volume Addendum Fields */}
                         {item.tipe === "volume" && (
                           <div className="grid gap-4 md:grid-cols-2">
                             <FormItem>
@@ -552,7 +540,6 @@ export default function AddendumStep() {
                                 />
                               </FormControl>
                             </FormItem>
-
                             <FormItem>
                               <FormLabel className="text-sm font-medium">
                                 Satuan
@@ -573,6 +560,29 @@ export default function AddendumStep() {
                             </FormItem>
                           </div>
                         )}
+
+                        <div className="flex items-center pt-2">
+                          <Checkbox
+                            id={`pemberian-kesempatan-${index}`}
+                            checked={item.pemberianKesempatan}
+                            onCheckedChange={(
+                              checked: boolean | "indeterminate"
+                            ) =>
+                              updateAddendumItem(
+                                index,
+                                "pemberianKesempatan",
+                                checked === true
+                              )
+                            }
+                            className="data-[state=checked]:bg-blue-600"
+                          />
+                          <label
+                            htmlFor={`pemberian-kesempatan-${index}`}
+                            className="text-sm font-medium leading-none ml-2 cursor-pointer"
+                          >
+                            Pemberian Kesempatan
+                          </label>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}

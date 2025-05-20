@@ -86,13 +86,13 @@ export async function loginAction(formData: FormData) {
     }
 
     if (!user) {
-      return { error: "Invalid credentials" };
+      return { error: "Email/username tidak terdaftar" };
     }
 
     const isValidPassword = await comparePassword(password, user.password);
 
     if (!isValidPassword) {
-      return { error: "Invalid credentials" };
+      return { error: "Password salah" };
     }
 
     await prisma.user.update({

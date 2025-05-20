@@ -38,29 +38,29 @@ export interface DashboardReport {
   }[];
 
   // Kontrak Bermasalah
-  problemContracts: {
-    id: string;
-    packageName: string;
-    issueDetails: {
-      description: string;
-      type: "KENDALA" | "KETERLAMBATAN" | "PERPANJANGAN" | "LAINNYA";
-      severity: "RINGAN" | "SEDANG" | "BERAT";
-      progressImpact?: string;
-      suggestedActions?: string[];
-      documents?: string[];
-    };
-    location: string;
-    progress: number | null;
-    contractDate: string | null;
-    contractValue: number;
-    vendor: string;
-  }[];
+  // problemContracts: {
+  //   id: string;
+  //   packageName: string;
+  //   issueDetails: {
+  //     description: string;
+  //     type: "KENDALA" | "KETERLAMBATAN" | "PERPANJANGAN" | "LAINNYA";
+  //     severity: "RINGAN" | "SEDANG" | "BERAT";
+  //     progressImpact?: string;
+  //     suggestedActions?: string[];
+  //     documents?: string[];
+  //   };
+  //   location: string;
+  //   progress: number | null;
+  //   contractDate: string | null;
+  //   contractValue: number;
+  //   vendor: string;
+  // }[];
   subkegiatanDistribution: {
     subkegiatan: string;
     totalContracts: number;
     completedContracts: number;
     ongoingContracts: number;
-    problemContracts: number;
+    // problemContracts: number;
     totalPaguAnggaran: number;
     totalNilaiKontrak: number;
     totalRealisasiKeuangan: number;
@@ -320,36 +320,36 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     }));
 
   // Get problem contracts
-  const problemContracts = contracts
-    .filter((contract) => contract.kendala === true || contract.permasalahan)
-    .map((contract) => {
-      const latestPhysicalProgress = contract.physicalProgress.sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      )[0];
+  // const problemContracts = contracts
+  //   .filter((contract) => contract.kendala === true || contract.permasalahan)
+  //   .map((contract) => {
+  //     const latestPhysicalProgress = contract.physicalProgress.sort(
+  //       (a, b) =>
+  //         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  //     )[0];
 
-      return {
-        id: contract.id,
-        packageName: contract.namaPaket,
-        issueDetails: {
-          description: contract.permasalahan || "Kendala tidak dijelaskan",
-          type: determineIssueType(contract),
-          severity: determineIssueSeverity(contract, latestPhysicalProgress),
-          progressImpact: latestPhysicalProgress
-            ? `${latestPhysicalProgress.deviasi.toFixed(2)}%`
-            : undefined,
-          suggestedActions: suggestActions(contract),
-          documents: getIssueDocuments(contract),
-        },
-        location: formatLocation(contract.location),
-        progress: latestPhysicalProgress?.realisasi || null,
-        contractDate: contract.tanggalKontrak
-          ? contract.tanggalKontrak.toISOString()
-          : null,
-        contractValue: contract.nilaiKontrak || 0,
-        vendor: contract.namaPenyedia || "N/A",
-      };
-    });
+  //     return {
+  //       id: contract.id,
+  //       packageName: contract.namaPaket,
+  //       issueDetails: {
+  //         description: contract.permasalahan || "Kendala tidak dijelaskan",
+  //         type: determineIssueType(contract),
+  //         severity: determineIssueSeverity(contract, latestPhysicalProgress),
+  //         progressImpact: latestPhysicalProgress
+  //           ? `${latestPhysicalProgress.deviasi.toFixed(2)}%`
+  //           : undefined,
+  //         suggestedActions: suggestActions(contract),
+  //         documents: getIssueDocuments(contract),
+  //       },
+  //       location: formatLocation(contract.location),
+  //       progress: latestPhysicalProgress?.realisasi || null,
+  //       contractDate: contract.tanggalKontrak
+  //         ? contract.tanggalKontrak.toISOString()
+  //         : null,
+  //       contractValue: contract.nilaiKontrak || 0,
+  //       vendor: contract.namaPenyedia || "N/A",
+  //     };
+  //   });
 
   // Fixed subkegiatan distribution implementation
   const subkegiatanMap = new Map<
@@ -358,7 +358,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
       totalContracts: number;
       completedContracts: number;
       ongoingContracts: number;
-      problemContracts: number;
+      // problemContracts: number;
       totalPaguAnggaran: number;
       totalNilaiKontrak: number;
       totalRealisasiKeuangan: number;
@@ -384,7 +384,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
       totalContracts: 0,
       completedContracts: 0,
       ongoingContracts: 0,
-      problemContracts: 0,
+      // problemContracts: 0,
       totalPaguAnggaran: 0,
       totalNilaiKontrak: 0,
       totalRealisasiKeuangan: 0,
@@ -417,14 +417,14 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     const hasFinancialProgress = !!contract.financialProgress;
 
     const isCompleted = maxPhysicalProgress >= 100;
-    const isProblem = contract.kendala === true || contract.permasalahan;
+    // const isProblem = contract.kendala === true || contract.permasalahan;
 
     // Update subkegiatan data
     subkegiatanMap.set(subkegiatan, {
       totalContracts: current.totalContracts + 1,
       completedContracts: current.completedContracts + (isCompleted ? 1 : 0),
       ongoingContracts: current.ongoingContracts + (!isCompleted ? 1 : 0),
-      problemContracts: current.problemContracts + (isProblem ? 1 : 0),
+      // problemContracts: current.problemContracts + (isProblem ? 1 : 0),
       totalPaguAnggaran:
         current.totalPaguAnggaran + (contract.paguAnggaran || 0),
       totalNilaiKontrak:
@@ -491,7 +491,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
         totalContracts: data.totalContracts,
         completedContracts: data.completedContracts,
         ongoingContracts: data.ongoingContracts,
-        problemContracts: data.problemContracts,
+        // problemContracts: data.problemContracts,
         totalPaguAnggaran: data.totalPaguAnggaran,
         totalNilaiKontrak: data.totalNilaiKontrak,
         totalRealisasiKeuangan: data.totalRealisasiKeuangan,
@@ -516,7 +516,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     locationDistribution,
     fundingSourceDistribution,
     recentContracts,
-    problemContracts,
+    // problemContracts,
     subkegiatanDistribution,
   };
 }
@@ -556,7 +556,7 @@ function getContractStatus(
   }
 
   if (maxRealisasi >= 100) return "SELESAI";
-  if (contract.kendala === true) return "BERMASALAH";
+  // if (contract.kendala === true) return "BERMASALAH";
 
   // Check if contract duration has passed (if we have masa pelaksanaan in days)
   if (contract.masaPelaksanaan && contract.tanggalKontrak) {

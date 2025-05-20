@@ -107,7 +107,7 @@ function DataContractTable() {
         const namaPenyedia = row.getValue("namaPenyedia") as string;
         return (
           <div className="relative max-w-[150px] truncate">
-            <span title={namaPenyedia}>{namaPenyedia}</span>
+            <span title={namaPenyedia}>{namaPenyedia || "-"}</span>
           </div>
         );
       },
@@ -119,7 +119,7 @@ function DataContractTable() {
         const nomorKontrak = row.getValue("nomorKontrak") as string;
         return (
           <div className="relative max-w-[150px] truncate">
-            <span title={nomorKontrak}>{nomorKontrak}</span>
+            <span title={nomorKontrak}>{nomorKontrak || "-"}</span>
           </div>
         );
       },

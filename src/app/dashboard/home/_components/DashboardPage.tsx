@@ -85,9 +85,9 @@ export default function DashboardPage() {
 
       <RecentContractsTable contracts={dashboardData.recentContracts} />
 
-      {dashboardData.problemContracts.length >= 1 && (
+      {/* {dashboardData.problemContracts.length >= 1 && (
         <ProblemContractsList contracts={dashboardData.problemContracts} />
-      )}
+      )} */}
     </div>
   );
 }

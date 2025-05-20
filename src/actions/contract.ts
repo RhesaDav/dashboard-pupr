@@ -22,6 +22,7 @@ import { IdSchema } from "@/schemas/id.schema";
 import { format } from "date-fns";
 import { getCurrentUser } from "./auth";
 import { cookies } from "next/headers";
+import { pgClient } from "@/lib/pgClient";
 
 interface ProgressItem {
   week: number;
@@ -41,9 +42,9 @@ function addDays(date: Date, days: number): Date {
 function generateWeeks(startDate: Date, durationDays: number) {
   const weeks: { month: string; items: ProgressItem[] }[] = [];
 
-  let currentDate = new Date(startDate);
-  const endDate = addDays(startDate, durationDays);
+  const endDate = addDays(startDate, durationDays - 1);
 
+  let currentDate = new Date(startDate);
   let weekNumber = 1;
   let currentMonth = "";
   let currentMonthData: { month: string; items: ProgressItem[] } | null = null;
@@ -52,37 +53,8 @@ function generateWeeks(startDate: Date, durationDays: number) {
     return date.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
   };
 
-  const monthName = formatMonth(currentDate);
-  currentMonth = monthName;
-  currentMonthData = {
-    month: monthName,
-    items: [],
-  };
-  weeks.push(currentMonthData);
-
-  const dayOfWeek = currentDate.getDay();
-  const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-  const firstWeekEnd = addDays(currentDate, daysToSunday);
-
-  const actualFirstWeekEnd = firstWeekEnd > endDate ? endDate : firstWeekEnd;
-
-  currentMonthData.items.push({
-    week: weekNumber,
-    startDate: new Date(currentDate),
-    endDate: new Date(actualFirstWeekEnd),
-    rencana: 0,
-    realisasi: 0,
-    deviasi: 0,
-  });
-
-  currentDate = addDays(actualFirstWeekEnd, 1);
-  weekNumber++;
-
   while (currentDate <= endDate) {
     const monthName = formatMonth(currentDate);
-    const weekStart = new Date(currentDate);
-    const weekEnd = addDays(weekStart, 6);
-    const actualWeekEnd = weekEnd > endDate ? endDate : weekEnd;
 
     if (monthName !== currentMonth) {
       currentMonth = monthName;
@@ -92,6 +64,10 @@ function generateWeeks(startDate: Date, durationDays: number) {
       };
       weeks.push(currentMonthData);
     }
+
+    const weekStart = new Date(currentDate);
+    const weekEnd = addDays(weekStart, 6);
+    const actualWeekEnd = weekEnd > endDate ? endDate : weekEnd;
 
     if (currentMonthData) {
       currentMonthData.items.push({
@@ -104,7 +80,7 @@ function generateWeeks(startDate: Date, durationDays: number) {
       });
     }
 
-    currentDate = addDays(currentDate, 7);
+    currentDate = addDays(weekStart, 7);
     weekNumber++;
   }
 
@@ -113,7 +89,7 @@ function generateWeeks(startDate: Date, durationDays: number) {
 
 export async function createContract(data: CompleteContractCreate) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser();
     const validatedData = await validateSchema(
       CompleteContractCreateSchema,
       data
@@ -132,9 +108,26 @@ export async function createContract(data: CompleteContractCreate) {
       throw new Error("Tanggal kontrak harus diisi");
     }
 
-    const generatedProgress = generateWeeks(
+    const tanggalSelesaiAwal = addDays(
       contractData.tanggalKontrak,
       contractData.masaPelaksanaan || 0
+    );
+
+    let totalAddendumWaktu = 0;
+    if (addendum && addendum.length > 0) {
+      totalAddendumWaktu = addendum
+        .filter((item) => item.tipe === "waktu" && item.hari)
+        .reduce((sum, item) => sum + (item.hari || 0), 0);
+    }
+
+    const tanggalSelesaiAkhir = addDays(tanggalSelesaiAwal, totalAddendumWaktu);
+
+    const totalDayAccumulate =
+      (contractData.masaPelaksanaan || 0) + totalAddendumWaktu;
+
+    const generatedProgress = generateWeeks(
+      contractData.tanggalKontrak,
+      totalDayAccumulate
     );
 
     const result = await prisma.$transaction(async (tx) => {
@@ -144,10 +137,13 @@ export async function createContract(data: CompleteContractCreate) {
           tanggalKontrak: contractData.tanggalKontrak,
           tanggalKontrakSupervisi: contractData.tanggalKontrakSupervisi || null,
           hasAddendum: addendum && addendum.length > 0 ? true : false,
+          tanggalSelesaiAwal,
+          tanggalSelesaiAkhir,
+          totalAddendumWaktu,
         },
       });
 
-      if (user && (user.role === 'ADMIN' || user.role === 'CONSULTANT')) {
+      if (user && (user.role === "ADMIN" || user.role === "CONSULTANT")) {
         await tx.contractAccess.create({
           data: {
             contractId: contract.id,
@@ -248,6 +244,20 @@ export async function getContractById(id: string) {
       },
     });
 
+    const rawSql = `
+      SELECT id, "createdAt", title, "kodeRekening", "tipePaket", urusan, bidang, distrik, "kabupatenKota", "titikKoordinat", penyedia, "nomorKontrak", "nilaiKontrak", "nilaiPagu", "sumberDana", "awalKontrak", "akhirKontrak", "volumeKontrak", "satuanKontrak", korwaslap, "pengawasLapangan", "hasilProdukAkhir", "tautanMediaProgresAwal", "tautanMediaProgresTengah", "tautanMediaProgresAkhir", "progresFisik", "progresKeuangan", "keuanganTerbayar", "volumeDPA", "satuanDPA", "volumeCapaian", "satuanCapaian", "kegiatanId", "programId", "subKegiatanId", kampung, "nipKorwaslap", "nipPengawas", "tanggalKontrak", "nipPejabatPembuatKomitmen", "pejabatPembuatKomitmen", klasifikasi
+      FROM sikerjaprod."Paket"
+      WHERE id='cadfa341-7551-4bcc-ae37-a2ee140af27d'
+    `;
+
+    const params = [];
+    const resultSql = await pgClient.query(rawSql);
+    console.log(resultSql.rows[0]);
+
+    const newData = {
+      ...contract,
+    };
+
     if (!contract) {
       throw new NotFoundError("Kontrak tidak ditemukan");
     }
@@ -290,11 +300,11 @@ export async function getAllContracts(filterParams: any = {}) {
       const budgetYearNum = parseInt(budgetYear);
       const startOfYear = new Date(budgetYearNum, 0, 1);
       const endOfYear = new Date(budgetYearNum, 11, 31, 23, 59, 59, 999);
-      
+
       where.tanggalKontrak = {
         ...where.tanggalKontrak,
         gte: startOfYear,
-        lte: endOfYear
+        lte: endOfYear,
       };
     }
 
@@ -398,29 +408,161 @@ export async function updateContract(id: string, updateData: any) {
       ? new Date(validatedContractData.tanggalKontrak)
       : null;
 
-    const isDurationChanged =
-      validatedContractData.masaPelaksanaan !== undefined &&
-      validatedContractData.masaPelaksanaan !==
-        existingContract.masaPelaksanaan;
+    const existingDuration = existingContract.masaPelaksanaan || 0;
+    const newDuration =
+      validatedContractData.masaPelaksanaan !== undefined
+        ? validatedContractData.masaPelaksanaan
+        : existingDuration;
+
+    const isDurationIncreased = (newDuration || 0) > existingDuration;
+    const isDurationDecreased = (newDuration || 0) < existingDuration;
 
     const isStartDateChanged =
-      validatedContractData.tanggalKontrak !== undefined &&
-      ((existingStartDate === null && newStartDate !== null) ||
-        (existingStartDate !== null && newStartDate === null) ||
-        (existingStartDate !== null &&
-          newStartDate !== null &&
-          existingStartDate.getTime() !== newStartDate.getTime()));
+      (existingStartDate &&
+        newStartDate &&
+        existingStartDate.getTime() !== newStartDate.getTime()) ||
+      (!existingStartDate && newStartDate) ||
+      (existingStartDate && !newStartDate);
 
-    const shouldRegenerateProgress = isDurationChanged || isStartDateChanged;
+    const effectiveStartDate = newStartDate || existingStartDate;
+    if (!effectiveStartDate) {
+      throw new Error("Tidak dapat menghitung tanggal tanpa tanggal kontrak");
+    }
+
+    const tanggalSelesaiAwal = addDays(effectiveStartDate, newDuration || 0);
+
+    let totalAddendumWaktu = existingContract.totalAddendumWaktu || 0;
+    if (addendum !== undefined) {
+      totalAddendumWaktu =
+        Array.isArray(addendum) && addendum.length > 0
+          ? addendum
+              .filter((item) => item.tipe === "waktu" && item.hari)
+              .reduce((sum, item) => sum + (item.hari || 0), 0)
+          : 0;
+    }
+
+    const tanggalSelesaiAkhir = addDays(tanggalSelesaiAwal, totalAddendumWaktu);
+
+    const totalDayAccumulate = (newDuration || 0) + totalAddendumWaktu;
 
     const result = await prisma.$transaction(async (tx) => {
       if (
-        shouldRegenerateProgress &&
-        existingContract.physicalProgress.length > 0
+        isStartDateChanged ||
+        isDurationIncreased ||
+        isDurationDecreased ||
+        addendum !== undefined
       ) {
-        await tx.physicalProgress.deleteMany({
-          where: { contractId: id },
-        });
+        if (isStartDateChanged) {
+          await tx.physicalProgress.deleteMany({
+            where: { contractId: id },
+          });
+
+          const newProgressData = generateWeeks(
+            effectiveStartDate,
+            totalDayAccumulate || 0
+          );
+
+          for (const monthData of newProgressData) {
+            for (const item of monthData.items) {
+              await tx.physicalProgress.create({
+                data: {
+                  contractId: id,
+                  month: monthData.month,
+                  week: item.week,
+                  startDate: item.startDate,
+                  endDate: item.endDate,
+                  rencana: 0,
+                  realisasi: 0,
+                  deviasi: 0,
+                },
+              });
+            }
+          }
+        } else {
+          const allNewProgressData = generateWeeks(
+            effectiveStartDate,
+            totalDayAccumulate || 0
+          );
+
+          const existingProgressRecords = await tx.physicalProgress.findMany({
+            where: { contractId: id },
+            select: {
+              id: true,
+              month: true,
+              week: true,
+              rencana: true,
+              realisasi: true,
+              deviasi: true,
+            },
+          });
+
+          const existingProgressMap = new Map(
+            existingProgressRecords.map((p) => [
+              `${p.month}-${p.week}`,
+              {
+                id: p.id,
+                rencana: p.rencana,
+                realisasi: p.realisasi,
+                deviasi: p.deviasi,
+              },
+            ])
+          );
+
+          const allNewKeys = new Set();
+          for (const monthData of allNewProgressData) {
+            for (const item of monthData.items) {
+              allNewKeys.add(`${monthData.month}-${item.week}`);
+            }
+          }
+
+          if (isDurationDecreased) {
+            const progressIdsToDelete = existingProgressRecords
+              .filter((p) => !allNewKeys.has(`${p.month}-${p.week}`))
+              .map((p) => p.id);
+
+            if (progressIdsToDelete.length > 0) {
+              await tx.physicalProgress.deleteMany({
+                where: {
+                  id: { in: progressIdsToDelete },
+                },
+              });
+            }
+          }
+
+          for (const monthData of allNewProgressData) {
+            for (const item of monthData.items) {
+              const progressKey = `${monthData.month}-${item.week}`;
+              const existingProgress = existingProgressMap.get(progressKey);
+
+              if (existingProgress) {
+                await tx.physicalProgress.update({
+                  where: { id: existingProgress.id },
+                  data: {
+                    startDate: item.startDate,
+                    endDate: item.endDate,
+
+                    rencana: existingProgress.rencana,
+                    realisasi: existingProgress.realisasi,
+                    deviasi: existingProgress.deviasi,
+                  },
+                });
+              } else {
+                await tx.physicalProgress.create({
+                  data: {
+                    contractId: id,
+                    month: monthData.month,
+                    week: item.week,
+                    startDate: item.startDate,
+                    endDate: item.endDate,
+                    rencana: 0,
+                    realisasi: 0,
+                    deviasi: 0,
+                  },
+                });
+              }
+            }
+          }
+        }
       }
 
       const updatedContract = await tx.contract.update({
@@ -435,44 +577,16 @@ export async function updateContract(id: string, updateData: any) {
             existingContract.tanggalKontrakSupervisi ||
             null,
           hasAddendum:
-            addendum && addendum.length > 0
-              ? true
+            addendum !== undefined
+              ? addendum && addendum.length > 0
+                ? true
+                : false
               : existingContract.hasAddendum,
+          tanggalSelesaiAwal,
+          tanggalSelesaiAkhir,
+          totalAddendumWaktu,
         },
       });
-
-      if (shouldRegenerateProgress) {
-        const effectiveStartDate = newStartDate || existingStartDate;
-        const effectiveDuration =
-          validatedContractData.masaPelaksanaan ||
-          existingContract.masaPelaksanaan;
-
-        if (!effectiveStartDate) {
-          throw new Error(
-            "Tidak dapat generate progress tanpa tanggal kontrak"
-          );
-        }
-
-        const newProgressData = generateWeeks(
-          effectiveStartDate,
-          effectiveDuration || 0
-        );
-
-        for (const monthData of newProgressData) {
-          await tx.physicalProgress.createMany({
-            data: monthData.items.map((item) => ({
-              contractId: id,
-              month: monthData.month,
-              week: item.week,
-              startDate: item.startDate,
-              endDate: item.endDate,
-              rencana: 0,
-              realisasi: 0,
-              deviasi: 0,
-            })),
-          });
-        }
-      }
 
       if (financialProgress) {
         if (existingContract.financialProgress) {
@@ -506,7 +620,7 @@ export async function updateContract(id: string, updateData: any) {
         }
       }
 
-      if (addendum && Array.isArray(addendum)) {
+      if (addendum !== undefined && Array.isArray(addendum)) {
         const existingAddendumIds = existingContract.addendum.map((a) => a.id);
 
         for (const addendumItem of addendum) {
@@ -519,7 +633,8 @@ export async function updateContract(id: string, updateData: any) {
                 hari: addendumItem.hari,
                 volume: addendumItem.volume,
                 satuan: addendumItem.satuan,
-                pemberianKesempatan: addendumItem.pemberianKesempatan,
+                tanggal: addendumItem.tanggal,
+                pemberianKesempatan: addendumItem.pemberianKesempatan || false,
               },
             });
 
@@ -536,6 +651,7 @@ export async function updateContract(id: string, updateData: any) {
                 hari: addendumItem.hari,
                 volume: addendumItem.volume,
                 satuan: addendumItem.satuan,
+                tanggal: addendumItem.tanggal,
                 pemberianKesempatan: addendumItem.pemberianKesempatan || false,
               },
             });
@@ -545,9 +661,7 @@ export async function updateContract(id: string, updateData: any) {
         if (existingAddendumIds.length > 0) {
           await tx.addendum.deleteMany({
             where: {
-              id: {
-                in: existingAddendumIds,
-              },
+              id: { in: existingAddendumIds },
             },
           });
         }
@@ -579,9 +693,7 @@ export async function updateContract(id: string, updateData: any) {
           await tx.contractAccess.deleteMany({
             where: {
               contractId: id,
-              userId: {
-                in: userIdsToRemove,
-              },
+              userId: { in: userIdsToRemove },
             },
           });
         }
@@ -599,7 +711,6 @@ export async function updateContract(id: string, updateData: any) {
     throw handlePrismaError(error);
   }
 }
-
 export async function deleteContract(id: string) {
   try {
     await validateSchema(IdSchema, { id });

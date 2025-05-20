@@ -44,12 +44,12 @@ export default function LocationStep() {
   };
 
   const openLocationInMap = (coordinates: string) => {
-    if (!coordinates || !isValidCoordinate(coordinates)) {
-      alert(
-        "Format koordinat tidak valid. Gunakan format: latitude,longitude (contoh: -6.123,106.456)"
-      );
-      return null;
-    }
+    // if (!coordinates || !isValidCoordinate(coordinates)) {
+    //   alert(
+    //     "Format koordinat tidak valid. Gunakan format: latitude,longitude (contoh: -6.123,106.456)"
+    //   );
+    //   return null;
+    // }
 
     const [lat, lng] = coordinates.split(",").map((coord) => coord.trim());
 

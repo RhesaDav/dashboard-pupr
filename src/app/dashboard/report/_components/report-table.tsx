@@ -117,7 +117,7 @@ export default function ReportTable() {
       : null;
 
     if (progress >= 100) return "Selesai";
-    if (contract.kendala) return "Bermasalah";
+    // if (contract.kendala) return "Bermasalah";
     if (endDate && today > endDate) return "Terlambat";
 
     return "Berjalan";
@@ -230,7 +230,7 @@ export default function ReportTable() {
       header: "Status",
       cell: ({ row }) => {
         const status = row.original.status || "Berjalan";
-        const hasProblem = row.original.kendala;
+        // const hasProblem = row.original.kendala;
 
         return (
           <div className="flex flex-col gap-1">
@@ -246,11 +246,11 @@ export default function ReportTable() {
             >
               {status}
             </Badge>
-            {hasProblem && (
+            {/* {hasProblem && (
               <Badge variant="outline" className="text-[10px] border-red-300">
                 Ada Kendala
               </Badge>
-            )}
+            )} */}
           </div>
         );
       },
@@ -449,7 +449,7 @@ export default function ReportTable() {
                   ? format(akhirKontrakAsli, "dd/MM/yyyy")
                   : "-",
                 akhirKontrakAdd: calculateFinalContractEndDate(contract),
-                permasalahan: contract.permasalahan || "-",
+                // permasalahan: contract.permasalahan || "-",
                 progressData: filteredWeeks,
                 maxRealisasiWeek: maxRealisasi.week,
                 maxRencanaWeek: maxRencana.week,

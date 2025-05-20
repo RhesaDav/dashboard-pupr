@@ -81,6 +81,7 @@ interface EditProgressProps {
     nilaiKontrak: number;
     tanggalKontrak: string;
     masaPelaksanaan: number;
+    totalAddendumWaktu: number;
     volumeKontrak: number | string;
     satuanKontrak: string;
     endDate: string;
@@ -195,18 +196,18 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     field: "rencana" | "realisasi",
     value: number
   ) => {
-    const currentMonthName = formValues.months[monthIndex].month;
-    const currentWeek = formValues.months[monthIndex].items[weekIndex].week;
-    const key = `months.${monthIndex}.items.${weekIndex}.${field}`;
-
     const allEntries = getAllProgressEntriesSorted(formValues);
-
     const currentEntryIndex = allEntries.findIndex(
       (entry) =>
         entry.monthIndex === monthIndex && entry.weekIndex === weekIndex
     );
 
     if (currentEntryIndex <= 0) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[`months.${monthIndex}.items.${weekIndex}.${field}`];
+        return newErrors;
+      });
       return value;
     }
 
@@ -222,15 +223,16 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     if (value < highestPreviousValue) {
       setValidationErrors((prev) => ({
         ...prev,
-        [key]: `Nilai ${field} (${value}%) lebih rendah dari nilai tertinggi sebelumnya (${highestPreviousValue}%)`,
+        [`months.${monthIndex}.items.${weekIndex}.${field}`]: `Nilai ${field} (${value}%) tidak boleh lebih rendah dari nilai tertinggi sebelumnya (${highestPreviousValue}%)`,
       }));
-    } else {
-      setValidationErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[key];
-        return newErrors;
-      });
+      return highestPreviousValue;
     }
+
+    setValidationErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[`months.${monthIndex}.items.${weekIndex}.${field}`];
+      return newErrors;
+    });
 
     return value;
   };
@@ -295,7 +297,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
       await updateContractProgress(contractId, allEntries);
 
       toast.success("Progress berhasil disimpan");
-      router.push("/dashboard/physical-progress")
+      router.push("/dashboard/physical-progress");
       router.refresh();
     } catch (error) {
       console.error("Error updating progress:", error);
@@ -305,6 +307,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     }
   };
 
+  const totalAddendumWaktu = contract.totalAddendumWaktu || 0;
   const masaPelaksanaan = contract.masaPelaksanaan || 0;
   const hasNoExecutionPeriod = masaPelaksanaan <= 0;
 
@@ -338,7 +341,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                     :{" "}
                     {hasNoExecutionPeriod
                       ? "Tidak ditentukan"
-                      : `${masaPelaksanaan} Hari`}
+                      : `${masaPelaksanaan + totalAddendumWaktu} Hari`}
                   </span>
                 </div>
               </div>
@@ -469,8 +472,8 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                       </label>
                                       <div className="relative">
                                         <Input
-                                          type="number"
-                                          step="0.01"
+                                          type="text"
+                                          inputMode="decimal"
                                           className={
                                             hasRencanaError
                                               ? "border-red-500 pr-8"
@@ -479,28 +482,101 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                           {...register(
                                             `months.${monthIndex}.items.${weekIndex}.rencana`,
                                             {
-                                              valueAsNumber: true,
                                               onChange: (e) => {
-                                                const inputValue = Math.min(
-                                                  100,
-                                                  Math.max(
-                                                    0,
-                                                    Number(e.target.value) || 0
-                                                  )
+                                                const rawValue = e.target.value;
+                                                const prevValue = watch(
+                                                  `months.${monthIndex}.items.${weekIndex}.rencana`
                                                 );
 
-                                                const validatedValue =
-                                                  validateProgressValue(
-                                                    monthIndex,
-                                                    weekIndex,
-                                                    "rencana",
-                                                    inputValue
+                                                const sanitizedValue =
+                                                  rawValue.replace(
+                                                    /[^0-9.]/g,
+                                                    ""
                                                   );
+
+                                                const numericValue =
+                                                  parseFloat(sanitizedValue);
+                                                if (
+                                                  !isNaN(numericValue) &&
+                                                  numericValue > 100
+                                                ) {
+                                                  e.target.value = "100";
+                                                  return;
+                                                }
+
+                                                const parts =
+                                                  sanitizedValue.split(".");
+                                                let validValue = parts[0];
+                                                if (parts.length > 1) {
+                                                  validValue +=
+                                                    "." + parts[1].slice(0, 2);
+                                                }
+
+                                                if (parts.length > 2) {
+                                                  e.target.value =
+                                                    prevValue || "";
+                                                  return;
+                                                }
+
+                                                if (rawValue !== validValue) {
+                                                  e.target.value =
+                                                    prevValue || "";
+                                                  return;
+                                                }
 
                                                 setValue(
                                                   `months.${monthIndex}.items.${weekIndex}.rencana`,
-                                                  validatedValue
+                                                  validValue
                                                 );
+                                              },
+                                              onBlur: (e) => {
+                                                let processedValue =
+                                                  e.target.value;
+
+                                                if (
+                                                  processedValue === "" ||
+                                                  processedValue === "."
+                                                ) {
+                                                  processedValue = "0";
+                                                } else if (
+                                                  processedValue.endsWith(".")
+                                                ) {
+                                                  processedValue =
+                                                    processedValue.slice(0, -1);
+                                                }
+
+                                                const numValue = Math.min(
+                                                  100,
+                                                  Math.max(
+                                                    0,
+                                                    parseFloat(
+                                                      processedValue
+                                                    ) || 0
+                                                  )
+                                                );
+
+                                                let formattedValue;
+                                                if (numValue % 1 === 0) {
+                                                  formattedValue =
+                                                    numValue.toString();
+                                                } else {
+                                                  formattedValue = numValue
+                                                    .toFixed(2)
+                                                    .replace(/\.?0+$/, "");
+                                                }
+
+                                                setValue(
+                                                  `months.${monthIndex}.items.${weekIndex}.rencana`,
+                                                  numValue
+                                                );
+                                                validateProgressValue(
+                                                  monthIndex,
+                                                  weekIndex,
+                                                  "rencana",
+                                                  numValue
+                                                );
+
+                                                e.target.value = formattedValue;
 
                                                 const realisasi =
                                                   Number(
@@ -511,7 +587,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                                 setValue(
                                                   `months.${monthIndex}.items.${weekIndex}.deviasi`,
                                                   calculateDeviasi(
-                                                    validatedValue,
+                                                    numValue,
                                                     realisasi
                                                   )
                                                 );
@@ -558,38 +634,111 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                       </label>
                                       <div className="relative">
                                         <Input
-                                          type="number"
-                                          step="0.01"
+                                          type="text"
+                                          inputMode="decimal"
                                           className={
-                                            hasRealisasiError
+                                            hasRencanaError
                                               ? "border-red-500 pr-8"
                                               : ""
                                           }
                                           {...register(
                                             `months.${monthIndex}.items.${weekIndex}.realisasi`,
                                             {
-                                              valueAsNumber: true,
                                               onChange: (e) => {
-                                                const inputValue = Math.min(
-                                                  100,
-                                                  Math.max(
-                                                    0,
-                                                    Number(e.target.value) || 0
-                                                  )
+                                                const rawValue = e.target.value;
+                                                const prevValue = watch(
+                                                  `months.${monthIndex}.items.${weekIndex}.realisasi`
                                                 );
 
-                                                const validatedValue =
-                                                  validateProgressValue(
-                                                    monthIndex,
-                                                    weekIndex,
-                                                    "realisasi",
-                                                    inputValue
+                                                const sanitizedValue =
+                                                  rawValue.replace(
+                                                    /[^0-9.]/g,
+                                                    ""
                                                   );
+
+                                                const numericValue =
+                                                  parseFloat(sanitizedValue);
+                                                if (
+                                                  !isNaN(numericValue) &&
+                                                  numericValue > 100
+                                                ) {
+                                                  e.target.value = "100";
+                                                  return;
+                                                }
+
+                                                const parts =
+                                                  sanitizedValue.split(".");
+                                                let validValue = parts[0];
+                                                if (parts.length > 1) {
+                                                  validValue +=
+                                                    "." + parts[1].slice(0, 2);
+                                                }
+
+                                                if (parts.length > 2) {
+                                                  e.target.value =
+                                                    prevValue || "";
+                                                  return;
+                                                }
+
+                                                if (rawValue !== validValue) {
+                                                  e.target.value =
+                                                    prevValue || "";
+                                                  return;
+                                                }
 
                                                 setValue(
                                                   `months.${monthIndex}.items.${weekIndex}.realisasi`,
-                                                  validatedValue
+                                                  validValue
                                                 );
+                                              },
+                                              onBlur: (e) => {
+                                                let processedValue =
+                                                  e.target.value;
+
+                                                if (
+                                                  processedValue === "" ||
+                                                  processedValue === "."
+                                                ) {
+                                                  processedValue = "0";
+                                                } else if (
+                                                  processedValue.endsWith(".")
+                                                ) {
+                                                  processedValue =
+                                                    processedValue.slice(0, -1);
+                                                }
+
+                                                const numValue = Math.min(
+                                                  100,
+                                                  Math.max(
+                                                    0,
+                                                    parseFloat(
+                                                      processedValue
+                                                    ) || 0
+                                                  )
+                                                );
+
+                                                let formattedValue;
+                                                if (numValue % 1 === 0) {
+                                                  formattedValue =
+                                                    numValue.toString();
+                                                } else {
+                                                  formattedValue = numValue
+                                                    .toFixed(2)
+                                                    .replace(/\.?0+$/, "");
+                                                }
+
+                                                setValue(
+                                                  `months.${monthIndex}.items.${weekIndex}.realisasi`,
+                                                  numValue
+                                                );
+                                                validateProgressValue(
+                                                  monthIndex,
+                                                  weekIndex,
+                                                  "rencana",
+                                                  numValue
+                                                );
+
+                                                e.target.value = formattedValue;
 
                                                 const rencana =
                                                   Number(
@@ -601,7 +750,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                                   `months.${monthIndex}.items.${weekIndex}.deviasi`,
                                                   calculateDeviasi(
                                                     rencana,
-                                                    validatedValue
+                                                    numValue
                                                   )
                                                 );
                                               },
@@ -658,8 +807,8 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                             Number(week.deviasi) < 0
                                               ? "#ef4444"
                                               : Number(week.deviasi) > 0
-                                              ? "#22c55e"
-                                              : "#64748b",
+                                                ? "#22c55e"
+                                                : "#64748b",
                                         }}
                                       />
                                     </div>

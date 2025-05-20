@@ -28,8 +28,10 @@ import { toast } from "sonner";
 import { Loader } from "lucide-react";
 import { Role } from "@prisma/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
 export default function CreateUserDialog() {
+  const user = useCurrentUser()
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -128,6 +130,7 @@ export default function CreateUserDialog() {
           <div className="grid gap-2">
             <Label htmlFor="role">Role</Label>
             <Select
+            disabled={user.user?.role !== "SUPERADMIN"}
               value={form.watch("role")}
               onValueChange={(value) => form.setValue("role", value as Role)}
             >

@@ -34,6 +34,16 @@ import {
   CompleteContractCreateSchema,
 } from "@/schemas/contract.schema";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const tabs = [
   { id: "basic-info", title: "Informasi Dasar" },
@@ -77,7 +87,7 @@ const tabFieldsMap: Record<string, FieldPath[]> = {
     "financialProgress.uangMuka",
     "financialProgress.totalProgress",
   ],
-  additional: ["hasilProdukAkhir", "dimensi", "kendala"],
+  additional: ["hasilProdukAkhir", "dimensi"],
   addendum: ["hasAddendum"],
   documentation: ["dokumentasiAwal", "dokumentasiTengah", "dokumentasiAkhir"],
   location: [
@@ -100,6 +110,11 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [tabErrors, setTabErrors] = useState<Record<string, boolean>>({});
   const [isAnyImageUploading, setIsAnyImageUploading] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [formDataToSubmit, setFormDataToSubmit] =
+    useState<CompleteContractCreate | null>(null);
+  const [hasDateChanged, setHasDateChanged] = useState(false);
+  const [originalDate, setOriginalDate] = useState<Date | null>(null);
 
   const defaultValues = {
     namaPaket: "",
@@ -161,6 +176,19 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
   });
 
   const { errors } = form.formState;
+  const tanggalKontrak = form.watch("tanggalKontrak");
+
+  useEffect(() => {
+    if (originalDate && tanggalKontrak && id) {
+      const oldDate = new Date(originalDate);
+      const newDate = new Date(tanggalKontrak);
+
+      const oldDateStr = oldDate.toISOString().split("T")[0];
+      const newDateStr = newDate.toISOString().split("T")[0];
+
+      setHasDateChanged(oldDateStr !== newDateStr);
+    }
+  }, [tanggalKontrak, originalDate, id]);
 
   useEffect(() => {
     const newTabErrors: Record<string, boolean> = {};
@@ -204,6 +232,10 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
               ...contractData
             } = result.data;
 
+            if (contractData.tanggalKontrak) {
+              setOriginalDate(new Date(contractData.tanggalKontrak));
+            }
+
             const formData = {
               ...contractData,
               location: contractData.location
@@ -233,6 +265,8 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
                   ...progress,
                 })) || [],
               addendum: contractData.addendum || [],
+              hasAddendum: contractData.addendum.length <= 0 ? false : true,
+              totalAddendumWaktu: contractData.totalAddendumWaktu || 0,
             };
 
             form.reset(formData);
@@ -255,7 +289,6 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
       const result = id
         ? await updateContract(id, data)
         : await createContract(data);
-
       if (result.success) {
         toast.success(`Kontrak berhasil ${id ? "diperbarui" : "dibuat"}`);
         router.push(`/dashboard/contracts`);
@@ -275,6 +308,25 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
 
   const handleFormSubmit = async () => {
     const result = await form.trigger();
+
+    const addendumItems = form.getValues("addendum") || [];
+    const hasEmptyAddendumFields = addendumItems.some((item) => {
+      return (
+        !item.name ||
+        !item.tipe ||
+        (item.tipe === "waktu" && !item.tanggal) ||
+        (item.tipe === "volume" && (!item.volume || isNaN(Number(item.volume))))
+      );
+    });
+
+    if (hasEmptyAddendumFields) {
+      setActiveTab("addendum");
+      setTabErrors({"addendum": true})
+      toast.error("Harap lengkapi semua field addendum yang wajib diisi", {
+        duration: 3000,
+      });
+      return;
+    }
 
     if (!result) {
       const currentTabErrors: Record<string, boolean> = {};
@@ -314,7 +366,26 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
       return;
     }
 
-    form.handleSubmit(handleSubmit)();
+    const data = form.getValues();
+    setFormDataToSubmit(data);
+
+    if (id && hasDateChanged) {
+      setIsConfirmDialogOpen(true);
+    } else {
+      form.handleSubmit(handleSubmit)();
+    }
+  };
+
+  const handleDialogConfirm = () => {
+    setIsConfirmDialogOpen(false);
+    if (formDataToSubmit) {
+      handleSubmit(formDataToSubmit);
+    }
+  };
+
+  const handleDialogCancel = () => {
+    setIsConfirmDialogOpen(false);
+    setFormDataToSubmit(null);
   };
 
   const handleImageUploadStatusChange = (isUploading: boolean) => {
@@ -417,6 +488,30 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
           </CardFooter>
         )}
       </Card>
+
+      {/* Confirmation Dialog for Date Change */}
+      <AlertDialog
+        open={isConfirmDialogOpen}
+        onOpenChange={setIsConfirmDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Perubahan Tanggal</AlertDialogTitle>
+            <AlertDialogDescription className="text-destructive font-medium">
+              Perubahan tanggal kontrak akan mereset jadwal progress yang belum
+              diisi. Progress yang sudah direkam tidak akan terpengaruh.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDialogCancel}>
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDialogConfirm}>
+              Lanjutkan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </FormProvider>
   );
 }

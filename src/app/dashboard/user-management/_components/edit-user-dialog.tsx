@@ -134,7 +134,7 @@ export default function EditUserDialog({ user }: { user: User }) {
             <Select
               onValueChange={(value) => form.setValue("role", value as Role)}
               defaultValue={user.role}
-              disabled={loading}
+              disabled={loading || user.role !== "SUPERADMIN"}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select role" />

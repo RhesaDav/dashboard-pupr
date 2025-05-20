@@ -57,6 +57,7 @@ interface ViewProgressProps {
     nilaiKontrak: number;
     tanggalKontrak: string;
     masaPelaksanaan: number;
+    totalAddendumWaktu: number;
     volumeKontrak: number | string;
     satuanKontrak: string;
     endDate: string;
@@ -200,7 +201,7 @@ export default function ViewProgressPage({ contract }: ViewProgressProps) {
               </div>
               <div className="flex">
                 <span className="w-36 font-medium">Masa Pelaksanaan</span>
-                <span>: {contract.masaPelaksanaan} Hari</span>
+                <span>: {contract.masaPelaksanaan + contract.totalAddendumWaktu} Hari</span>
               </div>
             </div>
             <div className="space-y-2">

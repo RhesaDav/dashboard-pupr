@@ -22,12 +22,12 @@ export function StatsGrid({ data }: StatsGridProps) {
         value={data.totalContracts}
         icon={<FileCheck className="h-4 w-4 text-muted-foreground" />}
         footer={
-          <div className="flex justify-between text-xs text-muted-foreground mt-2">
+          <div className="flex text-xs text-muted-foreground mt-2 gap-x-4">
             <span>Aktif: {data.activeContracts}</span>
             <span>Selesai: {data.completedContracts}</span>
-            <span className="text-red-500">
+            {/* <span className="text-red-500">
               Masalah: {data.problemContracts.length}
-            </span>
+            </span> */}
           </div>
         }
       />
