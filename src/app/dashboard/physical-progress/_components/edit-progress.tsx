@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { updateContractProgress } from "@/actions/progress";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Path } from "react-hook-form";
 import { AlertCircle, Calendar, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 
+// Schema for form validation
 const progressSchema = z.object({
   months: z.array(
     z.object({
@@ -89,20 +90,11 @@ interface EditProgressProps {
   };
 }
 
+// Helper to sort months chronologically
 const sortMonthsChronologically = (months: MonthProgress[]) => {
   const monthOrder = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
   ];
 
   return [...months].sort((a, b) => {
@@ -129,6 +121,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
   const router = useRouter();
   const contractId = String(params.id);
 
+  // Sort months chronologically
   const initialProgressData = useMemo(() => {
     if (contract.progress && contract.progress.length > 0) {
       return sortMonthsChronologically(contract.progress);
@@ -136,6 +129,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     return [];
   }, [contract.progress]);
 
+  // Form setup with zod validation
   const {
     register,
     handleSubmit,
@@ -155,10 +149,12 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     name: "months",
   });
 
+  // Calculate deviation between planned and actual progress
   const calculateDeviasi = (rencana: number, realisasi: number) => {
     return realisasi - rencana;
   };
 
+  // Get all progress entries sorted by month and week
   const getAllProgressEntriesSorted = (formValues: FormValues) => {
     const allEntries: {
       monthIndex: number;
@@ -190,6 +186,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     });
   };
 
+  // Validate that progress values never decrease from previous values
   const validateProgressValue = (
     monthIndex: number,
     weekIndex: number,
@@ -198,8 +195,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
   ) => {
     const allEntries = getAllProgressEntriesSorted(formValues);
     const currentEntryIndex = allEntries.findIndex(
-      (entry) =>
-        entry.monthIndex === monthIndex && entry.weekIndex === weekIndex
+      (entry) => entry.monthIndex === monthIndex && entry.weekIndex === weekIndex
     );
 
     if (currentEntryIndex <= 0) {
@@ -211,23 +207,25 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
       return value;
     }
 
+    // Find highest previous value
     let highestPreviousValue = 0;
     for (let i = 0; i < currentEntryIndex; i++) {
-      const prevValue =
-        field === "rencana" ? allEntries[i].rencana : allEntries[i].realisasi;
+      const prevValue = field === "rencana" ? allEntries[i].rencana : allEntries[i].realisasi;
       if (prevValue > highestPreviousValue) {
         highestPreviousValue = prevValue;
       }
     }
 
-    if (value < highestPreviousValue) {
+    if (value < highestPreviousValue && value !== 0) {
       setValidationErrors((prev) => ({
         ...prev,
-        [`months.${monthIndex}.items.${weekIndex}.${field}`]: `Nilai ${field} (${value}%) tidak boleh lebih rendah dari nilai tertinggi sebelumnya (${highestPreviousValue}%)`,
+        [`months.${monthIndex}.items.${weekIndex}.${field}`]: 
+          `Nilai ${field} pada ${weekIndex} (${value}%) tidak boleh lebih rendah dari nilai tertinggi sebelumnya (${highestPreviousValue}%)`,
       }));
       return highestPreviousValue;
     }
 
+    // Clear validation error if value is valid
     setValidationErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[`months.${monthIndex}.items.${weekIndex}.${field}`];
@@ -237,17 +235,11 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     return value;
   };
 
-  const calculateMonthProgress = (items: ProgressItem[]) => {
-    if (items.length === 0) return 0;
-    const lastItem = items[items.length - 1];
-    return Number(lastItem.realisasi) || 0;
-  };
-
+  // Calculate total progress from the latest realization value
   const calculateTotalProgress = () => {
     if (!formValues.months.length) return 0;
 
     let maxRealisasi = 0;
-    let maxWeek = null;
 
     for (const month of formValues.months) {
       for (const week of month.items) {
@@ -258,25 +250,17 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
           week.realisasi > maxRealisasi
         ) {
           maxRealisasi = week.realisasi;
-          maxWeek = week;
         }
       }
-    }
-
-    if (maxWeek) {
-      console.log(
-        "Max realisasi found in week:",
-        maxWeek.week,
-        "with value:",
-        maxRealisasi
-      );
     }
 
     return Math.min(maxRealisasi, 100);
   };
 
+  // Form values from watch
   const formValues = watch();
 
+  // Handle form submission
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
@@ -307,6 +291,79 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     }
   };
 
+  // Helper to format numeric inputs
+  const formatNumericInput = (value: string) => {
+    if (value === "" || value === ".") return "0";
+    if (value.endsWith(".")) value = value.slice(0, -1);
+    
+    const numValue = Math.min(100, Math.max(0, parseFloat(value) || 0));
+    
+    if (numValue % 1 === 0) {
+      return numValue.toString();
+    }
+    
+    return numValue.toFixed(2).replace(/\.?0+$/, "");
+  };
+
+  // Handle numeric input changes
+  const handleNumericInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    path: Path<FormValues>
+  ) => {
+    const rawValue = e.target.value;
+    const prevValue = watch(path);
+
+    const sanitizedValue = rawValue.replace(/[^0-9.]/g, "");
+    const numericValue = parseFloat(sanitizedValue);
+    
+    if (!isNaN(numericValue) && numericValue > 100) {
+      e.target.value = "100";
+      return;
+    }
+
+    const parts = sanitizedValue.split(".");
+    let validValue = parts[0];
+    if (parts.length > 1) {
+      validValue += "." + parts[1].slice(0, 2);
+    }
+
+    if (parts.length > 2 || rawValue !== validValue) {
+      e.target.value = prevValue?.toString() || "";
+      return;
+    }
+
+    setValue(path, validValue);
+  };
+
+  // Handle blur events for numeric inputs
+  const handleNumericInputBlur = (
+    e: React.FocusEvent<HTMLInputElement>,
+    monthIndex: number,
+    weekIndex: number,
+    field: "rencana" | "realisasi"
+  ) => {
+    const formattedValue = formatNumericInput(e.target.value);
+    const numValue = parseFloat(formattedValue);
+    
+    e.target.value = formattedValue;
+    setValue(`months.${monthIndex}.items.${weekIndex}.${field}`, numValue);
+    
+    // Validate against previous values
+    validateProgressValue(monthIndex, weekIndex, field, numValue);
+    
+    // Calculate and update deviation
+    const oppositeField = field === "rencana" ? "realisasi" : "rencana";
+    const oppositeValue = Number(
+      formValues.months[monthIndex].items[weekIndex][oppositeField]
+    ) || 0;
+    
+    const deviasi = field === "rencana" 
+      ? calculateDeviasi(numValue, oppositeValue)
+      : calculateDeviasi(oppositeValue, numValue);
+    
+    setValue(`months.${monthIndex}.items.${weekIndex}.deviasi`, deviasi);
+  };
+
   const totalAddendumWaktu = contract.totalAddendumWaktu || 0;
   const masaPelaksanaan = contract.masaPelaksanaan || 0;
   const hasNoExecutionPeriod = masaPelaksanaan <= 0;
@@ -325,6 +382,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
           </CardHeader>
 
           <CardContent className="pt-6">
+            {/* Contract info section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
               <div className="space-y-2">
                 <div className="flex">
@@ -349,7 +407,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                 <div className="flex">
                   <span className="w-36 font-medium">Volume</span>
                   <span>
-                    : {contract.volumeKontrak} {contract.satuanKontrak}
+                    : {contract.volumeKontrak || "-"} {contract.satuanKontrak}
                   </span>
                 </div>
                 <div className="flex">
@@ -375,6 +433,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
               </div>
             ) : (
               <>
+                {/* Total progress indicator */}
                 <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div className="font-semibold text-blue-900">
@@ -392,6 +451,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                   </div>
                 </div>
 
+                {/* Validation warnings */}
                 {Object.keys(validationErrors).length > 0 && (
                   <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div className="flex gap-2 text-yellow-700 font-medium">
@@ -413,6 +473,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                   </div>
                 )}
 
+                {/* Months accordion */}
                 <Accordion
                   type="multiple"
                   value={expandedMonths}
@@ -430,9 +491,6 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                           <span className="font-medium flex-1 text-left">
                             {formValues.months[monthIndex].month}
                           </span>
-                          {/* <span className="text-sm text-muted-foreground">
-                            Progress: {calculateMonthProgress(formValues.months[monthIndex].items).toFixed(1)}%
-                          </span> */}
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="p-4">
@@ -442,16 +500,15 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                               const rencanaErrorKey = `months.${monthIndex}.items.${weekIndex}.rencana`;
                               const realisasiErrorKey = `months.${monthIndex}.items.${weekIndex}.realisasi`;
 
-                              const hasRencanaError =
-                                !!validationErrors[rencanaErrorKey];
-                              const hasRealisasiError =
-                                !!validationErrors[realisasiErrorKey];
+                              const hasRencanaError = !!validationErrors[rencanaErrorKey];
+                              const hasRealisasiError = !!validationErrors[realisasiErrorKey];
 
                               return (
                                 <div
                                   key={`${monthField.id}-week-${weekIndex}`}
                                   className="p-3 border rounded-lg"
                                 >
+                                  {/* Week header */}
                                   <div className="flex justify-between items-center mb-3">
                                     <div className="font-medium flex items-center">
                                       Minggu {week.week}
@@ -465,7 +522,10 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                       )}
                                     </div>
                                   </div>
+                                  
+                                  {/* Progress inputs */}
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {/* Rencana input */}
                                     <div>
                                       <label className="block text-sm font-medium mb-1">
                                         Rencana (%)
@@ -474,124 +534,20 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                         <Input
                                           type="text"
                                           inputMode="decimal"
-                                          className={
-                                            hasRencanaError
-                                              ? "border-red-500 pr-8"
-                                              : ""
-                                          }
+                                          className={hasRencanaError ? "border-red-500 pr-8" : ""}
                                           {...register(
                                             `months.${monthIndex}.items.${weekIndex}.rencana`,
                                             {
-                                              onChange: (e) => {
-                                                const rawValue = e.target.value;
-                                                const prevValue = watch(
-                                                  `months.${monthIndex}.items.${weekIndex}.rencana`
-                                                );
-
-                                                const sanitizedValue =
-                                                  rawValue.replace(
-                                                    /[^0-9.]/g,
-                                                    ""
-                                                  );
-
-                                                const numericValue =
-                                                  parseFloat(sanitizedValue);
-                                                if (
-                                                  !isNaN(numericValue) &&
-                                                  numericValue > 100
-                                                ) {
-                                                  e.target.value = "100";
-                                                  return;
-                                                }
-
-                                                const parts =
-                                                  sanitizedValue.split(".");
-                                                let validValue = parts[0];
-                                                if (parts.length > 1) {
-                                                  validValue +=
-                                                    "." + parts[1].slice(0, 2);
-                                                }
-
-                                                if (parts.length > 2) {
-                                                  e.target.value =
-                                                    prevValue || "";
-                                                  return;
-                                                }
-
-                                                if (rawValue !== validValue) {
-                                                  e.target.value =
-                                                    prevValue || "";
-                                                  return;
-                                                }
-
-                                                setValue(
-                                                  `months.${monthIndex}.items.${weekIndex}.rencana`,
-                                                  validValue
-                                                );
-                                              },
-                                              onBlur: (e) => {
-                                                let processedValue =
-                                                  e.target.value;
-
-                                                if (
-                                                  processedValue === "" ||
-                                                  processedValue === "."
-                                                ) {
-                                                  processedValue = "0";
-                                                } else if (
-                                                  processedValue.endsWith(".")
-                                                ) {
-                                                  processedValue =
-                                                    processedValue.slice(0, -1);
-                                                }
-
-                                                const numValue = Math.min(
-                                                  100,
-                                                  Math.max(
-                                                    0,
-                                                    parseFloat(
-                                                      processedValue
-                                                    ) || 0
-                                                  )
-                                                );
-
-                                                let formattedValue;
-                                                if (numValue % 1 === 0) {
-                                                  formattedValue =
-                                                    numValue.toString();
-                                                } else {
-                                                  formattedValue = numValue
-                                                    .toFixed(2)
-                                                    .replace(/\.?0+$/, "");
-                                                }
-
-                                                setValue(
-                                                  `months.${monthIndex}.items.${weekIndex}.rencana`,
-                                                  numValue
-                                                );
-                                                validateProgressValue(
-                                                  monthIndex,
-                                                  weekIndex,
-                                                  "rencana",
-                                                  numValue
-                                                );
-
-                                                e.target.value = formattedValue;
-
-                                                const realisasi =
-                                                  Number(
-                                                    formValues.months[
-                                                      monthIndex
-                                                    ].items[weekIndex].realisasi
-                                                  ) || 0;
-                                                setValue(
-                                                  `months.${monthIndex}.items.${weekIndex}.deviasi`,
-                                                  calculateDeviasi(
-                                                    numValue,
-                                                    realisasi
-                                                  )
-                                                );
-                                              },
+                                              onChange: (e) => handleNumericInputChange(
+                                                e, 
+                                                `months.${monthIndex}.items.${weekIndex}.rencana`
+                                              ),
+                                              onBlur: (e) => handleNumericInputBlur(
+                                                e, 
+                                                monthIndex, 
+                                                weekIndex, 
+                                                "rencana"
+                                              ),
                                             }
                                           )}
                                         />
@@ -605,29 +561,21 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                               </TooltipTrigger>
                                               <TooltipContent side="right">
                                                 <p className="text-xs max-w-xs">
-                                                  {
-                                                    validationErrors[
-                                                      rencanaErrorKey
-                                                    ]
-                                                  }
+                                                  {validationErrors[rencanaErrorKey]}
                                                 </p>
                                               </TooltipContent>
                                             </Tooltip>
                                           </TooltipProvider>
                                         )}
                                       </div>
-                                      {errors.months?.[monthIndex]?.items?.[
-                                        weekIndex
-                                      ]?.rencana && (
+                                      {errors.months?.[monthIndex]?.items?.[weekIndex]?.rencana && (
                                         <p className="text-red-500 text-xs mt-1">
-                                          {
-                                            errors.months[monthIndex]?.items[
-                                              weekIndex
-                                            ]?.rencana?.message
-                                          }
+                                          {errors.months[monthIndex]?.items[weekIndex]?.rencana?.message}
                                         </p>
                                       )}
                                     </div>
+                                    
+                                    {/* Realisasi input */}
                                     <div>
                                       <label className="block text-sm font-medium mb-1">
                                         Realisasi (%)
@@ -636,124 +584,20 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                         <Input
                                           type="text"
                                           inputMode="decimal"
-                                          className={
-                                            hasRencanaError
-                                              ? "border-red-500 pr-8"
-                                              : ""
-                                          }
+                                          className={hasRealisasiError ? "border-red-500 pr-8" : ""}
                                           {...register(
                                             `months.${monthIndex}.items.${weekIndex}.realisasi`,
                                             {
-                                              onChange: (e) => {
-                                                const rawValue = e.target.value;
-                                                const prevValue = watch(
-                                                  `months.${monthIndex}.items.${weekIndex}.realisasi`
-                                                );
-
-                                                const sanitizedValue =
-                                                  rawValue.replace(
-                                                    /[^0-9.]/g,
-                                                    ""
-                                                  );
-
-                                                const numericValue =
-                                                  parseFloat(sanitizedValue);
-                                                if (
-                                                  !isNaN(numericValue) &&
-                                                  numericValue > 100
-                                                ) {
-                                                  e.target.value = "100";
-                                                  return;
-                                                }
-
-                                                const parts =
-                                                  sanitizedValue.split(".");
-                                                let validValue = parts[0];
-                                                if (parts.length > 1) {
-                                                  validValue +=
-                                                    "." + parts[1].slice(0, 2);
-                                                }
-
-                                                if (parts.length > 2) {
-                                                  e.target.value =
-                                                    prevValue || "";
-                                                  return;
-                                                }
-
-                                                if (rawValue !== validValue) {
-                                                  e.target.value =
-                                                    prevValue || "";
-                                                  return;
-                                                }
-
-                                                setValue(
-                                                  `months.${monthIndex}.items.${weekIndex}.realisasi`,
-                                                  validValue
-                                                );
-                                              },
-                                              onBlur: (e) => {
-                                                let processedValue =
-                                                  e.target.value;
-
-                                                if (
-                                                  processedValue === "" ||
-                                                  processedValue === "."
-                                                ) {
-                                                  processedValue = "0";
-                                                } else if (
-                                                  processedValue.endsWith(".")
-                                                ) {
-                                                  processedValue =
-                                                    processedValue.slice(0, -1);
-                                                }
-
-                                                const numValue = Math.min(
-                                                  100,
-                                                  Math.max(
-                                                    0,
-                                                    parseFloat(
-                                                      processedValue
-                                                    ) || 0
-                                                  )
-                                                );
-
-                                                let formattedValue;
-                                                if (numValue % 1 === 0) {
-                                                  formattedValue =
-                                                    numValue.toString();
-                                                } else {
-                                                  formattedValue = numValue
-                                                    .toFixed(2)
-                                                    .replace(/\.?0+$/, "");
-                                                }
-
-                                                setValue(
-                                                  `months.${monthIndex}.items.${weekIndex}.realisasi`,
-                                                  numValue
-                                                );
-                                                validateProgressValue(
-                                                  monthIndex,
-                                                  weekIndex,
-                                                  "rencana",
-                                                  numValue
-                                                );
-
-                                                e.target.value = formattedValue;
-
-                                                const rencana =
-                                                  Number(
-                                                    formValues.months[
-                                                      monthIndex
-                                                    ].items[weekIndex].rencana
-                                                  ) || 0;
-                                                setValue(
-                                                  `months.${monthIndex}.items.${weekIndex}.deviasi`,
-                                                  calculateDeviasi(
-                                                    rencana,
-                                                    numValue
-                                                  )
-                                                );
-                                              },
+                                              onChange: (e) => handleNumericInputChange(
+                                                e, 
+                                                `months.${monthIndex}.items.${weekIndex}.realisasi`
+                                              ),
+                                              onBlur: (e) => handleNumericInputBlur(
+                                                e, 
+                                                monthIndex, 
+                                                weekIndex, 
+                                                "realisasi"
+                                              ),
                                             }
                                           )}
                                         />
@@ -767,29 +611,21 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                               </TooltipTrigger>
                                               <TooltipContent side="right">
                                                 <p className="text-xs max-w-xs">
-                                                  {
-                                                    validationErrors[
-                                                      realisasiErrorKey
-                                                    ]
-                                                  }
+                                                  {validationErrors[realisasiErrorKey]}
                                                 </p>
                                               </TooltipContent>
                                             </Tooltip>
                                           </TooltipProvider>
                                         )}
                                       </div>
-                                      {errors.months?.[monthIndex]?.items?.[
-                                        weekIndex
-                                      ]?.realisasi && (
+                                      {errors.months?.[monthIndex]?.items?.[weekIndex]?.realisasi && (
                                         <p className="text-red-500 text-xs mt-1">
-                                          {
-                                            errors.months[monthIndex]?.items[
-                                              weekIndex
-                                            ]?.realisasi?.message
-                                          }
+                                          {errors.months[monthIndex]?.items[weekIndex]?.realisasi?.message}
                                         </p>
                                       )}
                                     </div>
+                                    
+                                    {/* Deviasi display */}
                                     <div>
                                       <label className="block text-sm font-medium mb-1">
                                         Deviasi (%)
@@ -797,9 +633,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                       <Input
                                         type="number"
                                         step="0.01"
-                                        value={(
-                                          Number(week.deviasi) || 0
-                                        ).toFixed(1)}
+                                        value={(Number(week.deviasi) || 0).toFixed(1)}
                                         readOnly
                                         className="bg-muted"
                                         style={{
@@ -814,7 +648,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                     </div>
                                   </div>
 
-                                  {/* Bagian Bermasalah & Deskripsi */}
+                                  {/* Problem section */}
                                   <div className="mt-4 space-y-2">
                                     <div className="flex items-center space-x-2">
                                       <Checkbox
