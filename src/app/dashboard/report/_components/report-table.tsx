@@ -207,13 +207,12 @@ export default function ReportTable() {
         </div>
       ),
     },
-
     {
       accessorKey: "timeline",
       header: "Masa Pelaksanaan",
       cell: ({ row }) => {
         const start = row.original.tanggalKontrak;
-        const duration = row.original.masaPelaksanaan || 0;
+        const duration = (row.original.masaPelaksanaan || 0) + (row.original.totalAddendumWaktu || 0);
         const end = start ? addDays(start, duration) : null;
 
         return (
