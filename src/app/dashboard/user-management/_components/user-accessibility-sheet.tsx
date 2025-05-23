@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -52,6 +52,7 @@ interface UserAccessibilitySheetProps {
 export default function UserAccessibilitySheet({
   user,
 }: UserAccessibilitySheetProps) {
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -85,6 +86,8 @@ export default function UserAccessibilitySheet({
     staleTime: 1000 * 60 * 5,
   });
 
+  console.log(contractsResponse);
+
   const {
     data: userAccessData,
     isLoading: isLoadingAccess,
@@ -96,6 +99,15 @@ export default function UserAccessibilitySheet({
     enabled: isOpen,
     staleTime: 1000 * 60 * 5,
   });
+
+  useEffect(() => {
+    if (userAccessData && !isLoadingAccess) {
+      const existingContractIds = userAccessData.map(
+        (access) => access.contractId
+      );
+      setSelectedContracts(existingContractIds);
+    }
+  }, [userAccessData, isLoadingAccess]);
 
   const contracts = contractsResponse?.data || [];
   const totalContracts = contractsResponse?.pagination?.total || 0;
@@ -118,6 +130,9 @@ export default function UserAccessibilitySheet({
     try {
       await updateContractAccess(user.id, selectedContracts);
       toast.success("Hak akses berhasil diperbarui.");
+      queryClient.invalidateQueries({
+        queryKey: ["userContractAccess", user.id],
+      });
     } catch (error) {
       console.error("Failed to update access:", error);
       toast.error("Gagal menyimpan perubahan hak akses.");
