@@ -121,10 +121,10 @@ function SignInForm() {
             <Building2 className="h-12 w-12 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
-            Bina Marga
+            SIAP_BEKERJA
           </h1>{" "}
           <p className="text-blue-100 mt-1.5 text-sm">
-            Sistem Manajemen Proyek
+            DASHBOARD BIDANG BINA MARGA - SIKERJA
           </p>{" "}
         </div>
 

@@ -11,6 +11,10 @@ import {
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+/**
+ * Mendapatkan user yang sedang login berdasarkan token di cookie.
+ * @returns {Promise<object|null>} User object atau null jika tidak ada token.
+ */
 export async function getCurrentUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get("session")?.value;
@@ -32,6 +36,11 @@ export async function getCurrentUser() {
   }
 }
 
+/**
+ * Mendaftarkan user baru.
+ * @param {FormData} formData - Data form registrasi.
+ * @returns {Promise<object>} Object berisi pesan sukses atau error.
+ */
 export async function registerAction(formData: FormData) {
   const cookiesHeaders = await cookies();
   const email = formData.get("email") as string;
@@ -61,13 +70,18 @@ export async function registerAction(formData: FormData) {
 
     return { message: "Registration success" };
   } catch (error) {
-    console.log(error);
+    console.error("Registration error:", error);
     return { error: "Registration failed" };
   } finally {
     redirect("/dashboard/home");
   }
 }
 
+/**
+ * Login user.
+ * @param {FormData} formData - Data form login.
+ * @returns {Promise<object>} Object berisi pesan sukses atau error.
+ */
 export async function loginAction(formData: FormData) {
   const cookiesHeaders = await cookies();
   const emailOrName = formData.get("email") as string;
@@ -112,14 +126,12 @@ export async function loginAction(formData: FormData) {
 
     cookiesHeaders.set("session", token, {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === "production",
-      secure: false
+      secure: process.env.NODE_ENV === "production",
     });
 
     cookiesHeaders.set("budgetYear", budgetYear, {
       httpOnly: false,
-      // secure: process.env.NODE_ENV === "production",
-      secure: false
+      secure: process.env.NODE_ENV === "production",
     });
 
     return {
@@ -128,11 +140,15 @@ export async function loginAction(formData: FormData) {
       budgetYear: parseInt(budgetYear, 10),
     };
   } catch (error) {
-    console.log(error);
+    console.error("Login error:", error);
     return { error: "Login failed" };
   }
 }
 
+/**
+ * Logout user.
+ * @returns {Promise<void>}
+ */
 export async function logoutAction() {
   const cookiesHeaders = await cookies();
   cookiesHeaders.delete("session");
@@ -140,6 +156,10 @@ export async function logoutAction() {
   redirect("/signin");
 }
 
+/**
+ * Refresh token user.
+ * @returns {Promise<object>} Object berisi status sukses.
+ */
 export async function refreshTokenAction() {
   const cookiesHeaders = await cookies();
   const oldToken = cookiesHeaders.get("session")?.value;

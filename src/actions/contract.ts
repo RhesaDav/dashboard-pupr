@@ -22,7 +22,7 @@ import { IdSchema } from "@/schemas/id.schema";
 import { format } from "date-fns";
 import { getCurrentUser } from "./auth";
 import { cookies } from "next/headers";
-import { pgClient } from "@/lib/pgClient";
+import { insertPaket, pgClient } from "@/lib/pgClient";
 
 interface ProgressItem {
   week: number;
@@ -204,6 +204,11 @@ export async function createContract(data: CompleteContractCreate) {
       }
 
       return contract;
+    });
+
+    await insertPaket({
+      tipePaket: "Pengawasan",
+      title: validatedData.namaPaket,
     });
 
     revalidatePath("/contracts");
