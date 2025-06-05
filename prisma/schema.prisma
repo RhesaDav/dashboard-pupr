@@ -55,6 +55,7 @@ model Contract {
   dokumentasiAwal   String?
   dokumentasiTengah String?
   dokumentasiAkhir  String?
+  dokumenPendukung String?
 
   // Addendum handling
   hasAddendum Boolean? @default(false)

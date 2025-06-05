@@ -36,6 +36,7 @@ export const ContractCreateSchema = z.object({
   dokumentasiAwal: z.string().nullable().optional(),
   dokumentasiTengah: z.string().nullable().optional(),
   dokumentasiAkhir: z.string().nullable().optional(),
+  dokumenPendukung: z.string().nullable().optional(),
   hasAddendum: z.boolean().nullable().optional().default(false),
 });
 
