@@ -207,7 +207,13 @@ export async function createContract(data: CompleteContractCreate) {
     });
 
     await insertPaket({
-      tipePaket: "Pengawasan",
+      kabupatenKota: validatedData.location?.kota || undefined,
+      distrik: validatedData.location?.distrik || undefined,
+      kampung: validatedData.location?.kampung || undefined,
+      titikKoordinat: validatedData.location?.koordinatAwal || undefined,
+      awalKontrak: validatedData.tanggalKontrak ? format(validatedData.tanggalKontrak, "dd-MM-yyyy") : undefined,
+      bidang: "Bina Marga",
+      tipePaket: "Fisik",
       title: validatedData.namaPaket,
     });
 
