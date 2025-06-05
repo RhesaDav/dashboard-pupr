@@ -18,11 +18,20 @@ import {
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Map } from "lucide-react";
+import { Map, MapPin, X } from "lucide-react";
 import { districts } from "@/lib/district";
+import dynamic from "next/dynamic";
+
+// Dynamic import untuk react-leaflet (untuk menghindari SSR issues)
+const InteractiveMap = dynamic(() => import("@/components/interactive-map"), {
+  ssr: false,
+  loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
+});
 
 export default function LocationStep() {
   const form = useFormContext();
+  const [showMap, setShowMap] = useState(false);
+  const [mapMode, setMapMode] = useState<'start' | 'end' | null>(null);
 
   const [filteredDistricts, setFilteredDistricts] = useState(districts);
   const selectedKota = form.watch("location.kota");
@@ -44,15 +53,7 @@ export default function LocationStep() {
   };
 
   const openLocationInMap = (coordinates: string) => {
-    // if (!coordinates || !isValidCoordinate(coordinates)) {
-    //   alert(
-    //     "Format koordinat tidak valid. Gunakan format: latitude,longitude (contoh: -6.123,106.456)"
-    //   );
-    //   return null;
-    // }
-
     const [lat, lng] = coordinates.split(",").map((coord) => coord.trim());
-
     return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   };
 
@@ -74,6 +75,30 @@ export default function LocationStep() {
     if (urlToOpen) {
       window.open(urlToOpen, "_blank");
     }
+  };
+
+  const handleMapSelect = (mode: 'start' | 'end') => {
+    setMapMode(mode);
+    setShowMap(true);
+  };
+
+  const handleCoordinateSelect = (lat: number, lng: number) => {
+    const coordinates = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+    
+    if (mapMode === 'start') {
+      form.setValue("location.koordinatAwal", coordinates);
+    } else if (mapMode === 'end') {
+      form.setValue("location.koordinatAkhir", coordinates);
+    }
+    
+    // setShowMap(false);
+    setMapMode(null);
+  };
+
+  const parseCoordinates = (coordString: string) => {
+    if (!coordString || !isValidCoordinate(coordString)) return null;
+    const [lat, lng] = coordString.split(",").map((coord) => parseFloat(coord.trim()));
+    return { lat, lng };
   };
 
   return (
@@ -195,12 +220,21 @@ export default function LocationStep() {
                       type="button"
                       variant="outline"
                       className="h-12 px-3"
+                      onClick={() => handleMapSelect('start')}
+                      title="Pilih dari Peta"
+                    >
+                      <MapPin className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-12 px-3"
                       onClick={() => {
                         const url = openLocationInMap(field.value);
                         if (url) window.open(url, "_blank");
                       }}
                       disabled={!field.value}
-                      title="Buka di Peta"
+                      title="Buka di Google Maps"
                     >
                       <Map className="h-5 w-5" />
                     </Button>
@@ -228,12 +262,21 @@ export default function LocationStep() {
                       type="button"
                       variant="outline"
                       className="h-12 px-3"
+                      onClick={() => handleMapSelect('end')}
+                      title="Pilih dari Peta"
+                    >
+                      <MapPin className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-12 px-3"
                       onClick={() => {
                         const url = openLocationInMap(field.value);
                         if (url) window.open(url, "_blank");
                       }}
                       disabled={!field.value}
-                      title="Buka di Peta"
+                      title="Buka di Google Maps"
                     >
                       <Map className="h-5 w-5" />
                     </Button>
@@ -245,6 +288,44 @@ export default function LocationStep() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Interactive Map Modal */}
+      {showMap && (
+        <Card className="fixed inset-4 z-50 bg-white shadow-2xl">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>
+              Pilih Koordinat {mapMode === 'start' ? 'Awal' : 'Akhir'}
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowMap(false);
+                setMapMode(null);
+              }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="p-4 h-full">
+            <div className="h-full">
+              <InteractiveMap
+                onCoordinateSelect={handleCoordinateSelect}
+                initialCoordinates={
+                  mapMode === 'start'
+                    ? parseCoordinates(form.watch("location.koordinatAwal"))
+                    : parseCoordinates(form.watch("location.koordinatAkhir"))
+                }
+                otherCoordinates={
+                  mapMode === 'start'
+                    ? parseCoordinates(form.watch("location.koordinatAkhir"))
+                    : parseCoordinates(form.watch("location.koordinatAwal"))
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
