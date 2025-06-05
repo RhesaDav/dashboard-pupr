@@ -40,6 +40,7 @@ import { Separator } from "@/components/ui/separator";
 const ADDENDUM_TYPES = [
   { value: "waktu", label: "Perubahan Waktu" },
   { value: "volume", label: "Perubahan Volume" },
+  { value: "waktuVolume", label: "Perubahan Waktu dan Volume" },
 ];
 
 export default function AddendumStep() {
@@ -245,7 +246,7 @@ export default function AddendumStep() {
                   array: Partial<Addendum>[]
                 ) => {
                   const totalNonKesempatanDays =
-                    (form.watch("masaPelaksanaan") || 0) +
+                    (form.watch("masaPelaksanaan") -1 || 0) +
                     (form.watch("addendum") ?? [])
                       .filter(
                         (add: Partial<Addendum>) => !add.pemberianKesempatan
@@ -405,7 +406,9 @@ export default function AddendumStep() {
                                   ? "border-blue-500 text-blue-600 bg-blue-50"
                                   : item.tipe === "volume"
                                     ? "border-green-500 text-green-600 bg-green-50"
-                                    : "border-slate-500 text-slate-600 bg-slate-50"
+                                    : item.tipe === "waktuVolume"
+                                      ? "border-purple-500 text-purple-600 bg-purple-50"
+                                      : "border-slate-500 text-slate-600 bg-slate-50"
                               )}
                             >
                               {ADDENDUM_TYPES.find((t) => t.value === item.tipe)
@@ -558,7 +561,141 @@ export default function AddendumStep() {
                                 />
                               </FormControl>
                             </FormItem>
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">
+                                Tanggal Mulai
+                              </FormLabel>
+                              <FormControl>
+                                <DateDayPicker
+                                  selectedDate={item.tanggal}
+                                  onChange={(value) => updateAddendumItem(
+                                      index,
+                                      "tanggal",
+                                      value || null
+                                    )}
+                                />
+                              </FormControl>
+                            </FormItem>
                           </div>
+                        )}
+
+                        {/* Waktu dan Volume Addendum Fields */}
+                        {item.tipe === "waktuVolume" && (
+                          <>
+                            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                              <h5 className="font-medium text-purple-800 mb-3 flex items-center gap-2">
+                                <Calendar className="h-4 w-4" />
+                                Perubahan Waktu
+                              </h5>
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium">
+                                    Jumlah Hari
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      placeholder="Contoh: 30"
+                                      value={item.hari || ""}
+                                      onChange={(e) =>
+                                        updateAddendumItem(
+                                          index,
+                                          "hari",
+                                          Number(e.target.value)
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium">
+                                    Tanggal Mulai
+                                  </FormLabel>
+                                  <FormControl>
+                                    <DateDayPicker
+                                      selectedDate={item.tanggal}
+                                      onChange={(value) => updateAddendumItem(
+                                          index,
+                                          "tanggal",
+                                          value || null
+                                        )}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              </div>
+                            </div>
+
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                              <h5 className="font-medium text-green-800 mb-3 flex items-center gap-2">
+                                <div className="h-4 w-4 rounded-full bg-green-600"></div>
+                                Perubahan Volume
+                              </h5>
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium">
+                                    Volume
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="Contoh: 100"
+                                      value={item.volume || ""}
+                                      onChange={(e) =>
+                                        updateAddendumItem(
+                                          index,
+                                          "volume",
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                                <FormItem>
+                                  <FormLabel className="text-sm font-medium">
+                                    Satuan
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="Contoh: m³, ton, unit"
+                                      value={item.satuan || ""}
+                                      onChange={(e) =>
+                                        updateAddendumItem(
+                                          index,
+                                          "satuan",
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Alasan Field untuk semua tipe */}
+                        {item.tipe && (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">
+                              Alasan Addendum
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Masukkan alasan perubahan kontrak..."
+                                value={item.alasan || ""}
+                                onChange={(e) =>
+                                  updateAddendumItem(
+                                    index,
+                                    "alasan",
+                                    e.target.value
+                                  )
+                                }
+                                rows={3}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs text-slate-500">
+                              Jelaskan alasan mengapa addendum ini diperlukan
+                            </FormDescription>
+                          </FormItem>
                         )}
 
                         <div className="flex items-center pt-2">
@@ -582,6 +719,19 @@ export default function AddendumStep() {
                           >
                             Pemberian Kesempatan
                           </label>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info size={14} className="text-slate-400 cursor-help ml-2" />
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <p>
+                                  Centang jika addendum ini merupakan pemberian kesempatan 
+                                  untuk menyelesaikan pekerjaan tanpa sanksi
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </CardContent>
                     </Card>

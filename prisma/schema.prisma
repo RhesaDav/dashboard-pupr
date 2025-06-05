@@ -55,7 +55,7 @@ model Contract {
   dokumentasiAwal   String?
   dokumentasiTengah String?
   dokumentasiAkhir  String?
-  dokumenPendukung String?
+  dokumenPendukung  String?
 
   // Addendum handling
   hasAddendum Boolean? @default(false)
@@ -140,6 +140,7 @@ model Addendum {
   volume              String?
   satuan              String?
   pemberianKesempatan Boolean
+  alasan              String?
 
   contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
   contractId String
