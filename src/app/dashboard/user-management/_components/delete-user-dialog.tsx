@@ -21,9 +21,10 @@ import { useQueryClient } from "@tanstack/react-query";
 interface DeleteUserDialogProps {
   userId: string;
   userName: string;
+  disabled?: boolean;
 }
 
-export function DeleteUserDialog({ userId, userName }: DeleteUserDialogProps) {
+export function DeleteUserDialog({ userId, userName, disabled }: DeleteUserDialogProps) {
   const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false);
 
@@ -45,7 +46,7 @@ export function DeleteUserDialog({ userId, userName }: DeleteUserDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="outline">
+        <Button disabled={disabled} variant="outline">
             <Trash/>
         </Button>
       </AlertDialogTrigger>

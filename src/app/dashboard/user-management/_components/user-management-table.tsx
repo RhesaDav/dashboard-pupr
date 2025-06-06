@@ -13,8 +13,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { getAllUsers } from "@/actions/user";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
 function UserManagementTable() {
+  const currentUser = useCurrentUser()
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -102,6 +104,7 @@ function UserManagementTable() {
               userId={user.id}
               userName={user.name || ""}
               aria-label={`Delete user ${user.name}`}
+              disabled={currentUser.user?.role !== "SUPERADMIN"}
             />
             <EditUserDialog user={user} aria-label={`Edit user ${user.name}`} />
             <UserAccessibilitySheet
