@@ -22,7 +22,7 @@ import { IdSchema } from "@/schemas/id.schema";
 import { format } from "date-fns";
 import { getCurrentUser } from "./auth";
 import { cookies } from "next/headers";
-import { deletePaket, insertPaket, pgClient } from "@/lib/pgClient";
+import { deletePaket, getPaketById, insertPaket, pgClient, updatePaket } from "@/lib/pgClient";
 
 interface ProgressItem {
   week: number;
@@ -52,7 +52,7 @@ function generateWeeks(startDate: Date, durationDays: number) {
   const getMondayOfWeek = (date: Date) => {
     const day = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const monday = new Date(date);
-    
+
     if (day === 0) {
       // If it's Sunday, go back 6 days to get Monday
       monday.setDate(date.getDate() - 6);
@@ -60,7 +60,7 @@ function generateWeeks(startDate: Date, durationDays: number) {
       // For other days, go back (day - 1) days to get Monday
       monday.setDate(date.getDate() - (day - 1));
     }
-    
+
     return monday;
   };
 
@@ -68,7 +68,7 @@ function generateWeeks(startDate: Date, durationDays: number) {
   const getSundayOfWeek = (date: Date) => {
     const day = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const sunday = new Date(date);
-    
+
     if (day === 0) {
       // If it's already Sunday, return as is
       return sunday;
@@ -76,7 +76,7 @@ function generateWeeks(startDate: Date, durationDays: number) {
       // Go forward to Sunday
       sunday.setDate(date.getDate() + (7 - day));
     }
-    
+
     return sunday;
   };
 
@@ -93,9 +93,10 @@ function generateWeeks(startDate: Date, durationDays: number) {
   while (currentWeekStart <= endDate) {
     // Calculate the Sunday of current week
     const currentWeekEnd = getSundayOfWeek(currentWeekStart);
-    
+
     // Determine the actual start and end dates for this week within project bounds
-    const actualWeekStart = currentWeekStart < startDate ? startDate : currentWeekStart;
+    const actualWeekStart =
+      currentWeekStart < startDate ? startDate : currentWeekStart;
     const actualWeekEnd = currentWeekEnd > endDate ? endDate : currentWeekEnd;
 
     // Skip if this week doesn't overlap with project duration
@@ -136,7 +137,6 @@ function generateWeeks(startDate: Date, durationDays: number) {
 
   return weeks;
 }
-
 
 export async function createContract(data: CompleteContractCreate) {
   try {
@@ -259,13 +259,30 @@ export async function createContract(data: CompleteContractCreate) {
 
     await insertPaket({
       id: result.id,
+      tipePaket: "Fisik",
       kabupatenKota: validatedData.location?.kota || undefined,
       distrik: validatedData.location?.distrik || undefined,
       kampung: validatedData.location?.kampung || undefined,
       titikKoordinat: validatedData.location?.koordinatAwal || undefined,
-      awalKontrak: validatedData.tanggalKontrak ? format(validatedData.tanggalKontrak, "dd-MM-yyyy") : undefined,
+      pejabatPembuatKomitmen: validatedData.ppk || undefined,
+      nipPejabatPembuatKomitmen: validatedData.nipPPK || undefined,
+      nomorKontrak: validatedData.nomorKontrak || undefined,
+      penyedia: validatedData.namaPenyedia || undefined,
+      nilaiKontrak: String(validatedData.nilaiKontrak) || undefined,
+      tanggalKontrak: validatedData.tanggalKontrak
+        ? format(validatedData.tanggalKontrak, "yyyy-MM-dd")
+        : undefined,
+      volumeKontrak: validatedData.volumeKontrak || undefined,
+      satuanKontrak: validatedData.satuanKontrak || undefined,
+      korwaslap: validatedData.korwaslap || undefined,
+      nipKorwaslap: validatedData.nipKorwaslap || undefined,
+      pengawasLapangan: validatedData.pengawasLapangan || undefined,
+      nipPengawas: validatedData.nipPengawasLapangan || undefined,
+      hasilProdukAkhir: validatedData.hasilProdukAkhir || undefined,
+      tautanMediaProgresAwal: validatedData.dokumentasiAwal || undefined,
+      tautanMediaProgresTengah: validatedData.dokumentasiTengah || undefined,
+      tautanMediaProgresAkhir: validatedData.dokumentasiAkhir || undefined,
       bidang: "Bina Marga",
-      tipePaket: "Fisik",
       title: validatedData.namaPaket,
     });
 
@@ -307,19 +324,7 @@ export async function getContractById(id: string) {
       },
     });
 
-    const rawSql = `
-      SELECT id, "createdAt", title, "kodeRekening", "tipePaket", urusan, bidang, distrik, "kabupatenKota", "titikKoordinat", penyedia, "nomorKontrak", "nilaiKontrak", "nilaiPagu", "sumberDana", "awalKontrak", "akhirKontrak", "volumeKontrak", "satuanKontrak", korwaslap, "pengawasLapangan", "hasilProdukAkhir", "tautanMediaProgresAwal", "tautanMediaProgresTengah", "tautanMediaProgresAkhir", "progresFisik", "progresKeuangan", "keuanganTerbayar", "volumeDPA", "satuanDPA", "volumeCapaian", "satuanCapaian", "kegiatanId", "programId", "subKegiatanId", kampung, "nipKorwaslap", "nipPengawas", "tanggalKontrak", "nipPejabatPembuatKomitmen", "pejabatPembuatKomitmen", klasifikasi
-      FROM sikerjaprod."Paket"
-      WHERE id='cadfa341-7551-4bcc-ae37-a2ee140af27d'
-    `;
-
-    const params = [];
-    const resultSql = await pgClient.query(rawSql);
-    console.log(resultSql.rows[0]);
-
-    const newData = {
-      ...contract,
-    };
+    await getPaketById(id)
 
     if (!contract) {
       throw new NotFoundError("Kontrak tidak ditemukan");
@@ -506,15 +511,23 @@ export async function updateContract(id: string, updateData: any) {
       newTotalAddendumWaktu =
         Array.isArray(addendum) && addendum.length > 0
           ? addendum
-              .filter((item) => item.tipe === "waktu" && item.hari || item.tipe === "waktuVolume" && item.hari)
+              .filter(
+                (item) =>
+                  (item.tipe === "waktu" && item.hari) ||
+                  (item.tipe === "waktuVolume" && item.hari)
+              )
               .reduce((sum, item) => sum + (item.hari || 0), 0)
           : 0;
     }
 
     // Check if addendum waktu has changed
-    const isAddendumWaktuChanged = newTotalAddendumWaktu !== oldTotalAddendumWaktu;
+    const isAddendumWaktuChanged =
+      newTotalAddendumWaktu !== oldTotalAddendumWaktu;
 
-    const tanggalSelesaiAkhir = addDays(tanggalSelesaiAwal, newTotalAddendumWaktu);
+    const tanggalSelesaiAkhir = addDays(
+      tanggalSelesaiAwal,
+      newTotalAddendumWaktu
+    );
 
     // Calculate old and new total duration for comparison
     const oldTotalDuration = existingDuration + oldTotalAddendumWaktu;
@@ -795,6 +808,33 @@ export async function updateContract(id: string, updateData: any) {
     revalidatePath(`/contracts/${id}`);
     revalidatePath(`/contracts/${id}/progress`);
 
+    await updatePaket({
+      id: result.id,
+      tipePaket: "Fisik",
+      kabupatenKota: updateData.location?.kota,
+      distrik: updateData.location?.distrik,
+      kampung: updateData.location?.kampung,
+      titikKoordinat: updateData.location?.koordinatAwal,
+      pejabatPembuatKomitmen: updateData.ppk,
+      nipPejabatPembuatKomitmen: updateData.nipPPK,
+      nomorKontrak: updateData.nomorKontrak,
+      penyedia: updateData.namaPenyedia,
+      nilaiKontrak: String(updateData.nilaiKontrak),
+      tanggalKontrak: format(updateData.tanggalKontrak, "yyyy-MM-dd"),
+      volumeKontrak: updateData.volumeKontrak,
+      satuanKontrak: updateData.satuanKontrak,
+      korwaslap: updateData.korwaslap,
+      nipKorwaslap: updateData.nipKorwaslap,
+      pengawasLapangan: updateData.pengawasLapangan,
+      nipPengawas: updateData.nipPengawasLapangan,
+      hasilProdukAkhir: updateData.hasilProdukAkhir,
+      tautanMediaProgresAwal: updateData.dokumentasiAwal,
+      tautanMediaProgresTengah: updateData.dokumentasiTengah,
+      tautanMediaProgresAkhir: updateData.dokumentasiAkhir,
+      bidang: "Bina Marga",
+      title: updateData.namaPaket,
+    })
+
     return { success: true, data: result };
   } catch (error) {
     throw handlePrismaError(error);
@@ -832,7 +872,7 @@ export async function deleteContract(id: string) {
       return deletedContract;
     });
 
-    await deletePaket(id)
+    await deletePaket(id);
 
     revalidatePath("/contracts");
 
