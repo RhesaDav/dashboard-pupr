@@ -11,17 +11,18 @@ async function ContractProgressPage({
   params: Promise<{ id: string }>;
 }) {
   const id = (await params).id;
-  
+
   const contractData = await getContractWithProgress(id);
-  
+
   const startDate = new Date(
     contractData.contractDetails.tanggalKontrak || new Date()
   );
   const endDate = new Date(startDate);
   endDate.setDate(
-    startDate.getDate() + (contractData.contractDetails.masaPelaksanaan || 0)
+    startDate.getDate() +
+      (((contractData.contractDetails.masaPelaksanaan || 0) - 1 || 0) + (contractData.contractDetails.totalAddendumWaktu ||0))
   );
-  
+
   const contract = {
     id: id,
     namaPaket: contractData.contractDetails.namaPaket || "",
@@ -53,12 +54,18 @@ async function ContractProgressPage({
 
       {/* Breadcrumb navigation */}
       <nav className="flex items-center text-sm text-gray-500 mb-6">
-        <Link href="/dashboard" className="flex items-center hover:text-blue-600">
+        <Link
+          href="/dashboard"
+          className="flex items-center hover:text-blue-600"
+        >
           <Home className="h-4 w-4 mr-1" />
           <span>Dashboard</span>
         </Link>
         <ChevronRight className="h-4 w-4 mx-2" />
-        <Link href="/dashboard/physical-progress" className="hover:text-blue-600">
+        <Link
+          href="/dashboard/physical-progress"
+          className="hover:text-blue-600"
+        >
           Progress Kontrak
         </Link>
         <ChevronRight className="h-4 w-4 mx-2" />

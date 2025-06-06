@@ -91,6 +91,7 @@ export default function AddendumStep() {
               hari: undefined,
               volume: "",
               satuan: "",
+              alasan: "",
               pemberianKesempatan: false,
             },
           ]);
@@ -114,6 +115,7 @@ export default function AddendumStep() {
         hari: undefined,
         volume: "",
         satuan: "",
+        alasan: "",
         pemberianKesempatan: false,
       },
     ]);

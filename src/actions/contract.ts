@@ -22,7 +22,7 @@ import { IdSchema } from "@/schemas/id.schema";
 import { format } from "date-fns";
 import { getCurrentUser } from "./auth";
 import { cookies } from "next/headers";
-import { insertPaket, pgClient } from "@/lib/pgClient";
+import { deletePaket, insertPaket, pgClient } from "@/lib/pgClient";
 
 interface ProgressItem {
   week: number;
@@ -42,19 +42,72 @@ function addDays(date: Date, days: number): Date {
 function generateWeeks(startDate: Date, durationDays: number) {
   const weeks: { month: string; items: ProgressItem[] }[] = [];
 
+  if (durationDays <= 0) {
+    return weeks;
+  }
+
   const endDate = addDays(startDate, durationDays - 1);
 
-  let currentDate = new Date(startDate);
-  let weekNumber = 1;
-  let currentMonth = "";
-  let currentMonthData: { month: string; items: ProgressItem[] } | null = null;
+  // Helper function to get Monday of the week containing the given date
+  const getMondayOfWeek = (date: Date) => {
+    const day = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const monday = new Date(date);
+    
+    if (day === 0) {
+      // If it's Sunday, go back 6 days to get Monday
+      monday.setDate(date.getDate() - 6);
+    } else {
+      // For other days, go back (day - 1) days to get Monday
+      monday.setDate(date.getDate() - (day - 1));
+    }
+    
+    return monday;
+  };
+
+  // Helper function to get Sunday of the week containing the given date
+  const getSundayOfWeek = (date: Date) => {
+    const day = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const sunday = new Date(date);
+    
+    if (day === 0) {
+      // If it's already Sunday, return as is
+      return sunday;
+    } else {
+      // Go forward to Sunday
+      sunday.setDate(date.getDate() + (7 - day));
+    }
+    
+    return sunday;
+  };
 
   const formatMonth = (date: Date) => {
     return date.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
   };
 
-  while (currentDate <= endDate) {
-    const monthName = formatMonth(currentDate);
+  // Start from the Monday of the week containing startDate
+  let currentWeekStart = getMondayOfWeek(startDate);
+  let weekNumber = 1;
+  let currentMonth = "";
+  let currentMonthData: { month: string; items: ProgressItem[] } | null = null;
+
+  while (currentWeekStart <= endDate) {
+    // Calculate the Sunday of current week
+    const currentWeekEnd = getSundayOfWeek(currentWeekStart);
+    
+    // Determine the actual start and end dates for this week within project bounds
+    const actualWeekStart = currentWeekStart < startDate ? startDate : currentWeekStart;
+    const actualWeekEnd = currentWeekEnd > endDate ? endDate : currentWeekEnd;
+
+    // Skip if this week doesn't overlap with project duration
+    if (actualWeekStart > endDate || actualWeekEnd < startDate) {
+      currentWeekStart = addDays(currentWeekStart, 7);
+      weekNumber++;
+      continue;
+    }
+
+    // Determine which month this week belongs to
+    // Use the start date of the week (or project start if week starts before project)
+    const monthName = formatMonth(actualWeekStart);
 
     if (monthName !== currentMonth) {
       currentMonth = monthName;
@@ -65,14 +118,10 @@ function generateWeeks(startDate: Date, durationDays: number) {
       weeks.push(currentMonthData);
     }
 
-    const weekStart = new Date(currentDate);
-    const weekEnd = addDays(weekStart, 6);
-    const actualWeekEnd = weekEnd > endDate ? endDate : weekEnd;
-
     if (currentMonthData) {
       currentMonthData.items.push({
         week: weekNumber,
-        startDate: weekStart,
+        startDate: actualWeekStart,
         endDate: actualWeekEnd,
         rencana: 0,
         realisasi: 0,
@@ -80,12 +129,14 @@ function generateWeeks(startDate: Date, durationDays: number) {
       });
     }
 
-    currentDate = addDays(weekStart, 7);
+    // Move to next week (next Monday)
+    currentWeekStart = addDays(currentWeekStart, 7);
     weekNumber++;
   }
 
   return weeks;
 }
+
 
 export async function createContract(data: CompleteContractCreate) {
   try {
@@ -207,6 +258,7 @@ export async function createContract(data: CompleteContractCreate) {
     });
 
     await insertPaket({
+      id: result.id,
       kabupatenKota: validatedData.location?.kota || undefined,
       distrik: validatedData.location?.distrik || undefined,
       kampung: validatedData.location?.kampung || undefined,
@@ -442,35 +494,55 @@ export async function updateContract(id: string, updateData: any) {
 
     const tanggalSelesaiAwal = addDays(effectiveStartDate, newDuration || 0);
 
-    let totalAddendumWaktu = existingContract.totalAddendumWaktu || 0;
+    // Calculate OLD total addendum waktu
+    const oldTotalAddendumWaktu = existingContract.totalAddendumWaktu || 0;
+
+    // Calculate NEW total addendum waktu
+    let newTotalAddendumWaktu = oldTotalAddendumWaktu;
+    let isAddendumChanged = false;
+
     if (addendum !== undefined) {
-      totalAddendumWaktu =
+      isAddendumChanged = true;
+      newTotalAddendumWaktu =
         Array.isArray(addendum) && addendum.length > 0
           ? addendum
-              .filter((item) => item.tipe === "waktu" && item.hari)
+              .filter((item) => item.tipe === "waktu" && item.hari || item.tipe === "waktuVolume" && item.hari)
               .reduce((sum, item) => sum + (item.hari || 0), 0)
           : 0;
     }
 
-    const tanggalSelesaiAkhir = addDays(tanggalSelesaiAwal, totalAddendumWaktu);
+    // Check if addendum waktu has changed
+    const isAddendumWaktuChanged = newTotalAddendumWaktu !== oldTotalAddendumWaktu;
 
-    const totalDayAccumulate = (newDuration || 0) + totalAddendumWaktu;
+    const tanggalSelesaiAkhir = addDays(tanggalSelesaiAwal, newTotalAddendumWaktu);
+
+    // Calculate old and new total duration for comparison
+    const oldTotalDuration = existingDuration + oldTotalAddendumWaktu;
+    const newTotalDuration = (newDuration || 0) + newTotalAddendumWaktu;
+    const isTotalDurationChanged = oldTotalDuration !== newTotalDuration;
 
     const result = await prisma.$transaction(async (tx) => {
+      // Regenerate physical progress if any of these conditions are met:
+      // 1. Start date changed
+      // 2. Basic duration changed (increased/decreased)
+      // 3. Addendum waktu changed (including deletion/reduction)
+      // 4. Total duration changed
       if (
         isStartDateChanged ||
         isDurationIncreased ||
         isDurationDecreased ||
-        addendum !== undefined
+        isAddendumWaktuChanged ||
+        isTotalDurationChanged
       ) {
         if (isStartDateChanged) {
+          // Complete regeneration when start date changes
           await tx.physicalProgress.deleteMany({
             where: { contractId: id },
           });
 
           const newProgressData = generateWeeks(
             effectiveStartDate,
-            totalDayAccumulate || 0
+            newTotalDuration || 0
           );
 
           for (const monthData of newProgressData) {
@@ -490,9 +562,10 @@ export async function updateContract(id: string, updateData: any) {
             }
           }
         } else {
+          // Smart update when only duration or addendum changes
           const allNewProgressData = generateWeeks(
             effectiveStartDate,
-            totalDayAccumulate || 0
+            newTotalDuration || 0
           );
 
           const existingProgressRecords = await tx.physicalProgress.findMany({
@@ -526,7 +599,9 @@ export async function updateContract(id: string, updateData: any) {
             }
           }
 
-          if (isDurationDecreased) {
+          // Delete progress records that are no longer needed
+          // This handles both duration decrease AND addendum reduction
+          if (isDurationDecreased || newTotalDuration < oldTotalDuration) {
             const progressIdsToDelete = existingProgressRecords
               .filter((p) => !allNewKeys.has(`${p.month}-${p.week}`))
               .map((p) => p.id);
@@ -540,6 +615,7 @@ export async function updateContract(id: string, updateData: any) {
             }
           }
 
+          // Update existing records and create new ones
           for (const monthData of allNewProgressData) {
             for (const item of monthData.items) {
               const progressKey = `${monthData.month}-${item.week}`;
@@ -551,7 +627,6 @@ export async function updateContract(id: string, updateData: any) {
                   data: {
                     startDate: item.startDate,
                     endDate: item.endDate,
-
                     rencana: existingProgress.rencana,
                     realisasi: existingProgress.realisasi,
                     deviasi: existingProgress.deviasi,
@@ -594,8 +669,8 @@ export async function updateContract(id: string, updateData: any) {
                 : false
               : existingContract.hasAddendum,
           tanggalSelesaiAwal,
-          tanggalSelesaiAkhir,
-          totalAddendumWaktu,
+          tanggalSelesaiAkhir, // This now uses the updated newTotalAddendumWaktu
+          totalAddendumWaktu: newTotalAddendumWaktu, // Updated value
         },
       });
 
@@ -645,6 +720,7 @@ export async function updateContract(id: string, updateData: any) {
                 volume: addendumItem.volume,
                 satuan: addendumItem.satuan,
                 tanggal: addendumItem.tanggal,
+                alasan: addendumItem.alasan,
                 pemberianKesempatan: addendumItem.pemberianKesempatan || false,
               },
             });
@@ -663,12 +739,14 @@ export async function updateContract(id: string, updateData: any) {
                 volume: addendumItem.volume,
                 satuan: addendumItem.satuan,
                 tanggal: addendumItem.tanggal,
+                alasan: addendumItem.alasan,
                 pemberianKesempatan: addendumItem.pemberianKesempatan || false,
               },
             });
           }
         }
 
+        // Delete removed addendum items
         if (existingAddendumIds.length > 0) {
           await tx.addendum.deleteMany({
             where: {
@@ -753,6 +831,8 @@ export async function deleteContract(id: string) {
 
       return deletedContract;
     });
+
+    await deletePaket(id)
 
     revalidatePath("/contracts");
 

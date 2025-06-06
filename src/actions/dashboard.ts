@@ -81,7 +81,7 @@ export interface DashboardReport {
 export async function getDashboardReport(): Promise<DashboardReport> {
   const cookieStore = await cookies();
   const budgetYear = cookieStore.get("budgetYear")?.value;
-  if (!budgetYear) throw Error("budget year not found")
+  if (!budgetYear) throw Error("budget year not found");
   const budgetYearNum = parseInt(budgetYear);
   const startOfYear = new Date(budgetYearNum, 0, 1);
   const endOfYear = new Date(budgetYearNum, 11, 31, 23, 59, 59, 999);
@@ -419,16 +419,17 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     const financialProgress = contract.financialProgress?.totalProgress || 0;
     const hasFinancialProgress = !!contract.financialProgress;
 
-    const isCompleted = maxPhysicalProgress > 0;
-    const noProgress = maxPhysicalProgress === 0;
+    const isCompleted = maxPhysicalProgress >= 100;
+    const isOngoing = maxPhysicalProgress > 0 && maxPhysicalProgress < 100;
+    const isNoProgress = maxPhysicalProgress === 0;
     // const isProblem = contract.kendala === true || contract.permasalahan;
 
     // Update subkegiatan data
     subkegiatanMap.set(subkegiatan, {
       totalContracts: current.totalContracts + 1,
       completedContracts: current.completedContracts + (isCompleted ? 1 : 0),
-      ongoingContracts: current.ongoingContracts + (!isCompleted ? 1 : 0),
-      noProgress: current.noProgress + (noProgress ? 1 : 0),
+    ongoingContracts: current.ongoingContracts + (isOngoing ? 1 : 0),
+    noProgress: current.noProgress + (isNoProgress ? 1 : 0),
       // problemContracts: current.problemContracts + (isProblem ? 1 : 0),
       totalPaguAnggaran:
         current.totalPaguAnggaran + (contract.paguAnggaran || 0),

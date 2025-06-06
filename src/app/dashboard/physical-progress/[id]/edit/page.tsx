@@ -3,20 +3,32 @@ import { getContractWithProgress } from "@/actions/progress";
 import { format } from "date-fns";
 import EditProgressPage from "../../_components/edit-progress";
 
-async function ContractProgressPage({ params }: { params: Promise<{ id: string }> }) {
+async function ContractProgressPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const id = (await params).id;
 
   const contractData = await getContractWithProgress(id);
-  
-  const startDate = new Date(contractData.contractDetails.tanggalKontrak || new Date);
+
+  const startDate = new Date(
+    contractData.contractDetails.tanggalKontrak || new Date()
+  );
   const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + (contractData.contractDetails.masaPelaksanaan || 0));
-  
+  endDate.setDate(
+    startDate.getDate() +
+      (((contractData.contractDetails.masaPelaksanaan || 0) - 1 || 0) +
+        (contractData.contractDetails.totalAddendumWaktu || 0))
+  );
   const contract = {
     id: id,
     namaPaket: contractData.contractDetails.namaPaket || "",
     nilaiKontrak: contractData.contractDetails.nilaiKontrak || 0,
-    tanggalKontrak: format(contractData.contractDetails.tanggalKontrak || new Date(), "dd-MM-yyyy"),
+    tanggalKontrak: format(
+      contractData.contractDetails.tanggalKontrak || new Date(),
+      "dd-MM-yyyy"
+    ),
     masaPelaksanaan: contractData.contractDetails.masaPelaksanaan || 0,
     totalAddendumWaktu: contractData.contractDetails.totalAddendumWaktu || 0,
     volumeKontrak: contractData.contractDetails.volumeKontrak || "",

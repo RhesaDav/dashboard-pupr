@@ -6,6 +6,7 @@ export const AddendumCreateSchema = z.object({
   tipe: z.string().nullable().optional(),
   hari: z.number().nullable().optional(),
   tanggal: z.date().nullable().optional(),
+  alasan: z.string().nullable().optional(),
   volume: z.string().nullable().optional(),
   satuan: z.string().nullable().optional(),
   pemberianKesempatan: z.boolean().default(false),
