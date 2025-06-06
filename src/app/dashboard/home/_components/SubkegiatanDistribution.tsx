@@ -17,6 +17,7 @@ interface SubkegiatanDistributionProps {
     totalContracts: number;
     completedContracts: number;
     ongoingContracts: number;
+    noProgress: number;
     // problemContracts: number;
     totalPaguAnggaran: number;
     totalNilaiKontrak: number;
@@ -80,7 +81,7 @@ export function SubkegiatanDistribution({ data }: SubkegiatanDistributionProps) 
                     <div>
                       <div className="mb-2">
                         {item.completedContracts} / {item.totalContracts} Paket Selesai 
-                        {/* ( {item.ongoingContracts} ON PROGRESS | {item.problemContracts} NO PROGRESS ) */}
+                        ( {item.ongoingContracts} ON PROGRESS | {item.noProgress} NO PROGRESS )
                       </div>
                       <div className="flex flex-col">
                         <div>Pagu Anggaran : {formatRupiah(item.totalPaguAnggaran)}</div>

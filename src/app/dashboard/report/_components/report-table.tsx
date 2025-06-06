@@ -295,6 +295,8 @@ export default function ReportTable() {
     return result;
   };
 
+  console.log(contractsData)
+
   const handleExport = async () => {
     if (selectedRows.length === 0) {
       toast.error("Pilih setidaknya satu kontrak untuk diekspor.");
@@ -433,6 +435,7 @@ export default function ReportTable() {
                 korwaslap: contract.korwaslap,
                 pengawasLapangan: contract.pengawasLapangan,
                 nilaiKontrak: contract.nilaiKontrak,
+                totalFinancialProgress: contract.financialProgress?.totalProgress,
                 nilaiKontrakFisik: contract.nilaiKontrak,
                 tanggalKontrak: contract.tanggalKontrak,
                 masaPelaksanaan: contract.masaPelaksanaan,
@@ -501,6 +504,7 @@ export default function ReportTable() {
             korwaslap: contract!.korwaslap,
             pengawasLapangan: contract!.pengawasLapangan,
             nilaiKontrak: contract!.nilaiKontrak,
+            totalFinancialProgress: contract!.totalFinancialProgress,
             nilaiKontrakFisik: contract!.nilaiKontrakFisik,
             tanggalKontrak: contract!.tanggalKontrak,
             masaPelaksanaan: contract!.masaPelaksanaan,

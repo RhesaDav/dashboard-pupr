@@ -30,7 +30,8 @@ interface Contract {
   korwaslap: string;
   pengawasLapangan: string;
   nilaiKontrak: number;
-  nilaiKontrakFisik: number;
+  nilaiKontrakFisik: string;
+  totalFinancialProgress: number;
   tanggalKontrak: string;
   masaPelaksanaan: number;
   konsultanSupervisi: string;
@@ -75,6 +76,7 @@ interface PDFExportData {
 export default function PDFExportPage() {
   const router = useRouter();
   const [exportData, setExportData] = useState<PDFExportData | null>(null);
+  const [originalData, setOriginalData] = useState<PDFExportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -107,7 +109,21 @@ export default function PDFExportPage() {
 
     try {
       const parsedData = JSON.parse(data) as PDFExportData;
-      setExportData(parsedData);
+      console.log("Parsed data:", parsedData);
+      
+      // Simpan data asli
+      setOriginalData(parsedData);
+      
+      // Modifikasi data untuk display dengan menambahkan progress percentage ke nilaiKontrak
+      const modifiedData = {
+        ...parsedData,
+        contracts: parsedData.contracts.map((contract) => ({
+          ...contract,
+          nilaiKontrakFisik: `${contract.nilaiKontrak} (${contract.totalFinancialProgress}%)`,
+        }))
+      };
+      
+      setExportData(modifiedData);
       setVisibleColumns(parsedData.defaultVisible);
     } catch (error) {
       console.error("Error parsing export data:", error);
@@ -123,22 +139,18 @@ export default function PDFExportPage() {
     setIsGenerating(true);
   
     try {
-      
       const originalStyles = {
         width: contentRef.current.style.width,
         minWidth: contentRef.current.style.minWidth,
         overflowX: contentRef.current.style.overflowX,
       };
   
-      
       const tableElement = contentRef.current.querySelector('table');
       let tableWidth = 0;
       
       if (tableElement) {
-        
         const headerCells = tableElement.querySelectorAll('thead th');
         headerCells.forEach(cell => {
-          
           const cellStyle = window.getComputedStyle(cell);
           const cellWidth = cell.getBoundingClientRect().width + 
             parseInt(cellStyle.paddingLeft) + 
@@ -147,19 +159,14 @@ export default function PDFExportPage() {
             parseInt(cellStyle.borderRightWidth);
           tableWidth += cellWidth;
         });
-  
-        
         tableWidth += 40; 
       } else {
-        
         tableWidth = 1100;
       }
   
-      
       contentRef.current.style.width = `${tableWidth}px`;
       contentRef.current.style.minWidth = `${tableWidth}px`;
       contentRef.current.style.overflowX = "visible";
-      
       
       if (tableElement) {
         const colgroup = document.createElement('colgroup');
@@ -172,18 +179,14 @@ export default function PDFExportPage() {
           colgroup.appendChild(col);
         });
       
-        
         const existingColgroup = tableElement.querySelector('colgroup');
         if (existingColgroup) {
           tableElement.removeChild(existingColgroup);
         }
       
-        
         tableElement.insertBefore(colgroup, tableElement.firstChild);
       }
-      
   
-      
       const canvas = await html2canvas(contentRef.current, {
         scale: 2,
         useCORS: true,
@@ -192,7 +195,6 @@ export default function PDFExportPage() {
         width: tableWidth,
         height: contentRef.current.offsetHeight,
         onclone: (clonedDoc, element) => {
-          
           const clonedTable = element.querySelector('table');
           if (clonedTable) {
             clonedTable.style.width = '100%';
@@ -201,42 +203,37 @@ export default function PDFExportPage() {
         }
       });
   
-      
       contentRef.current.style.width = originalStyles.width;
       contentRef.current.style.minWidth = originalStyles.minWidth;
       contentRef.current.style.overflowX = originalStyles.overflowX;
-  
+
       const imgData = canvas.toDataURL("image/png");
-      
       
       const pdf = new jsPDF({
         orientation: "landscape",
         unit: "mm",
         format: "a4",
       });
-  
+
       const pageWidth = 297; 
       const pageHeight = 210; 
       
-      
       const imgWidth = pageWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  
+
       let heightLeft = imgHeight;
       let position = 0;
-  
-      
+
       pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-  
-      
+
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
-  
+
       if (forPreview) {
         const pdfBlob = pdf.output("blob");
         const url = URL.createObjectURL(pdfBlob);
@@ -252,30 +249,39 @@ export default function PDFExportPage() {
   };
 
   const generateExcel = async () => {
-    if (!exportData) return;
+    if (!originalData) return; // Gunakan data asli untuk Excel
 
     setIsExportingExcel(true);
 
     try {
       const wsData = [
         visibleColumns.map((colId) => {
-          const column = exportData.columns.find((c) => c.id === colId);
+          const column = originalData.columns.find((c) => c.id === colId);
           return column ? column.label : colId;
         }),
       ];
 
-      exportData.contracts.forEach((contract) => {
+      originalData.contracts.forEach((contract) => {
         contract.progressData.forEach((progress, progressIdx) => {
           const row = visibleColumns.map((colId) => {
             if (
               colId in contract &&
               typeof contract[colId as keyof Contract] !== "object"
             ) {
-              return progressIdx === 0
-                ? colId.includes("nilai")
-                  ? formatCurrency(contract[colId as keyof Contract] as number)
-                  : String(contract[colId as keyof Contract])
-                : "";
+              if (progressIdx === 0) {
+                // Handle different field types
+                if (colId === 'nilaiKontrak') {
+                  return String(contract[colId as keyof Contract]);
+                } else if (colId === 'totalFinancialProgress') {
+                  return `${contract.totalFinancialProgress}%`;
+                } else if (colId.includes("nilai") && typeof contract[colId as keyof Contract] === 'number') {
+                  return formatCurrency(contract[colId as keyof Contract] as number);
+                } else {
+                  return String(contract[colId as keyof Contract]);
+                }
+              } else {
+                return "";
+              }
             }
 
             const value = progress[colId as keyof typeof progress];
@@ -286,11 +292,11 @@ export default function PDFExportPage() {
       });
 
       const overallProgress =
-        exportData.contracts.length > 0
-          ? exportData.contracts.reduce(
+        originalData.contracts.length > 0
+          ? originalData.contracts.reduce(
               (sum, contract) => sum + contract.totalProgress,
               0
-            ) / exportData.contracts.length
+            ) / originalData.contracts.length
           : 0;
 
       const totalRow = visibleColumns.map((colId, index) => {
@@ -357,7 +363,7 @@ export default function PDFExportPage() {
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Report");
-      XLSX.writeFile(wb, `${exportData.title || "report"}.xlsx`);
+      XLSX.writeFile(wb, `${originalData.title || "report"}.xlsx`);
     } catch (error) {
       console.error("Error generating Excel:", error);
     } finally {
@@ -431,6 +437,30 @@ export default function PDFExportPage() {
       minimumFractionDigits: 0,
     }).format(value);
   };
+
+  const getCellValue = (contract: Contract, colId: string, progressIdx: number) => {
+    if (colId in contract && typeof contract[colId as keyof Contract] !== "object") {
+      if (progressIdx === 0) {
+        const value = contract[colId as keyof Contract];
+        
+        if (colId === 'totalFinancialProgress') {
+          return `${value}%`;
+        } else if (colId === 'nilaiKontrakFisik') {
+          // Untuk display, sudah dimodifikasi dengan progress percentage
+          return String(value);
+        } else if (colId.includes("nilai") && typeof value === 'number') {
+          return formatCurrency(value);
+        } else {
+          return String(value);
+        }
+      } else {
+        return "";
+      }
+    }
+    return "";
+  };
+
+  console.log("Export data contracts:", exportData.contracts);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -527,26 +557,22 @@ export default function PDFExportPage() {
                         }
                       >
                         {visibleColumns.map((colId) => {
+                          // Cek apakah kolom adalah bagian dari contract data
                           if (
                             colId in contract &&
-                            typeof contract[colId as keyof Contract] !==
-                              "object"
+                            typeof contract[colId as keyof Contract] !== "object"
                           ) {
-                            const value = contract[colId as keyof Contract];
                             return (
                               <td
                                 key={colId}
                                 className="px-4 py-2 text-sm border border-gray-200 whitespace-nowrap"
                               >
-                                {progressIdx === 0
-                                  ? colId.includes("nilai")
-                                    ? formatCurrency(value as number)
-                                    : String(value)
-                                  : ""}
+                                {getCellValue(contract, colId, progressIdx)}
                               </td>
                             );
                           }
-  
+
+                          // Jika bukan, ambil dari progress data
                           const progressValue =
                             progress[colId as keyof typeof progress];
                           return (
@@ -597,4 +623,5 @@ export default function PDFExportPage() {
         </div>
       </div>
     </div>
-  );}
+  );
+}

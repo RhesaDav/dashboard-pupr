@@ -60,6 +60,7 @@ export interface DashboardReport {
     totalContracts: number;
     completedContracts: number;
     ongoingContracts: number;
+    noProgress: number;
     // problemContracts: number;
     totalPaguAnggaran: number;
     totalNilaiKontrak: number;
@@ -358,6 +359,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
       totalContracts: number;
       completedContracts: number;
       ongoingContracts: number;
+      noProgress: number;
       // problemContracts: number;
       totalPaguAnggaran: number;
       totalNilaiKontrak: number;
@@ -384,6 +386,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
       totalContracts: 0,
       completedContracts: 0,
       ongoingContracts: 0,
+      noProgress: 0,
       // problemContracts: 0,
       totalPaguAnggaran: 0,
       totalNilaiKontrak: 0,
@@ -416,7 +419,8 @@ export async function getDashboardReport(): Promise<DashboardReport> {
     const financialProgress = contract.financialProgress?.totalProgress || 0;
     const hasFinancialProgress = !!contract.financialProgress;
 
-    const isCompleted = maxPhysicalProgress >= 100;
+    const isCompleted = maxPhysicalProgress > 0;
+    const noProgress = maxPhysicalProgress === 0;
     // const isProblem = contract.kendala === true || contract.permasalahan;
 
     // Update subkegiatan data
@@ -424,6 +428,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
       totalContracts: current.totalContracts + 1,
       completedContracts: current.completedContracts + (isCompleted ? 1 : 0),
       ongoingContracts: current.ongoingContracts + (!isCompleted ? 1 : 0),
+      noProgress: current.noProgress + (noProgress ? 1 : 0),
       // problemContracts: current.problemContracts + (isProblem ? 1 : 0),
       totalPaguAnggaran:
         current.totalPaguAnggaran + (contract.paguAnggaran || 0),
@@ -491,6 +496,7 @@ export async function getDashboardReport(): Promise<DashboardReport> {
         totalContracts: data.totalContracts,
         completedContracts: data.completedContracts,
         ongoingContracts: data.ongoingContracts,
+        noProgress: data.noProgress,
         // problemContracts: data.problemContracts,
         totalPaguAnggaran: data.totalPaguAnggaran,
         totalNilaiKontrak: data.totalNilaiKontrak,
