@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
 interface DateWeekPickerProps {
   selectedDate?: Date;
@@ -53,13 +54,45 @@ export function DateWeekPicker({
   placeholder = "Pilih minggu",
   className,
 }: DateWeekPickerProps) {
-  const currentDate = selectedDate || new Date();
-  const [month, setMonth] = useState<Date>(currentDate);
+  const user = useCurrentUser();
 
-  const years = Array.from({ length: 11 }, (_, i) => {
-    const year = new Date().getFullYear() - 5 + i;
-    return { value: year.toString(), label: year.toString() };
+  const budgetYear = user?.budgetYear || new Date().getFullYear();
+
+  const currentDate = selectedDate || new Date();
+
+  const [month, setMonth] = useState<Date>(() => {
+    if (selectedDate) {
+      return selectedDate;
+    }
+
+    if (user?.budgetYear) {
+      return new Date(user.budgetYear, new Date().getMonth(), 1);
+    }
+
+    return new Date();
   });
+
+  useEffect(() => {
+    if (user?.budgetYear && !selectedDate) {
+      setMonth(new Date(user.budgetYear, new Date().getMonth(), 1));
+    }
+  }, [user?.budgetYear, selectedDate]);
+
+  const years = useMemo(() => {
+    if (user?.budgetYear) {
+      return [
+        {
+          value: user.budgetYear.toString(),
+          label: user.budgetYear.toString(),
+        },
+      ];
+    }
+
+    return Array.from({ length: 11 }, (_, i) => {
+      const year = new Date().getFullYear() - 5 + i;
+      return { value: year.toString(), label: year.toString() };
+    });
+  }, [user?.budgetYear]);
 
   const months = [
     { value: "0", label: "Januari" },
@@ -75,6 +108,16 @@ export function DateWeekPicker({
     { value: "10", label: "November" },
     { value: "11", label: "Desember" },
   ];
+
+  const dateConstraints = useMemo(() => {
+    if (user?.budgetYear) {
+      return {
+        fromDate: new Date(user.budgetYear, 0, 1),
+        toDate: new Date(user.budgetYear, 11, 31),
+      };
+    }
+    return {};
+  }, [user?.budgetYear]);
 
   const handleWeekSelect = (date: Date | undefined) => {
     onChange(date);
@@ -93,33 +136,56 @@ export function DateWeekPicker({
   };
 
   const handleMonthChange = (value: string) => {
-    const newDate = new Date(month);
-    newDate.setMonth(parseInt(value));
+    const newDate = new Date(budgetYear, parseInt(value), 1);
     setMonth(newDate);
   };
 
   const handleYearChange = (value: string) => {
+    if (user?.budgetYear) return;
+
     const newDate = new Date(month);
     newDate.setFullYear(parseInt(value));
     setMonth(newDate);
   };
 
   const handlePrevMonth = () => {
-    setMonth(subMonths(month, 1));
+    const newMonth = subMonths(month, 1);
+
+    if (user?.budgetYear && newMonth.getFullYear() !== user.budgetYear) {
+      return;
+    }
+    setMonth(newMonth);
   };
 
   const handleNextMonth = () => {
-    setMonth(addMonths(month, 1));
+    const newMonth = addMonths(month, 1);
+
+    if (user?.budgetYear && newMonth.getFullYear() !== user.budgetYear) {
+      return;
+    }
+    setMonth(newMonth);
   };
 
-  const handleSelectMonth = (month: number) => {
-    const newDate = new Date(currentDate);
-    newDate.setMonth(month);
+  const handleSelectMonth = (monthIndex: number) => {
+    const targetYear = user?.budgetYear || currentDate.getFullYear();
+    const newDate = new Date(targetYear, monthIndex, 1);
     const start = startOfMonth(newDate);
     const end = endOfMonth(newDate);
     onWeekRangeChange({ start, end });
     onChange(newDate);
   };
+
+  const canNavigatePrev = useMemo(() => {
+    if (!user?.budgetYear) return true;
+    const prevMonth = subMonths(month, 1);
+    return prevMonth.getFullYear() === user.budgetYear;
+  }, [month, user?.budgetYear]);
+
+  const canNavigateNext = useMemo(() => {
+    if (!user?.budgetYear) return true;
+    const nextMonth = addMonths(month, 1);
+    return nextMonth.getFullYear() === user.budgetYear;
+  }, [month, user?.budgetYear]);
 
   return (
     <div className={cn("flex items-center space-x-2", className)}>
@@ -160,8 +226,12 @@ export function DateWeekPicker({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-full hover:bg-muted"
+              className={cn(
+                "h-7 w-7 rounded-full hover:bg-muted",
+                !canNavigatePrev && "opacity-50 cursor-not-allowed"
+              )}
               onClick={handlePrevMonth}
+              disabled={!canNavigatePrev}
             >
               <ChevronLeft className="h-4 w-4" />
               <span className="sr-only">Bulan sebelumnya</span>
@@ -187,8 +257,14 @@ export function DateWeekPicker({
               <Select
                 value={month.getFullYear().toString()}
                 onValueChange={handleYearChange}
+                disabled={!!user?.budgetYear}
               >
-                <SelectTrigger className="h-8 w-[80px] rounded-md focus:ring-1 focus:ring-primary">
+                <SelectTrigger
+                  className={cn(
+                    "h-8 w-[80px] rounded-md focus:ring-1 focus:ring-primary",
+                    user?.budgetYear && "opacity-50 cursor-not-allowed"
+                  )}
+                >
                   <SelectValue placeholder="Tahun" />
                 </SelectTrigger>
                 <SelectContent>
@@ -204,8 +280,12 @@ export function DateWeekPicker({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-full hover:bg-muted"
+              className={cn(
+                "h-7 w-7 rounded-full hover:bg-muted",
+                !canNavigateNext && "opacity-50 cursor-not-allowed"
+              )}
               onClick={handleNextMonth}
+              disabled={!canNavigateNext}
             >
               <ChevronRight className="h-4 w-4" />
               <span className="sr-only">Bulan berikutnya</span>
@@ -214,7 +294,7 @@ export function DateWeekPicker({
 
           <div className="p-1">
             <Calendar
-            disableNavigation
+              disableNavigation
               mode="single"
               selected={selectedDate}
               onSelect={handleWeekSelect}
@@ -241,6 +321,8 @@ export function DateWeekPicker({
                   borderRadius: "4px",
                 },
               }}
+              fromDate={dateConstraints.fromDate}
+              toDate={dateConstraints.toDate}
               initialFocus
               locale={indonesiaLocale}
               showOutsideDays={false}

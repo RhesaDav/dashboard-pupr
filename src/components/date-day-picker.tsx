@@ -1,15 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format, addMonths, subMonths } from "date-fns";
 import { id as indonesiaLocale } from "date-fns/locale";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { getCurrentUser } from "@/actions/auth";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
 interface DateDayPickerProps {
   selectedDate: Date | null | undefined;
@@ -33,13 +49,44 @@ export function DateDayPicker({
   minDate,
   maxDate,
 }: DateDayPickerProps) {
-  const [month, setMonth] = useState<Date>(selectedDate || new Date());
+  const user = useCurrentUser();
+
+  const budgetYear = user?.budgetYear || new Date().getFullYear();
+
+  const [month, setMonth] = useState<Date>(() => {
+    if (selectedDate) {
+      return selectedDate;
+    }
+
+    if (user?.budgetYear) {
+      return new Date(user.budgetYear, new Date().getMonth(), 1);
+    }
+
+    return new Date();
+  });
   const [isOpen, setIsOpen] = useState(false);
 
-  const years = Array.from({ length: 11 }, (_, i) => {
-    const year = new Date().getFullYear() - 5 + i;
-    return { value: year.toString(), label: year.toString() };
-  });
+  useEffect(() => {
+    if (user?.budgetYear && !selectedDate) {
+      setMonth(new Date(user.budgetYear, new Date().getMonth(), 1));
+    }
+  }, [user?.budgetYear, selectedDate]);
+
+  const years = useMemo(() => {
+    if (user?.budgetYear) {
+      return [
+        {
+          value: user.budgetYear.toString(),
+          label: user.budgetYear.toString(),
+        },
+      ];
+    }
+
+    return Array.from({ length: 11 }, (_, i) => {
+      const year = new Date().getFullYear() - 5 + i;
+      return { value: year.toString(), label: year.toString() };
+    });
+  }, [user?.budgetYear]);
 
   const months = [
     { value: "0", label: "Januari" },
@@ -56,33 +103,84 @@ export function DateDayPicker({
     { value: "11", label: "Desember" },
   ];
 
+  const dateConstraints = useMemo(() => {
+    if (user?.budgetYear) {
+      return {
+        minDate: new Date(user.budgetYear, 0, 1),
+        maxDate: new Date(user.budgetYear, 11, 31),
+      };
+    }
+    return { minDate, maxDate };
+  }, [user?.budgetYear, minDate, maxDate]);
+
   const handleDaySelect = (date: Date | undefined) => {
     onChange(date);
     if (date) setIsOpen(false);
   };
 
   const handleMonthChange = (value: string) => {
-    const newDate = new Date(month);
-    newDate.setMonth(parseInt(value));
+    const newDate = new Date(budgetYear, parseInt(value), 1);
     setMonth(newDate);
   };
 
   const handleYearChange = (value: string) => {
+    if (user?.budgetYear) return;
+
     const newDate = new Date(month);
     newDate.setFullYear(parseInt(value));
     setMonth(newDate);
   };
 
-  const handlePrevMonth = () => setMonth(subMonths(month, 1));
-  const handleNextMonth = () => setMonth(addMonths(month, 1));
+  const handlePrevMonth = () => {
+    const newMonth = subMonths(month, 1);
+
+    if (user?.budgetYear && newMonth.getFullYear() !== user.budgetYear) {
+      return;
+    }
+    setMonth(newMonth);
+  };
+
+  const handleNextMonth = () => {
+    const newMonth = addMonths(month, 1);
+
+    if (user?.budgetYear && newMonth.getFullYear() !== user.budgetYear) {
+      return;
+    }
+    setMonth(newMonth);
+  };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const isToday = selectedDate && selectedDate.toDateString() === today.toDateString();
+  const isToday =
+    selectedDate && selectedDate.toDateString() === today.toDateString();
+
+  const canNavigatePrev = useMemo(() => {
+    if (!user?.budgetYear) return true;
+    const prevMonth = subMonths(month, 1);
+    return prevMonth.getFullYear() === user.budgetYear;
+  }, [month, user?.budgetYear]);
+
+  const canNavigateNext = useMemo(() => {
+    if (!user?.budgetYear) return true;
+    const nextMonth = addMonths(month, 1);
+    return nextMonth.getFullYear() === user.budgetYear;
+  }, [month, user?.budgetYear]);
 
   return (
     <div className={cn("w-full", className)}>
-      <Popover open={isOpen && !disabled} onOpenChange={setIsOpen}>
+      <Popover
+        open={isOpen && !disabled}
+        onOpenChange={(open) => {
+          setIsOpen(open);
+
+          if (open && user?.budgetYear) {
+            const currentMonth = selectedDate
+              ? selectedDate.getMonth()
+              : new Date().getMonth();
+            setMonth(new Date(user.budgetYear, currentMonth, 1));
+          }
+        }}
+      >
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -97,10 +195,15 @@ export function DateDayPicker({
             {selectedDate ? (
               <div className="flex items-center gap-2">
                 <span className="text-sm truncate">
-                  {format(selectedDate, dateFormat, { locale: indonesiaLocale })}
+                  {format(selectedDate, dateFormat, {
+                    locale: indonesiaLocale,
+                  })}
                 </span>
                 {isToday && (
-                  <Badge variant="secondary" className="h-5 px-1.5 ml-auto text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="h-5 px-1.5 ml-auto text-xs"
+                  >
                     Hari ini
                   </Badge>
                 )}
@@ -112,14 +215,21 @@ export function DateDayPicker({
             )}
           </Button>
         </PopoverTrigger>
-        
-        <PopoverContent className="w-auto p-0 shadow-lg rounded-md" align="start">
+
+        <PopoverContent
+          className="w-auto p-0 shadow-lg rounded-md"
+          align="start"
+        >
           <div className="p-2 border-b flex items-center justify-between bg-muted/30">
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-full hover:bg-muted"
+              className={cn(
+                "h-7 w-7 rounded-full hover:bg-muted",
+                !canNavigatePrev && "opacity-50 cursor-not-allowed"
+              )}
               onClick={handlePrevMonth}
+              disabled={!canNavigatePrev}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -134,7 +244,9 @@ export function DateDayPicker({
                 </SelectTrigger>
                 <SelectContent>
                   {months.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -142,13 +254,21 @@ export function DateDayPicker({
               <Select
                 value={month.getFullYear().toString()}
                 onValueChange={handleYearChange}
+                disabled={!!user?.budgetYear}
               >
-                <SelectTrigger className="h-8 w-[80px] rounded-md">
+                <SelectTrigger
+                  className={cn(
+                    "h-8 w-[80px] rounded-md",
+                    user?.budgetYear && "opacity-50 cursor-not-allowed"
+                  )}
+                >
                   <SelectValue placeholder="Tahun" />
                 </SelectTrigger>
                 <SelectContent>
                   {years.map((y) => (
-                    <SelectItem key={y.value} value={y.value}>{y.label}</SelectItem>
+                    <SelectItem key={y.value} value={y.value}>
+                      {y.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -157,8 +277,12 @@ export function DateDayPicker({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-full hover:bg-muted"
+              className={cn(
+                "h-7 w-7 rounded-full hover:bg-muted",
+                !canNavigateNext && "opacity-50 cursor-not-allowed"
+              )}
               onClick={handleNextMonth}
+              disabled={!canNavigateNext}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -184,26 +308,42 @@ export function DateDayPicker({
                 fontWeight: "bold",
               },
             }}
-            fromDate={minDate}
-            toDate={maxDate}
+            fromDate={dateConstraints.minDate}
+            toDate={dateConstraints.maxDate}
             initialFocus
             locale={indonesiaLocale}
             className="border-0"
           />
 
           <div className="flex items-center justify-between p-2 border-t bg-muted/30">
-            <Button variant="ghost" size="sm" onClick={() => handleDaySelect(new Date())}>
-              Hari Ini
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const today = new Date();
+                if (user?.budgetYear) {
+                  const budgetYearDate = new Date(user.budgetYear, 0, 1);
+                  handleDaySelect(budgetYearDate);
+                } else {
+                  handleDaySelect(today);
+                }
+              }}
+            >
+              {user?.budgetYear ? `1 Jan ${user.budgetYear}` : "Hari Ini"}
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => handleDaySelect(undefined)}
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
               Hapus
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setIsOpen(false)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsOpen(false)}
+            >
               Tutup
             </Button>
           </div>

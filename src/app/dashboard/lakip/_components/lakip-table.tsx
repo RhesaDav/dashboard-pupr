@@ -155,12 +155,6 @@ function LakipTable({}: LakipTableTypes) {
 
       <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
         <Input onChange={handleSearch} placeholder="Cari kontrak..." />
-        <Button
-          variant={"outline"}
-          onClick={() => router.push(`${pathname}/create`)}
-        >
-          Create New
-        </Button>
       </div>
     </div>
     <DataTable
