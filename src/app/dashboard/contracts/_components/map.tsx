@@ -9,12 +9,10 @@ const MapComponent: React.FC<{
   const [routeLoading, setRouteLoading] = useState(false);
 
   useEffect(() => {
-    // Import Leaflet dynamically
     const loadLeaflet = async () => {
       const leaflet = await import('leaflet');
       setL(leaflet.default);
       
-      // Load CSS
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -26,7 +24,6 @@ const MapComponent: React.FC<{
   useEffect(() => {
     if (!L || !koordinatAwal || !koordinatAkhir) return;
 
-    // Parse coordinates
     const parseCoordinate = (coord: string | null): [number, number] | null => {
       if (!coord) return null;
       const parts = coord.split(',').map(p => parseFloat(p.trim()));
@@ -38,15 +35,12 @@ const MapComponent: React.FC<{
 
     if (!startCoord || !endCoord) return;
 
-    // Initialize map
     const mapInstance = L.map('map').setView(startCoord, 13);
 
-    // Add tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(mapInstance);
 
-    // Create custom icons for start and end points
     const startIcon = L.divIcon({
       className: 'custom-marker-icon',
       html: `
@@ -103,18 +97,15 @@ const MapComponent: React.FC<{
       popupAnchor: [0, -30],
     });
 
-    // Add markers
     const startMarker = L.marker(startCoord, { icon: startIcon }).addTo(mapInstance);
     startMarker.bindPopup('<strong>Titik Awal</strong><br/>Koordinat: ' + koordinatAwal);
 
     const endMarker = L.marker(endCoord, { icon: endIcon }).addTo(mapInstance);
     endMarker.bindPopup('<strong>Titik Akhir</strong><br/>Koordinat: ' + koordinatAkhir);
 
-    // Function to get route from OpenRouteService
     const getRoute = async () => {
       setRouteLoading(true);
       try {
-        // Using OpenRouteService free API (no key required for basic usage)
         const response = await fetch(
           `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf6248YOUR_API_KEY&start=${endCoord[1]},${endCoord[0]}&end=${startCoord[1]},${startCoord[0]}`
         );
@@ -126,10 +117,8 @@ const MapComponent: React.FC<{
         const data = await response.json();
         const coordinates = data.features[0].geometry.coordinates;
         
-        // Convert coordinates to Leaflet format [lat, lng]
         const routeCoords = coordinates.map((coord: number[]) => [coord[1], coord[0]]);
         
-        // Add polyline to map
         const polyline = L.polyline(routeCoords, {
           color: '#3b82f6',
           weight: 5,
@@ -137,12 +126,10 @@ const MapComponent: React.FC<{
           dashArray: '0',
         }).addTo(mapInstance);
         
-        // Fit map to show the route
         mapInstance.fitBounds(polyline.getBounds(), { padding: [20, 20] });
         
       } catch (error) {
         console.log('Routing service unavailable, using direct line');
-        // Fallback: draw a direct line
         const directLine = L.polyline([startCoord, endCoord], {
           color: '#6b7280',
           weight: 3,
@@ -150,7 +137,6 @@ const MapComponent: React.FC<{
           dashArray: '10, 10',
         }).addTo(mapInstance);
         
-        // Fit map to show both points
         const bounds = L.latLngBounds([startCoord, endCoord]);
         mapInstance.fitBounds(bounds, { padding: [50, 50] });
       } finally {
@@ -158,7 +144,6 @@ const MapComponent: React.FC<{
       }
     };
 
-    // Alternative: Use OSRM (Open Source Routing Machine) - free service
     const getRouteOSRM = async () => {
       setRouteLoading(true);
       try {
@@ -176,10 +161,8 @@ const MapComponent: React.FC<{
           const route = data.routes[0];
           const coordinates = route.geometry.coordinates;
           
-          // Convert coordinates to Leaflet format [lat, lng]
           const routeCoords = coordinates.map((coord: number[]) => [coord[1], coord[0]]);
           
-          // Add polyline to map with road-following style
           const polyline = L.polyline(routeCoords, {
             color: '#3b82f6',
             weight: 5,
@@ -188,11 +171,9 @@ const MapComponent: React.FC<{
             lineJoin: 'round',
           }).addTo(mapInstance);
           
-          // Add distance and duration info
-          const distance = (route.distance / 1000).toFixed(1); // Convert to km
-          const duration = Math.round(route.duration / 60); // Convert to minutes
+          const distance = (route.distance / 1000).toFixed(1); 
+          const duration = Math.round(route.duration / 60); 
           
-          // Create info popup
           const routeInfo = L.popup()
             .setLatLng([(startCoord[0] + endCoord[0]) / 2, (startCoord[1] + endCoord[1]) / 2])
             .setContent(`
@@ -203,7 +184,6 @@ const MapComponent: React.FC<{
               </div>
             `);
           
-          // Fit map to show the route
           mapInstance.fitBounds(polyline.getBounds(), { padding: [30, 30] });
           
         } else {
@@ -212,7 +192,6 @@ const MapComponent: React.FC<{
         
       } catch (error) {
         console.log('OSRM routing failed, using direct line');
-        // Fallback: draw a direct line
         const directLine = L.polyline([startCoord, endCoord], {
           color: '#6b7280',
           weight: 3,
@@ -220,7 +199,6 @@ const MapComponent: React.FC<{
           dashArray: '10, 10',
         }).addTo(mapInstance);
         
-        // Add simple distance calculation
         const distance = mapInstance.distance(startCoord, endCoord) / 1000;
         const directInfo = L.popup()
           .setLatLng([(startCoord[0] + endCoord[0]) / 2, (startCoord[1] + endCoord[1]) / 2])
@@ -231,7 +209,6 @@ const MapComponent: React.FC<{
             </div>
           `);
         
-        // Fit map to show both points
         const bounds = L.latLngBounds([startCoord, endCoord]);
         mapInstance.fitBounds(bounds, { padding: [50, 50] });
       } finally {
@@ -239,12 +216,10 @@ const MapComponent: React.FC<{
       }
     };
 
-    // Try to get route using OSRM (free service)
     getRouteOSRM();
 
     setMap(mapInstance);
 
-    // Cleanup function
     return () => {
       if (mapInstance) {
         mapInstance.remove();
@@ -252,7 +227,6 @@ const MapComponent: React.FC<{
     };
   }, [L, koordinatAwal, koordinatAkhir]);
 
-  // If no valid coordinates, show a fallback message
   if (!koordinatAwal || !koordinatAkhir) {
     return (
       <div className="bg-gray-100 rounded-md p-4 h-64 flex items-center justify-center">
