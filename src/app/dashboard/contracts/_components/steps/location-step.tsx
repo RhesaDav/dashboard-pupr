@@ -31,7 +31,9 @@ const InteractiveMap = dynamic(() => import("@/components/interactive-map"), {
 export default function LocationStep() {
   const form = useFormContext();
   const [showMap, setShowMap] = useState(false);
-  const [mapMode, setMapMode] = useState<'start' | 'end' | null>(null);
+  const [mapMode, setMapMode] = useState<"start" | "end" | undefined>(
+    undefined
+  );
 
   const [filteredDistricts, setFilteredDistricts] = useState(districts);
   const selectedKota = form.watch("location.kota");
@@ -77,27 +79,29 @@ export default function LocationStep() {
     }
   };
 
-  const handleMapSelect = (mode: 'start' | 'end') => {
+  const handleMapSelect = (mode: "start" | "end") => {
     setMapMode(mode);
     setShowMap(true);
   };
 
   const handleCoordinateSelect = (lat: number, lng: number) => {
     const coordinates = `${lat.toFixed(6)},${lng.toFixed(6)}`;
-    
-    if (mapMode === 'start') {
+
+    if (mapMode === "start") {
       form.setValue("location.koordinatAwal", coordinates);
-    } else if (mapMode === 'end') {
+    } else if (mapMode === "end") {
       form.setValue("location.koordinatAkhir", coordinates);
     }
-    
+
     // setShowMap(false);
-    setMapMode(null);
+    setMapMode(undefined);
   };
 
   const parseCoordinates = (coordString: string) => {
     if (!coordString || !isValidCoordinate(coordString)) return null;
-    const [lat, lng] = coordString.split(",").map((coord) => parseFloat(coord.trim()));
+    const [lat, lng] = coordString
+      .split(",")
+      .map((coord) => parseFloat(coord.trim()));
     return { lat, lng };
   };
 
@@ -216,19 +220,22 @@ export default function LocationStep() {
                         className="h-12"
                       />
                     </FormControl>
+
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-12 px-3"
-                      onClick={() => handleMapSelect('start')}
+                      className="h-12 px-3 flex items-center space-x-2"
+                      onClick={() => handleMapSelect("start")}
                       title="Pilih dari Peta"
                     >
                       <MapPin className="h-5 w-5" />
+                      <span>Pilih Lokasi</span>
                     </Button>
+
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-12 px-3"
+                      className="h-12 px-3 flex items-center space-x-2"
                       onClick={() => {
                         const url = openLocationInMap(field.value);
                         if (url) window.open(url, "_blank");
@@ -237,8 +244,10 @@ export default function LocationStep() {
                       title="Buka di Google Maps"
                     >
                       <Map className="h-5 w-5" />
+                      <span>Buka di GMap</span>
                     </Button>
                   </div>
+
                   <FormMessage className="text-xs" />
                 </FormItem>
               )}
@@ -258,19 +267,22 @@ export default function LocationStep() {
                         className="h-12"
                       />
                     </FormControl>
+
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-12 px-3"
-                      onClick={() => handleMapSelect('end')}
+                      className="h-12 px-3 flex items-center space-x-2"
+                      onClick={() => handleMapSelect("end")}
                       title="Pilih dari Peta"
                     >
                       <MapPin className="h-5 w-5" />
+                      <span>Pilih Lokasi</span>
                     </Button>
+
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-12 px-3"
+                      className="h-12 px-3 flex items-center space-x-2"
                       onClick={() => {
                         const url = openLocationInMap(field.value);
                         if (url) window.open(url, "_blank");
@@ -279,8 +291,10 @@ export default function LocationStep() {
                       title="Buka di Google Maps"
                     >
                       <Map className="h-5 w-5" />
+                      <span>Buka di GMap</span>
                     </Button>
                   </div>
+
                   <FormMessage className="text-xs" />
                 </FormItem>
               )}
@@ -292,35 +306,18 @@ export default function LocationStep() {
       {/* Interactive Map Modal */}
       {showMap && (
         <Card className="fixed inset-4 z-50 bg-white shadow-2xl">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>
-              Pilih Koordinat {mapMode === 'start' ? 'Awal' : 'Akhir'}
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setShowMap(false);
-                setMapMode(null);
-              }}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </CardHeader>
-          <CardContent className="p-4 h-full">
+          <CardContent className="h-full">
             <div className="h-full">
               <InteractiveMap
+                mode={mapMode}
                 onCoordinateSelect={handleCoordinateSelect}
-                initialCoordinates={
-                  mapMode === 'start'
-                    ? parseCoordinates(form.watch("location.koordinatAwal"))
-                    : parseCoordinates(form.watch("location.koordinatAkhir"))
-                }
-                otherCoordinates={
-                  mapMode === 'start'
-                    ? parseCoordinates(form.watch("location.koordinatAkhir"))
-                    : parseCoordinates(form.watch("location.koordinatAwal"))
-                }
+                startCoordinates={parseCoordinates(
+                  form.watch("location.koordinatAwal")
+                )}
+                endCoordinates={parseCoordinates(
+                  form.watch("location.koordinatAkhir")
+                )}
+                onClose={() => setShowMap(false)}
               />
             </div>
           </CardContent>

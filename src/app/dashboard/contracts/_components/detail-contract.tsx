@@ -42,6 +42,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import MapComponent from "./map";
+import dynamic from "next/dynamic";
+
+const DynamicMapComponent = dynamic(() => import("./map"), {
+  ssr: false,
+});
 
 interface ExtendedContract extends Contract {
   addendum?: Addendum[];
@@ -611,9 +616,8 @@ export default function ContractDetailsPage() {
                     </div>
 
                     {/* Map Placeholder */}
-
-                    <div className="md:col-span-2 bg-gray-100 rounded-md p-4 h-64 flex items-center justify-center">
-                      <MapComponent
+                    <div className="md:col-span-2 p-4 h-64">
+                      <DynamicMapComponent
                         koordinatAkhir={contract.location.koordinatAkhir}
                         koordinatAwal={contract.location.koordinatAwal}
                       />

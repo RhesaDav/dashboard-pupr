@@ -565,7 +565,9 @@ export default function ReportTable() {
               }, 0) / contract!.progressData.length,
             keterangan: [
               contract?.progressData.some(
-                (item) => item.weekNumber > contract.maxRealisasiWeek
+                (item) =>
+                  item.weekNumber > contract.maxRealisasiWeek &&
+                  contract.maxRealisasiWeek !== 0
               )
                 ? `Data diambil dari minggu ke-${contract!.maxRealisasiWeek}`
                 : "",
