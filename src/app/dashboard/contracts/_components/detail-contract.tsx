@@ -41,6 +41,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
+import MapComponent from "./map";
 
 interface ExtendedContract extends Contract {
   addendum?: Addendum[];
@@ -108,10 +109,11 @@ export default function ContractDetailsPage() {
       ? contract?.physicalProgress[contract.physicalProgress.length - 1]
       : null;
 
-  const maxRealisasiEntry = contract?.physicalProgress.reduce(
+  const maxRealisasiEntry = contract?.physicalProgress?.reduce(
     (prev, current) => {
       return prev.realisasi > current.realisasi ? prev : current;
-    }
+    },
+    { realisasi: 0, rencana: 0, deviasi: 0 } // Initial value
   );
   return (
     <div className="container mx-auto py-6">
@@ -185,7 +187,7 @@ export default function ContractDetailsPage() {
                   </h3>
                   <p>
                     {contract?.masaPelaksanaan
-                      ? `${contract.masaPelaksanaan} hari`
+                      ? `${(contract.masaPelaksanaan -1) + (contract.totalAddendumWaktu || 0)} hari`
                       : "Tidak tersedia"}
                   </p>
                 </div>
@@ -609,10 +611,12 @@ export default function ContractDetailsPage() {
                     </div>
 
                     {/* Map Placeholder */}
+
                     <div className="md:col-span-2 bg-gray-100 rounded-md p-4 h-64 flex items-center justify-center">
-                      <p className="text-gray-500">
-                        Peta akan ditampilkan di sini
-                      </p>
+                      <MapComponent
+                        koordinatAkhir={contract.location.koordinatAkhir}
+                        koordinatAwal={contract.location.koordinatAwal}
+                      />
                     </div>
                   </div>
                 ) : (

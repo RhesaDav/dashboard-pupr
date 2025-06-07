@@ -212,7 +212,9 @@ export default function ReportTable() {
       header: "Masa Pelaksanaan",
       cell: ({ row }) => {
         const start = row.original.tanggalKontrak;
-        const duration = (row.original.masaPelaksanaan || 0) + (row.original.totalAddendumWaktu || 0);
+        const duration =
+          (row.original.masaPelaksanaan || 0) +
+          (row.original.totalAddendumWaktu || 0);
         const end = start ? addDays(start, duration) : null;
 
         return (
@@ -238,8 +240,8 @@ export default function ReportTable() {
                 status === "Selesai"
                   ? "default"
                   : status === "Bermasalah"
-                  ? "destructive"
-                  : "secondary"
+                    ? "destructive"
+                    : "secondary"
               }
               className="text-[10px]"
             >
@@ -257,10 +259,18 @@ export default function ReportTable() {
   ];
 
   const selectedRows = useMemo(() => {
-    return Object.keys(rowSelection).map(
-      (rowId) => filteredContracts[parseInt(rowId)].id
-    );
-  }, [rowSelection, filteredContracts]);
+    const displayedData = filterContractsByWeekRange;
+    const selectedIds: string[] = [];
+
+    Object.keys(rowSelection).forEach((rowIndex) => {
+      const contract = displayedData[parseInt(rowIndex)];
+      if (contract && contract.id) {
+        selectedIds.push(contract.id);
+      }
+    });
+
+    return selectedIds;
+  }, [rowSelection, filterContractsByWeekRange]);
 
   const handleWeekRangeChange = (
     range: { start: Date; end: Date } | undefined
@@ -295,8 +305,6 @@ export default function ReportTable() {
     return result;
   };
 
-  console.log(contractsData)
-
   const handleExport = async () => {
     if (selectedRows.length === 0) {
       toast.error("Pilih setidaknya satu kontrak untuk diekspor.");
@@ -329,7 +337,6 @@ export default function ReportTable() {
           const processedProgressData = processProgressDataWithContinuity(
             contract.physicalProgress
           );
-          console.log(processProgressDataWithContinuity);
 
           let maxRealisasi = { value: 0, week: 0 };
           let maxRencana = { value: 0, week: 0 };
@@ -435,7 +442,8 @@ export default function ReportTable() {
                 korwaslap: contract.korwaslap,
                 pengawasLapangan: contract.pengawasLapangan,
                 nilaiKontrak: contract.nilaiKontrak,
-                totalFinancialProgress: contract.financialProgress?.totalProgress,
+                totalFinancialProgress:
+                  contract.financialProgress?.totalProgress,
                 nilaiKontrakFisik: contract.nilaiKontrak,
                 tanggalKontrak: contract.tanggalKontrak,
                 masaPelaksanaan: contract.masaPelaksanaan,
@@ -602,8 +610,6 @@ export default function ReportTable() {
           "keterangan",
         ],
       };
-
-      console.log({contractsToExport, pdfData})
 
       sessionStorage.setItem("pdfExportData", JSON.stringify(pdfData));
       router.push("/dashboard/report/pdf");
