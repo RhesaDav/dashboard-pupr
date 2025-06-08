@@ -111,17 +111,7 @@ export default function PDFExportPage() {
       const parsedData = JSON.parse(data) as PDFExportData;
       console.log("Parsed data:", parsedData);
       
-      // Simpan data asli
       setOriginalData(parsedData);
-      
-      // Modifikasi data untuk display dengan menambahkan progress percentage ke nilaiKontrak
-      const modifiedData = {
-        ...parsedData,
-        contracts: parsedData.contracts.map((contract) => ({
-          ...contract,
-          nilaiKontrakFisik: `${contract.nilaiKontrak} (${contract.totalFinancialProgress}%)`,
-        }))
-      };
       
       setExportData(parsedData);
       setVisibleColumns(parsedData.defaultVisible);
@@ -445,9 +435,9 @@ export default function PDFExportPage() {
         
         if (colId === 'totalFinancialProgress') {
           return `${value}%`;
-        } else if (colId === 'nilaiKontrakFisik') {
+        } else if (colId === 'realisasiKeuangan') {
           // Untuk display, sudah dimodifikasi dengan progress percentage
-          return `${formatCurrency(Number(value))} (${contract.totalFinancialProgress} %)`;
+          return `${value} (${contract.totalFinancialProgress} %)`;
         } else if (colId.includes("nilai") && typeof value === 'number') {
           return formatCurrency(value);
         } else {

@@ -192,7 +192,7 @@ export default function ContractDetailsPage() {
                   </h3>
                   <p>
                     {contract?.masaPelaksanaan
-                      ? `${(contract.masaPelaksanaan -1) + (contract.totalAddendumWaktu || 0)} hari`
+                      ? `${(contract.masaPelaksanaan) + (contract.totalAddendumWaktu || 0)} hari`
                       : "Tidak tersedia"}
                   </p>
                 </div>

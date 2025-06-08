@@ -215,7 +215,7 @@ export default function ReportTable() {
         const duration =
           (row.original.masaPelaksanaan || 0) +
           (row.original.totalAddendumWaktu || 0);
-        const end = start ? addDays(start, duration) : null;
+        const end = start ? addDays(start, duration -1) : null;
 
         return (
           <div className="text-xs">
@@ -402,7 +402,7 @@ export default function ReportTable() {
             : null;
           const akhirKontrakAsli =
             contractStartDate && contract.masaPelaksanaan
-              ? addDays(contractStartDate, contract.masaPelaksanaan)
+              ? addDays(contractStartDate, (contract.masaPelaksanaan - 1 || 0))
               : null;
 
           const realisasiKeuangan =
@@ -417,7 +417,7 @@ export default function ReportTable() {
             const endDate = new Date(contract.tanggalKontrak);
 
             endDate.setDate(
-              endDate.getDate() + (contract.masaPelaksanaan || 0)
+              endDate.getDate() + (contract.masaPelaksanaan -1 || 0)
             );
 
             if (contract.addendum && contract.addendum.length > 0) {
