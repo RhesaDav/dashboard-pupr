@@ -38,7 +38,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
       <div className="flex items-center gap-3">
         <div className="relative w-8 h-8 md:w-10 md:h-10">
           <Image
-            src="/img/logo-bina-marga.png"
+            src="/img/logo-bina-marga.svg"
             alt="Logo Bina Marga"
             fill
             className="object-contain"

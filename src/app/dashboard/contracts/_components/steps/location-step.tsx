@@ -22,7 +22,6 @@ import { Map, MapPin, X } from "lucide-react";
 import { districts } from "@/lib/district";
 import dynamic from "next/dynamic";
 
-// Dynamic import untuk react-leaflet (untuk menghindari SSR issues)
 const InteractiveMap = dynamic(() => import("@/components/interactive-map"), {
   ssr: false,
   loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,

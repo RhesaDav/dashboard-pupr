@@ -116,7 +116,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
 <div className="flex items-center gap-3 mb-6 flex-shrink-0">
         <div className="relative w-10 h-10">
           <Image
-            src="/img/logo-papua.png"
+            src="/img/logo-papua.svg"
             alt="Logo Bina Marga Papua"
             fill
             className="object-contain"
