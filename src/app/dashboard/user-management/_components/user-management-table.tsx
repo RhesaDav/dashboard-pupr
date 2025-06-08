@@ -30,7 +30,7 @@ function UserManagementTable() {
       getAllUsers({
         page: pageParam,
         limit: pageSizeParam,
-        search: searchQuery,
+        search: searchQuery || "",
       }),
   });
 

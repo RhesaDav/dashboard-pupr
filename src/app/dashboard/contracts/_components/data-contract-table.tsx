@@ -273,7 +273,7 @@ function DataContractTable() {
             variant={"outline"}
             onClick={() => router.push(`${pathname}/create`)}
           >
-            Create New
+            Buat Baru
           </Button>
         </div>
       </div>

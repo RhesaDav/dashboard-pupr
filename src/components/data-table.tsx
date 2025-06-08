@@ -226,7 +226,7 @@ export function DataTable<TData, TValue>({
                           size="sm"
                           onClick={onResetFilter}
                         >
-                          Reset filter
+                          Setel ulang filter
                         </Button>
                       )}
                     </div>
@@ -244,7 +244,7 @@ export function DataTable<TData, TValue>({
         <div className="flex items-center justify-between space-x-2 py-4">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <p className="text-sm font-medium">Items per page</p>
+              <p className="text-sm font-medium">Item per halaman</p>
               <select
                 value={pageSize}
                 onChange={(e) => {

@@ -72,11 +72,11 @@ export default function CreateUserDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Create User</Button>
+        <Button variant="outline">Buat User Baru</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
-          <DialogTitle>Create User</DialogTitle>
+          <DialogTitle>Buat User Baru</DialogTitle>
           <DialogDescription>Masukkan informasi user baru.</DialogDescription>
         </DialogHeader>
 
@@ -154,7 +154,7 @@ export default function CreateUserDialog() {
               disabled={loading}
             >
               {loading && <Loader className="w-4 h-4 animate-spin" />}
-              Create User
+              Buat User Baru
             </Button>
           </DialogFooter>
         </form>
