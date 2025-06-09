@@ -1,81 +1,5 @@
 import type { NextConfig } from "next";
-import nextPwa from "next-pwa";
-
-const withPWA = nextPwa({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
-
-  runtimeCaching: [
-    {
-      urlPattern: /^https:\/\/api\.domainanda\.com\/.*/i,
-      handler: "NetworkFirst",
-      options: {
-        cacheName: "api-cache",
-        networkTimeoutSeconds: 10,
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 60 * 60 * 24 * 7,
-        },
-        cacheableResponse: {
-          statuses: [0, 200],
-        },
-      },
-    },
-
-    {
-      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "image-cache",
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 60 * 60 * 24 * 30,
-        },
-        cacheableResponse: { statuses: [0, 200] },
-      },
-    },
-
-    {
-      urlPattern: ({ request }) => request.mode === "navigate",
-      handler: "StaleWhileRevalidate",
-      options: {
-        cacheName: "page-cache",
-        expiration: {
-          maxEntries: 30,
-          maxAgeSeconds: 60 * 60 * 24 * 7,
-        },
-        cacheableResponse: { statuses: [0, 200] },
-      },
-    },
-
-    {
-      urlPattern: /\.(?:js|css)$/i,
-      handler: "StaleWhileRevalidate",
-      options: {
-        cacheName: "static-resources-cache",
-        expiration: {
-          maxEntries: 60,
-          maxAgeSeconds: 60 * 60 * 24 * 30,
-        },
-      },
-    },
-
-    {
-      urlPattern: /\.(?:woff|woff2|ttf|otf|eot)$/i,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "font-cache",
-        expiration: {
-          maxEntries: 30,
-          maxAgeSeconds: 60 * 60 * 24 * 365,
-        },
-        cacheableResponse: { statuses: [0, 200] },
-      },
-    },
-  ],
-});
+import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   images: {
@@ -92,4 +16,106 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA({
+  dest: "public",
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  disable: process.env.NODE_ENV === "development",
+  workboxOptions: {
+    disableDevLogs: true,
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "google-fonts-webfonts",
+          expiration: {
+            maxEntries: 4,
+            maxAgeSeconds: 365 * 24 * 60 * 60 // 365 days
+          }
+        }
+      },
+      {
+        urlPattern: /^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "google-fonts-stylesheets",
+          expiration: {
+            maxEntries: 4,
+            maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
+          }
+        }
+      },
+      {
+        urlPattern: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "static-font-assets",
+          expiration: {
+            maxEntries: 4,
+            maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
+          }
+        }
+      },
+      {
+        urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "static-image-assets",
+          expiration: {
+            maxEntries: 64,
+            maxAgeSeconds: 24 * 60 * 60 // 24 hours
+          }
+        }
+      },
+      {
+        urlPattern: /\/_next\/image\?url=.+$/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "next-image",
+          expiration: {
+            maxEntries: 64,
+            maxAgeSeconds: 24 * 60 * 60 // 24 hours
+          }
+        }
+      },
+      {
+        urlPattern: /\.(?:js)$/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "static-js-assets",
+          expiration: {
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60 // 24 hours
+          }
+        }
+      },
+      {
+        urlPattern: /\.(?:css|less)$/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "static-style-assets",
+          expiration: {
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60 // 24 hours
+          }
+        }
+      },
+      {
+        urlPattern: /^https?.*/,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "offlineCache",
+          expiration: {
+            maxEntries: 200,
+            maxAgeSeconds: 24 * 60 * 60 // 24 hours
+          },
+          cacheableResponse: {
+            statuses: [0, 200]
+          }
+        }
+      }
+    ]
+  }
+})(nextConfig);

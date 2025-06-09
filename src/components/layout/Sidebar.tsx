@@ -87,16 +87,16 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     );
   }
 
-  if (error) {
-    return (
-      <aside className="w-64 bg-background border-r min-h-screen p-6 hidden md:block"> 
-        <h1 className="text-2xl font-semibold mb-6">Bina Marga</h1>
-        <div className="text-red-500 text-sm p-2 bg-red-50 rounded">
-          Error loading user data
-        </div>
-      </aside>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <aside className="w-64 bg-background border-r min-h-screen p-6 hidden md:block"> 
+  //       <h1 className="text-2xl font-semibold mb-6">Bina Marga</h1>
+  //       <div className="text-red-500 text-sm p-2 bg-red-50 rounded">
+  //         Error loading user data
+  //       </div>
+  //     </aside>
+  //   );
+  // }
 
   const filteredMenuItems = menuItems.filter(item =>
     user?.role && item.roles.includes(user.role)

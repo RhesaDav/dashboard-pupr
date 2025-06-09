@@ -1,7 +1,7 @@
 {
     "name": "Bina Marga",
     "short_name": "Bina Marga",
-    "description": "Bina Marga ini deskripsi ya cuy",
+    "description": "Aplikasi dashboard resmi untuk monitoring dan manajemen infrastruktur jalan di Papua Barat",
     "icons": [
       {
         "src": "/icons/icon-192x192.png", 
@@ -26,5 +26,6 @@
     "background_color": "#FFFFFF", 
     "start_url": "/",
     "display": "standalone", 
-    "orientation": "portrait"
+    "orientation": "portrait",
+    "lang": "id"
 }
