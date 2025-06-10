@@ -19,7 +19,7 @@ interface HeaderProps {
 }
 
 const Header = ({ onToggleSidebar }: HeaderProps) => {
-  const { user } = useCurrentUser();
+  const { user, isOnline } = useCurrentUser();
 
   return (
     <header className="bg-background shadow-sm p-3 md:p-4 flex items-center border-b sticky top-0 z-20">
@@ -63,6 +63,11 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
               <span className="hidden sm:inline">
                 {user?.name?.split(" ")[0] ?? "Account"}
               </span>
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  isOnline ? "bg-green-500" : "bg-gray-400"
+                }`}
+              />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

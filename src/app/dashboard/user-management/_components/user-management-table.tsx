@@ -25,7 +25,7 @@ function UserManagementTable() {
   const pageSizeParam = parseInt(searchParams.get("pageSize") || "10");
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["users", pageParam, pageSizeParam, searchQuery],
+    queryKey: ["users-management", pageParam, pageSizeParam, searchQuery],
     queryFn: () =>
       getAllUsers({
         page: pageParam,

@@ -62,7 +62,7 @@ export default function ContractDetailsPage() {
   const params = useParams();
   const contractId = params.id as string;
   const { data, isLoading, error } = useQuery({
-    queryKey: ["contract", contractId],
+    queryKey: ["contract-detail", contractId],
     queryFn: () => getContractById(contractId),
   });
   const contract = data?.data;

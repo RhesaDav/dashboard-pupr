@@ -56,7 +56,7 @@ export default function CreateUserDialog() {
 
     const res = await createUser(formData);
     queryClient.refetchQueries({
-      queryKey: ['users']
+      queryKey: ['users-management']
     })
     setLoading(false);
 

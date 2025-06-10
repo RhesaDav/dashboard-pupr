@@ -38,7 +38,7 @@ function FinancialProgressTable() {
   const pageSizeParam = parseInt(searchParams.get("pageSize") || "10");
 
   const { data: contractsData, isLoading } = useQuery({
-    queryKey: ["contracts", pageParam, pageSizeParam, searchQuery],
+    queryKey: ["contracts-financial", pageParam, pageSizeParam, searchQuery],
     queryFn: () =>
       getAllContracts({
         page: pageParam,

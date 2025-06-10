@@ -75,7 +75,7 @@ export default function UserAccessibilitySheet({
     isError: isErrorContracts,
     error: contractsError,
   } = useQuery({
-    queryKey: ["contracts", page, pageSize, debouncedSearch],
+    queryKey: ["contracts-accessibility-sheet", page, pageSize, debouncedSearch],
     queryFn: () =>
       getAllContracts({
         page,
@@ -85,8 +85,6 @@ export default function UserAccessibilitySheet({
     enabled: isOpen,
     staleTime: 1000 * 60 * 5,
   });
-
-  console.log(contractsResponse);
 
   const {
     data: userAccessData,

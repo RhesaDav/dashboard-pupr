@@ -61,7 +61,7 @@ export default function ReportTable() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["contracts", pageParam, pageSizeParam, searchQuery],
+    queryKey: ["contracts-report", pageParam, pageSizeParam, searchQuery],
     queryFn: async () => {
       const result = await getAllContracts({
         pageParam,

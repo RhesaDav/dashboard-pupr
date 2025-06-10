@@ -42,7 +42,7 @@ function ProgressTable() {
     error,
     isFetching,
   } = useQuery({
-    queryKey: ["contracts", pageParam, pageSizeParam, searchQuery],
+    queryKey: ["contracts-physical", pageParam, pageSizeParam, searchQuery],
     queryFn: () =>
       getAllContracts({
         page: pageParam,

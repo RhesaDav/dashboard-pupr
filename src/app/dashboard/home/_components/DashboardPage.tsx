@@ -62,7 +62,7 @@ export default function DashboardPage() {
     return <DashboardSkeleton />;
   }
 
-  if (isError || !dashboardData) {
+  if (!dashboardData) {
     return <DashboardError />;
   }
 

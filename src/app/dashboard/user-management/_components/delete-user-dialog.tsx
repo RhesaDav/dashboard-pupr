@@ -33,7 +33,7 @@ export function DeleteUserDialog({ userId, userName, disabled }: DeleteUserDialo
     const res = await deleteUser(userId);
     setLoading(false);
     queryClient.refetchQueries({
-      queryKey: ['users']
+      queryKey: ['users-management']
     })
 
     if (res.success) {

@@ -92,6 +92,11 @@ const MapComponent: React.FC<{
   koordinatAkhir: string | null;
 }> = ({ koordinatAwal, koordinatAkhir }) => {
   const [routeLoading, setRouteLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false); 
+
+  useEffect(() => {
+    setIsClient(true); 
+  }, []);
 
   const parseCoordinate = (coord: string | null): LatLngTuple | null => {
     if (!coord) return null;

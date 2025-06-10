@@ -336,6 +336,11 @@ export default function InteractiveMap({
   const [currentTileLayer, setCurrentTileLayer] = useState(tileLayers[0]);
   const [showAccuracyCircle, setShowAccuracyCircle] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [isClient, setIsClient] = useState(false); 
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Initialize with start or end coordinates based on mode
   useEffect(() => {

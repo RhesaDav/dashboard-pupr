@@ -64,14 +64,13 @@ function DataContractTable() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["contracts", pageParam, pageSizeParam, searchQuery],
+    queryKey: ["contracts-table", pageParam, pageSizeParam, searchQuery],
     queryFn: () =>
       getAllContracts({
         page: pageParam,
         limit: pageSizeParam,
         search: searchQuery,
       }),
-    refetchOnMount: "always",
   });
 
   const { user } = useCurrentUser();
