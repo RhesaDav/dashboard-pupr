@@ -21,8 +21,8 @@ export default withPWA({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  // disable: process.env.NODE_ENV === "development",
-  disable: false,
+  disable: process.env.NODE_ENV === "development",
+  // disable: false,
   workboxOptions: {
     disableDevLogs: true,
     runtimeCaching: [
@@ -33,9 +33,9 @@ export default withPWA({
           cacheName: "google-fonts-webfonts",
           expiration: {
             maxEntries: 4,
-            maxAgeSeconds: 365 * 24 * 60 * 60 // 365 days
-          }
-        }
+            maxAgeSeconds: 365 * 24 * 60 * 60, // 365 days
+          },
+        },
       },
       {
         urlPattern: /^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,
@@ -44,9 +44,9 @@ export default withPWA({
           cacheName: "google-fonts-stylesheets",
           expiration: {
             maxEntries: 4,
-            maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
-          }
-        }
+            maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+          },
+        },
       },
       {
         urlPattern: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
@@ -55,9 +55,9 @@ export default withPWA({
           cacheName: "static-font-assets",
           expiration: {
             maxEntries: 4,
-            maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
-          }
-        }
+            maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+          },
+        },
       },
       {
         urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
@@ -66,9 +66,9 @@ export default withPWA({
           cacheName: "static-image-assets",
           expiration: {
             maxEntries: 64,
-            maxAgeSeconds: 24 * 60 * 60 // 24 hours
-          }
-        }
+            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          },
+        },
       },
       {
         urlPattern: /\/_next\/image\?url=.+$/i,
@@ -77,9 +77,9 @@ export default withPWA({
           cacheName: "next-image",
           expiration: {
             maxEntries: 64,
-            maxAgeSeconds: 24 * 60 * 60 // 24 hours
-          }
-        }
+            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          },
+        },
       },
       {
         urlPattern: /\.(?:js)$/i,
@@ -88,9 +88,9 @@ export default withPWA({
           cacheName: "static-js-assets",
           expiration: {
             maxEntries: 32,
-            maxAgeSeconds: 24 * 60 * 60 // 24 hours
-          }
-        }
+            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          },
+        },
       },
       {
         urlPattern: /\.(?:css|less)$/i,
@@ -99,9 +99,9 @@ export default withPWA({
           cacheName: "static-style-assets",
           expiration: {
             maxEntries: 32,
-            maxAgeSeconds: 24 * 60 * 60 // 24 hours
-          }
-        }
+            maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          },
+        },
       },
       {
         urlPattern: /^https?.*/,
@@ -110,13 +110,27 @@ export default withPWA({
           cacheName: "offlineCache",
           expiration: {
             maxEntries: 200,
-            maxAgeSeconds: 24 * 60 * 60 // 24 hours
+            maxAgeSeconds: 24 * 60 * 60, // 24 hours
           },
           cacheableResponse: {
-            statuses: [0, 200]
-          }
-        }
-      }
-    ]
-  }
+            statuses: [0, 200],
+          },
+        },
+      },
+      {
+        urlPattern: /\/dashboard\/.*/,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "dynamic-pages",
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 24 * 60 * 60, // 24 jam
+          },
+          cacheableResponse: {
+            statuses: [0, 200],
+          },
+        },
+      },
+    ],
+  },
 })(nextConfig);

@@ -1,6 +1,6 @@
 import React from "react";
 import { getContractWithProgress } from "@/actions/progress";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import EditProgressPage from "../../_components/edit-progress";
 
 async function ContractProgressPage({
@@ -26,7 +26,10 @@ async function ContractProgressPage({
     namaPaket: contractData.contractDetails.namaPaket || "",
     nilaiKontrak: contractData.contractDetails.nilaiKontrak || 0,
     tanggalKontrak: format(
-      contractData.contractDetails.tanggalKontrak || new Date(),
+      addDays(
+        new Date(contractData.contractDetails.tanggalKontrak || new Date()),
+        1
+      ),
       "dd-MM-yyyy"
     ),
     masaPelaksanaan: contractData.contractDetails.masaPelaksanaan || 0,

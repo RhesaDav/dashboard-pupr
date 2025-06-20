@@ -10,16 +10,18 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { logoutAction } from "@/actions/auth";
-import { LogOut, Menu, User } from "lucide-react";
+import { LogOut, Menu, UserIcon } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import Image from "next/image";
+import { User } from "@prisma/client";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
+  user: User |null;
+  isOnline?: boolean;
 }
 
-const Header = ({ onToggleSidebar }: HeaderProps) => {
-  const { user, isOnline } = useCurrentUser();
+const Header = ({ onToggleSidebar, user, isOnline = false }: HeaderProps) => {
 
   return (
     <header className="bg-background shadow-sm p-3 md:p-4 flex items-center border-b sticky top-0 z-20">
@@ -59,7 +61,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2">
-              <User className="w-5 h-5" />
+              <UserIcon className="w-5 h-5" />
               <span className="hidden sm:inline">
                 {user?.name?.split(" ")[0] ?? "Account"}
               </span>

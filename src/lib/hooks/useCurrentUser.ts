@@ -28,7 +28,6 @@ export function useCurrentUser() {
   const loadFromOfflineStorage = async (): Promise<boolean> => {
     try {
       const offlineData = await offlineUserStorage.getUserData();
-
       if (offlineData) {
         setUser(offlineData.user);
         setBudgetYear(offlineData.budgetYear);
@@ -36,7 +35,6 @@ export function useCurrentUser() {
         console.log("📱 Loaded user data from offline storage");
         return true;
       }
-
       return false;
     } catch (error) {
       console.error("❌ Failed to load from offline storage:", error);
@@ -105,40 +103,36 @@ export function useCurrentUser() {
     }
   };
 
-  useEffect(() => {
-    const initializeUser = async () => {
-      try {
-        setLoading(true);
+  const initializeUser = async () => {
+    try {
+      setLoading(true);
 
-        const hasOfflineData = await loadFromOfflineStorage();
+      const offlineData = await offlineUserStorage.getUserData();
 
-        if (hasOfflineData) {
-          setLoading(false);
+      if (offlineData) {
+        setUser(offlineData.user);
+        setBudgetYear(offlineData.budgetYear);
+        setSyncStatus(offlineData.syncStatus);
 
-          if (navigator.onLine) {
-            try {
-              await fetchUserFromServer();
-            } catch (error) {
-              console.log("🔄 Using offline data, server sync failed");
-            }
-          }
-        } else {
-          if (navigator.onLine) {
-            await fetchUserFromServer();
-          } else {
-            throw new Error("No cached data available and device is offline");
-          }
+        if (navigator.onLine && (await offlineUserStorage.isDataStale())) {
+          console.log("🔄 Data exists but stale, refreshing...");
+          await fetchUserFromServer();
         }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error";
-        setError(errorMessage);
-        setSyncStatus("ERROR");
-      } finally {
-        setLoading(false);
+      } else if (navigator.onLine) {
+        await fetchUserFromServer();
+      } else {
+        throw new Error("Anda offline dan tidak ada data tersimpan");
       }
-    };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      setError(errorMessage);
+      setSyncStatus("ERROR");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     initializeUser();
 
     const handleOnline = () => {
@@ -164,7 +158,7 @@ export function useCurrentUser() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [syncStatus]);  // Add syncStatus to dependency array to re-check sync on status change
+  }, [syncStatus]);
 
   const logout = async (): Promise<void> => {
     try {

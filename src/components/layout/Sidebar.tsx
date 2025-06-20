@@ -14,7 +14,7 @@ import {
   Clock,
   FileBarChart2,
   NotebookText,
-  User,
+  UserIcon,
   CircleDollarSign,
   Construction,
   GanttChart,
@@ -24,12 +24,13 @@ import {
   TriangleAlert
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { Role } from "@prisma/client";
+import { Role, User } from "@prisma/client";
 import { useState } from "react";
 import Image from "next/image";
 
 interface SidebarProps {
   isOpen: boolean;
+  user: User | null
 }
 
 interface MenuItem {
@@ -46,7 +47,7 @@ interface MenuItem {
 
 const Sidebar = ({ isOpen }: SidebarProps) => { 
   const path = usePathname();
-  const { user, loading, error } = useCurrentUser();
+  const { user, error } = useCurrentUser();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
   const toggleSubmenu = (label: string) => {
@@ -78,14 +79,14 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     { label: "Kelola Pengguna", icon: Users, href: "/dashboard/user-management", roles: ["ADMIN", "SUPERADMIN"] },
   ];
 
-  if (loading) {
-    return (
-      <aside className="w-64 bg-background border-r min-h-screen p-6 hidden md:block"> 
-        <h1 className="text-2xl font-semibold mb-6">Bina Marga</h1>
-        <p>Loading user...</p>
-      </aside>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <aside className="w-64 bg-background border-r min-h-screen p-6 hidden md:block"> 
+  //       <h1 className="text-2xl font-semibold mb-6">Bina Marga</h1>
+  //       <p>Loading user...</p>
+  //     </aside>
+  //   );
+  // }
 
   // if (error) {
   //   return (
@@ -211,7 +212,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
         <div className="mt-4 pt-4 border-t flex-shrink-0"> 
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-4 h-4 text-primary" />
+              <UserIcon className="w-4 h-4 text-primary" />
             </div>
             <div>
               <p className="text-sm font-medium line-clamp-1">{user.name}</p>

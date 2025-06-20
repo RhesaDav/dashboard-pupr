@@ -9,86 +9,108 @@ export interface OfflineUserData {
 }
 
 class OfflineUserStorage {
-  private userStore = localforage.createInstance({
-    name: 'ContractPWA',
-    storeName: 'userData'
-  });
-
+  private userStore: LocalForage;
   private readonly USER_KEY = 'currentUser';
-  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+  private readonly CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // Diperpanjang jadi 7 hari
 
-  // Save user data to offline storage
+  constructor() {
+    this.userStore = localforage.createInstance({
+      name: 'ContractPWA',
+      storeName: 'userData',
+      driver: [
+        localforage.INDEXEDDB,
+        localforage.WEBSQL,
+        localforage.LOCALSTORAGE // Fallback
+      ]
+    });
+  }
+
   async saveUserData(userData: OfflineUserData): Promise<void> {
     try {
-      await this.userStore.setItem(this.USER_KEY, userData);
+      const dataToSave = {
+        ...userData,
+        lastSynced: new Date().toISOString() // Update sync time
+      };
+      await this.userStore.setItem(this.USER_KEY, dataToSave);
       console.log('✅ User data saved to offline storage');
     } catch (error) {
       console.error('❌ Failed to save user data:', error);
-      throw error;
+      // Coba fallback ke localStorage jika IndexedDB gagal
+      try {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(userData));
+        console.log('⚠️ Saved to localStorage as fallback');
+      } catch (fallbackError) {
+        console.error('❌ Failed to fallback to localStorage:', fallbackError);
+        throw error;
+      }
     }
   }
 
-  // Get user data from offline storage
   async getUserData(): Promise<OfflineUserData | null> {
     try {
+      // Coba dari IndexedDB/localForage dulu
       const userData = await this.userStore.getItem<OfflineUserData>(this.USER_KEY);
       
-      if (!userData) {
-        return null;
+      if (userData) {
+        // Skip expiry check untuk user data (tetap bisa digunakan meski expired)
+        return userData;
       }
 
-      // Check if data is still valid (not expired)
-      const lastSynced = new Date(userData.lastSynced);
-      const now = new Date();
-      const isExpired = (now.getTime() - lastSynced.getTime()) > this.CACHE_DURATION;
-
-      if (isExpired) {
-        console.log('⚠️ Cached user data expired');
-        return { ...userData, syncStatus: 'PENDING' };
+      // Fallback: Cek localStorage
+      const localStorageData = localStorage.getItem(this.USER_KEY);
+      if (localStorageData) {
+        const parsedData = JSON.parse(localStorageData) as OfflineUserData;
+        console.log('⚠️ Loaded from localStorage fallback');
+        // Migrasikan ke IndexedDB
+        await this.saveUserData(parsedData);
+        localStorage.removeItem(this.USER_KEY);
+        return parsedData;
       }
 
-      return userData;
+      return null;
     } catch (error) {
       console.error('❌ Failed to get user data:', error);
       return null;
     }
   }
 
-  // Clear user data from offline storage
   async clearUserData(): Promise<void> {
     try {
       await this.userStore.removeItem(this.USER_KEY);
-      console.log('✅ User data cleared from offline storage');
+      // Bersihkan juga dari localStorage untuk memastikan
+      localStorage.removeItem(this.USER_KEY);
+      console.log('✅ User data cleared from all storage');
     } catch (error) {
       console.error('❌ Failed to clear user data:', error);
     }
   }
 
-  // Check if user data exists in offline storage
-  async hasUserData(): Promise<boolean> {
+  async updateSyncStatus(status: 'SYNCED' | 'PENDING' | 'ERROR'): Promise<boolean> {
     try {
-      const userData = await this.userStore.getItem(this.USER_KEY);
-      return userData !== null;
+      const userData = await this.getUserData();
+      if (!userData) return false;
+
+      const updatedData = {
+        ...userData,
+        syncStatus: status,
+        ...(status === 'SYNCED' && { lastSynced: new Date().toISOString() })
+      };
+
+      await this.saveUserData(updatedData);
+      return true;
     } catch (error) {
-      console.error('❌ Failed to check user data:', error);
+      console.error('❌ Failed to update sync status:', error);
       return false;
     }
   }
 
-  // Update sync status
-  async updateSyncStatus(status: 'SYNCED' | 'PENDING' | 'ERROR'): Promise<void> {
-    try {
-      const userData = await this.getUserData();
-      if (userData) {
-        userData.syncStatus = status;
-        if (status === 'SYNCED') {
-          userData.lastSynced = new Date().toISOString();
-        }
-        await this.saveUserData(userData);
-      }
-    } catch (error) {
-      console.error('❌ Failed to update sync status:', error);
-    }
+  // Method tambahan yang berguna
+  async isDataStale(): Promise<boolean> {
+    const userData = await this.getUserData();
+    if (!userData) return true;
+
+    const lastSynced = new Date(userData.lastSynced);
+    return (Date.now() - lastSynced.getTime()) > this.CACHE_DURATION;
   }
 }
 
