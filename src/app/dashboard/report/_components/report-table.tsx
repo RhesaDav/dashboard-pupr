@@ -215,7 +215,7 @@ export default function ReportTable() {
         const duration =
           (row.original.masaPelaksanaan || 0) +
           (row.original.totalAddendumWaktu || 0);
-        const end = start ? addDays(start, duration -1) : null;
+        const end = start ? addDays(start, duration - 1) : null;
 
         return (
           <div className="text-xs">
@@ -330,9 +330,8 @@ export default function ReportTable() {
           if (
             !contract.physicalProgress ||
             contract.physicalProgress.length === 0
-          ) {
+          )
             return null;
-          }
 
           const processedProgressData = processProgressDataWithContinuity(
             contract.physicalProgress
@@ -346,7 +345,6 @@ export default function ReportTable() {
               const weekStart = week.startDate
                 ? new Date(week.startDate)
                 : null;
-
               if (!weekStart || !isValid(weekStart)) return false;
 
               if (week.realisasi > maxRealisasi.value) {
@@ -365,11 +363,6 @@ export default function ReportTable() {
               const start = week.startDate ? new Date(week.startDate) : null;
               const end = week.endDate ? new Date(week.endDate) : null;
 
-              const dataSourceNote =
-                "sourceWeek" in week
-                  ? `data diambil dari week ${week.sourceWeek}`
-                  : "";
-
               return {
                 bulan: week.month,
                 minggu: `Minggu ${week.week}`,
@@ -379,94 +372,100 @@ export default function ReportTable() {
                     : "Tanggal tidak valid",
                 rencana: `${week.rencana}%`,
                 realisasi: `${week.realisasi}%`,
-                // rencana: `${week.rencana}%${
-                //   week.rencana === maxRencana.value
-                //     ? ` (tertinggi, Minggu ${week.week})`
-                //     : ""
-                // }`,
-                // realisasi: `${week.realisasi}%${
-                //   week.realisasi === maxRealisasi.value
-                //     ? ` (tertinggi, Minggu ${week.week})`
-                //     : ""
-                // }`,
                 deviasi: `${week.deviasi}%`,
                 weekNumber: week.week,
-                dataSourceNote,
+                dataSourceNote:
+                  "sourceWeek" in week
+                    ? `data diambil dari week ${week.sourceWeek}`
+                    : "",
                 bermasalah: week.bermasalah,
                 deskripsiMasalah: week.deskripsiMasalah || "",
               };
             });
+
+          if (filteredWeeks.length === 0) return null;
 
           const contractStartDate = contract.tanggalKontrak
             ? new Date(contract.tanggalKontrak)
             : null;
           const akhirKontrakAsli =
             contractStartDate && contract.masaPelaksanaan
-              ? addDays(contractStartDate, (contract.masaPelaksanaan - 1 || 0))
+              ? addDays(contractStartDate, contract.masaPelaksanaan - 1 || 0)
               : null;
 
-          const realisasiKeuangan =
-            contract.financialProgress?.totalPayment || 0;
-
-          const koordinatAwal = contract.location?.koordinatAwal || "";
-          const koordinatAkhir = contract.location?.koordinatAkhir || "";
-
-          function calculateFinalContractEndDate(contract: any): string {
+          const calculateFinalContractEndDate = (
+            contract: ContractWithProgress
+          ) => {
             if (!contract.tanggalKontrak) return "-";
-
             const endDate = new Date(contract.tanggalKontrak);
-
             endDate.setDate(
-              endDate.getDate() + (contract.masaPelaksanaan -1 || 0)
+              endDate.getDate() + ((contract.masaPelaksanaan || 0) - 1 || 0)
             );
 
             if (contract.addendum && contract.addendum.length > 0) {
               const totalAddendumDays = contract.addendum.reduce(
-                (sum: number, add: any) => {
-                  return sum + (add.hari ? parseInt(add.hari) : 0);
-                },
+                (sum, add) => sum + (add.hari ? add.hari : 0),
                 0
               );
               endDate.setDate(endDate.getDate() + totalAddendumDays);
             }
 
             return format(endDate, "dd/MM/yyyy");
-          }
+          };
 
-          return filteredWeeks.length > 0
-            ? {
-                id: contract.id,
-                namaPaket: contract.namaPaket,
-                namaPenyedia: contract.namaPenyedia,
-                ppk: contract.ppk,
-                korwaslap: contract.korwaslap,
-                pengawasLapangan: contract.pengawasLapangan,
-                nilaiKontrak: contract.nilaiKontrak,
-                totalFinancialProgress:
-                  contract.financialProgress?.totalProgress,
-                nilaiKontrakFisik: contract.nilaiKontrak,
-                tanggalKontrak: contract.tanggalKontrak,
-                masaPelaksanaan: contract.masaPelaksanaan,
-                konsultanSupervisi: contract.konsultanSupervisi || "-",
-                nilaiKontrakSupervisi: contract.nilaiKontrakSupervisi || 0,
-                volumeKontrak: contract.volumeKontrak || "-",
-                satuanKontrak: contract.satuanKontrak || "-",
-                hasilProdukAkhir: contract.hasilProdukAkhir || "-",
-                koordinatAwal,
-                koordinatAkhir,
-                realisasiKeuangan,
-                akhirKontrakAsli: akhirKontrakAsli
-                  ? format(akhirKontrakAsli, "dd/MM/yyyy")
-                  : "-",
-                akhirKontrakAdd: calculateFinalContractEndDate(contract),
-                // permasalahan: contract.permasalahan || "-",
-                progressData: filteredWeeks,
-                maxRealisasiWeek: maxRealisasi.week,
-                maxRencanaWeek: maxRencana.week,
-                status: contract.status,
-                progressPercentage: contract.progressPercentage,
-              }
-            : null;
+          const lastAddendum =
+            contract.addendum?.[contract.addendum.length - 1] || null;
+
+          return {
+            id: contract.id,
+            namaPaket: contract.namaPaket,
+            namaPenyedia: contract.namaPenyedia,
+            nomorKontrak: contract.nomorKontrak,
+            tanggalKontrak: contract.tanggalKontrak,
+            masaPelaksanaan: contract.masaPelaksanaan,
+            nilaiKontrak: contract.nilaiKontrak,
+            nilaiKontrakFisik: contract.nilaiKontrak,
+            nilaiKontrakSupervisi: contract.nilaiKontrakSupervisi || 0,
+            nomorKontrakFisik: contract.nomorKontrak || "-",
+            tanggalKontrakFisik: contract.tanggalKontrak || "-",
+            masaPelaksanaanFisik: contract.masaPelaksanaan || "-",
+            nomorKontrakSupervisi: contract.nomorKontrakSupervisi || "-",
+            tanggalKontrakSupervisi: contract.tanggalKontrakSupervisi || "-",
+            masaPelaksanaanSupervisi: contract.masaPelaksanaanSupervisi || "-",
+            subKegiatan: contract.subKegiatan || "-",
+            volumeKontrak: contract.volumeKontrak || "-",
+            satuanKontrak: contract.satuanKontrak || "-",
+            dimensi: contract.dimensi || "-",
+            paguAnggaran: contract.paguAnggaran || "-",
+            sumberDana: contract.sumberDana || "-",
+            hasilProdukAkhir: contract.hasilProdukAkhir || "-",
+            ppk: contract.ppk,
+            nipPPK: contract.nipPPK || "-",
+            korwaslap: contract.korwaslap || "-",
+            nipKorwaslap: contract.nipKorwaslap || "-",
+            pengawasLapangan: contract.pengawasLapangan || "-",
+            nipPengawasLapangan: contract.nipPengawasLapangan || "-",
+            koordinatAwal: contract.location?.koordinatAwal || "-",
+            koordinatAkhir: contract.location?.koordinatAkhir || "-",
+            kota: contract.location?.kota || "-",
+            kecamatan: contract.location?.distrik || "-",
+            kampung: contract.location?.kampung || "-",
+            akhirKontrakAsli: akhirKontrakAsli
+              ? format(akhirKontrakAsli, "dd/MM/yyyy")
+              : "-",
+            akhirKontrakAdd: calculateFinalContractEndDate(contract),
+            tanggalAddendumTerakhir: lastAddendum?.tanggal
+              ? format(new Date(lastAddendum.tanggal), "dd/MM/yyyy")
+              : "-",
+            realisasiKeuangan: contract.financialProgress?.totalPayment || 0,
+            totalFinancialProgress:
+              contract.financialProgress?.totalProgress || 0,
+            progressPercentage: contract.progressPercentage,
+            status: contract.status,
+            maxRealisasiWeek: maxRealisasi.week,
+            maxRencanaWeek: maxRencana.week,
+            progressData: filteredWeeks,
+          };
         })
         .filter(Boolean);
 
@@ -477,20 +476,17 @@ export default function ReportTable() {
         return;
       }
 
-      const fileNameBase = `Progress_Mingguan_${format(
-        selectedWeekRange.start,
-        "yyyy-MM-dd"
-      )}`;
-
-      const title = `Laporan Progress Mingguan (${format(
-        selectedWeekRange.start,
-        "dd MMM"
-      )} - ${format(selectedWeekRange.end, "dd MMM yyyy")})`;
+      const fileNameBase = `Progress_Mingguan_${format(selectedWeekRange.start, "yyyy-MM-dd")}`;
+      const title = `Laporan Progress Mingguan (${format(selectedWeekRange.start, "dd MMM")} - ${format(
+        selectedWeekRange.end,
+        "dd MMM yyyy"
+      )})`;
 
       const pdfData = {
         title,
+        weekRange: selectedWeekRange,
         contracts: contractsWithFilteredProgress.map((contract) => {
-          const allProblems = contract!.progressData
+          const allProblems = contract?.progressData
             .filter((progress) => progress.bermasalah)
             .map((progress) => ({
               week: progress.weekNumber,
@@ -498,58 +494,29 @@ export default function ReportTable() {
                 progress.deskripsiMasalah || "Tidak ada deskripsi masalah",
             }));
 
-          // Format the problems for display
-          const formattedProblems =
-            allProblems.length > 0
-              ? allProblems
-                  .map((p) => `Minggu ${p.week}: ${p.description}`)
-                  .join("; ")
-              : "";
+          const formattedProblems = allProblems?.length
+            ? allProblems
+                .map((p) => `Minggu ${p.week}: ${p.description}`)
+                .join("; ")
+            : "";
+
           return {
-            namaPaket: contract!.namaPaket,
-            namaPenyedia: contract!.namaPenyedia,
-            ppk: contract!.ppk,
-            korwaslap: contract!.korwaslap,
-            pengawasLapangan: contract!.pengawasLapangan,
-            nilaiKontrak: contract!.nilaiKontrak,
-            totalFinancialProgress: contract!.totalFinancialProgress,
-            nilaiKontrakFisik: contract!.nilaiKontrakFisik,
-            tanggalKontrak: contract!.tanggalKontrak,
-            masaPelaksanaan: contract!.masaPelaksanaan,
-            konsultanSupervisi: contract!.konsultanSupervisi,
-            nilaiKontrakSupervisi: contract!.nilaiKontrakSupervisi,
-            volumeKontrak: contract!.volumeKontrak,
-            satuanKontrak: contract!.satuanKontrak,
-            hasilProdukAkhir: contract!.hasilProdukAkhir,
-            koordinatAwal: contract!.koordinatAwal,
-            koordinatAkhir: contract!.koordinatAkhir,
-            realisasiKeuangan: formatRupiah(contract!.realisasiKeuangan),
-            akhirKontrakAsli: contract!.akhirKontrakAsli,
-            akhirKontrakAdd: contract!.akhirKontrakAdd,
+            ...contract,
             permasalahan: formattedProblems,
-            status: contract!.status,
-            progressPercentage: contract!.progressPercentage,
-            progressData: contract!.progressData.map((progress) => ({
-              bulan: progress.bulan,
-              minggu: progress.minggu,
-              periode: progress.periode,
+            realisasiKeuangan: formatRupiah(contract?.realisasiKeuangan || 0),
+            progressData: contract?.progressData.map((progress) => ({
+              ...progress,
               rencana: parseFloat(progress.rencana).toFixed(2) + " %",
               realisasi: parseFloat(progress.realisasi).toFixed(2) + " %",
               deviasi: parseFloat(progress.deviasi).toFixed(2) + " %",
-              bermasalah: progress.bermasalah,
-              deskripsiMasalah: progress.deskripsiMasalah,
               keterangan: [
-                progress.weekNumber === contract!.maxRealisasiWeek
-                  ? `Nilai realisasi tertinggi (Minggu ${
-                      contract!.maxRealisasiWeek
-                    })`
+                progress.weekNumber === contract.maxRealisasiWeek
+                  ? `Nilai realisasi tertinggi (Minggu ${contract.maxRealisasiWeek})`
                   : null,
-                progress.weekNumber === contract!.maxRencanaWeek
-                  ? `Nilai rencana tertinggi (Minggu ${
-                      contract!.maxRencanaWeek
-                    })`
+                progress.weekNumber === contract.maxRencanaWeek
+                  ? `Nilai rencana tertinggi (Minggu ${contract.maxRencanaWeek})`
                   : null,
-                progress.dataSourceNote ? progress.dataSourceNote : null,
+                progress.dataSourceNote || null,
                 progress.bermasalah
                   ? `Bermasalah: ${progress.deskripsiMasalah}`
                   : null,
@@ -558,42 +525,61 @@ export default function ReportTable() {
                 .join(", "),
             })),
             totalProgress:
-              contract!.progressData.reduce((sum, p) => {
-                return (
-                  sum + parseFloat(p.realisasi.replace("%", "").split(" ")[0])
-                );
-              }, 0) / contract!.progressData.length,
-            keterangan: [
-              contract?.progressData.some(
-                (item) =>
-                  item.weekNumber > contract.maxRealisasiWeek &&
-                  contract.maxRealisasiWeek !== 0
-              )
-                ? `Data diambil dari minggu ke-${contract!.maxRealisasiWeek}`
-                : "",
-              // `Nilai realisasi tertinggi: Minggu ${contract!.maxRealisasiWeek}`,
-              // `Nilai rencana tertinggi: Minggu ${contract!.maxRencanaWeek}`,
-              // `Status: ${contract!.status}`,
-              // `Progress Keseluruhan: ${contract!.progressPercentage.toFixed(2)}%`,
-            ].join("; "),
+              contract?.progressData && contract.progressData.length > 0
+                ? contract.progressData.reduce((sum, p) => {
+                    const realisasiNum = parseFloat(
+                      p.realisasi.replace("%", "").split(" ")[0]
+                    );
+                    return sum + (isNaN(realisasiNum) ? 0 : realisasiNum);
+                  }, 0) / contract.progressData.length
+                : 0,
+
+            keterangan: contract?.progressData.some(
+              (item) =>
+                item.weekNumber > contract.maxRealisasiWeek &&
+                contract.maxRealisasiWeek !== 0
+            )
+              ? `Data diambil dari minggu ke-${contract?.maxRealisasiWeek}`
+              : "",
           };
         }),
-        weekRange: selectedWeekRange,
         columns: [
           { id: "namaPaket", label: "Nama Paket" },
           { id: "namaPenyedia", label: "Nama Penyedia" },
-          { id: "konsultanSupervisi", label: "Konsultan Supervisi" },
+          { id: "nomorKontrakFisik", label: "No Kontrak Fisik" },
+          { id: "tanggalKontrakFisik", label: "Tgl Kontrak Fisik" },
+          { id: "masaPelaksanaanFisik", label: "Masa Pelaksanaan Fisik" },
+          { id: "nomorKontrakSupervisi", label: "No Kontrak Supervisi" },
+          { id: "tanggalKontrakSupervisi", label: "Tgl Kontrak Supervisi" },
+          {
+            id: "masaPelaksanaanSupervisi",
+            label: "Masa Pelaksanaan Supervisi",
+          },
+          { id: "subKegiatan", label: "Sub Kegiatan" },
           { id: "volumeKontrak", label: "Volume Kontrak" },
-          { id: "koordinatAwal", label: "Koordinat Awal" },
-          { id: "koordinatAkhir", label: "Koordinat Akhir" },
+          { id: "satuanKontrak", label: "Satuan" },
           { id: "nilaiKontrakFisik", label: "Nilai Kontrak Fisik" },
           { id: "nilaiKontrakSupervisi", label: "Nilai Kontrak Supervisi" },
           { id: "hasilProdukAkhir", label: "Produk Akhir" },
           { id: "realisasiKeuangan", label: "Realisasi Keuangan" },
+          { id: "paguAnggaran", label: "Pagu Anggaran" },
+          { id: "sumberDana", label: "Sumber Dana" },
+          { id: "dimensi", label: "Dimensi" },
+          { id: "kota", label: "Kota/Kab" },
+          { id: "kecamatan", label: "Kecamatan" },
+          { id: "kampung", label: "Kampung" },
           { id: "akhirKontrakAsli", label: "Akhir Kontrak Asli" },
           { id: "akhirKontrakAdd", label: "Akhir Kontrak Add" },
+          { id: "tanggalAddendumTerakhir", label: "Tgl Addendum Terakhir" },
           { id: "permasalahan", label: "Permasalahan" },
           { id: "ppk", label: "PPK" },
+          { id: "nipPPK", label: "NIP PPK" },
+          { id: "korwaslap", label: "Korwaslap" },
+          { id: "nipKorwaslap", label: "NIP Korwaslap" },
+          { id: "pengawasLapangan", label: "Pengawas Lapangan" },
+          { id: "nipPengawasLapangan", label: "NIP Pengawas Lapangan" },
+          { id: "koordinatAwal", label: "Koordinat Awal" },
+          { id: "koordinatAkhir", label: "Koordinat Akhir" },
           { id: "rencana", label: "Rencana" },
           { id: "realisasi", label: "Realisasi" },
           { id: "deviasi", label: "Deviasi" },
@@ -602,7 +588,6 @@ export default function ReportTable() {
         defaultVisible: [
           "namaPaket",
           "namaPenyedia",
-          "konsultanSupervisi",
           "volumeKontrak",
           "nilaiKontrakFisik",
           "realisasiKeuangan",

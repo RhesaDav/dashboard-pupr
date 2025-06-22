@@ -2,7 +2,7 @@
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { DeleteUserDialog } from "./delete-user-dialog";
 import { User } from "@prisma/client";
 import EditUserDialog from "./edit-user-dialog";
@@ -16,22 +16,47 @@ import { getAllUsers } from "@/actions/user";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
 function UserManagementTable() {
-  const currentUser = useCurrentUser()
+  const currentUser = useCurrentUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const searchQuery = searchParams.get("search") || "";
-  const pageParam = parseInt(searchParams.get("page") || "1");
-  const pageSizeParam = parseInt(searchParams.get("pageSize") || "10");
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["users", pageParam, pageSizeParam, searchQuery],
+  const queryParams = useMemo(() => {
+    const search = searchParams.get("search") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "10");
+
+    return {
+      search: search.trim(),
+      page: page > 0 ? page : 1,
+      pageSize: pageSize > 0 ? pageSize : 10,
+    };
+  }, [searchParams]);
+
+  const { data, isLoading, refetch, error } = useQuery({
+    queryKey: [
+      "users",
+      queryParams.page,
+      queryParams.pageSize,
+      queryParams.search,
+    ],
     queryFn: () =>
       getAllUsers({
-        page: pageParam,
-        limit: pageSizeParam,
-        search: searchQuery || "",
+        page: queryParams.page,
+        limit: queryParams.pageSize,
+        search: queryParams.search,
       }),
+
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: (failureCount, error) => {
+      if (error && typeof error === "object" && "status" in error) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+
+    refetchOnWindowFocus: false,
   });
 
   const columns: ColumnDef<User>[] = [
@@ -119,14 +144,28 @@ function UserManagementTable() {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const params = new URLSearchParams(searchParams);
-    params.set("search", e.target.value);
+    const value = e.target.value.trim();
+
+    if (value) {
+      params.set("search", value);
+    } else {
+      params.delete("search");
+    }
+
+    params.set("page", "1");
     router.push(`?${params.toString()}`);
   };
 
   const handleResetFilter = () => {
     const params = new URLSearchParams();
-    router.push(pathname);
+    params.set("page", "1");
+    params.set("pageSize", queryParams.pageSize.toString());
+    router.push(`?${params.toString()}`);
   };
+
+  console.log("Query params:", queryParams);
+  console.log("Is loading:", isLoading);
+  console.log("Error:", error);
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-screen-2xl mx-auto">
@@ -147,6 +186,7 @@ function UserManagementTable() {
               placeholder="Search users..."
               className="pl-9 w-full"
               aria-label="Search users"
+              defaultValue={queryParams.search}
             />
           </div>
           <CreateUserDialog />
@@ -160,7 +200,7 @@ function UserManagementTable() {
         totalItems={data?.pagination?.total || 0}
         noDataMessage="No users available"
         noFilteredDataMessage="No users match your search criteria"
-        filterActive={searchParams.get("search") !== ""}
+        filterActive={!!queryParams.search}
         onResetFilter={handleResetFilter}
         tableName="user"
         aria-label="User management table"
