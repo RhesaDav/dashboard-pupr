@@ -65,8 +65,8 @@ function DataContractTable() {
     refetch,
   } = useQuery({
     queryKey: ["contracts", pageParam, pageSizeParam, searchQuery],
-    queryFn: () =>
-      getAllContracts({
+    queryFn: async () =>
+      await getAllContracts({
         page: pageParam,
         limit: pageSizeParam,
         search: searchQuery,

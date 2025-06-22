@@ -40,8 +40,8 @@ function UserManagementTable() {
       queryParams.pageSize,
       queryParams.search,
     ],
-    queryFn: () =>
-      getAllUsers({
+    queryFn: async () =>
+      await getAllUsers({
         page: queryParams.page,
         limit: queryParams.pageSize,
         search: queryParams.search,
