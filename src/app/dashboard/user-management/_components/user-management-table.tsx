@@ -57,6 +57,7 @@ function UserManagementTable() {
     },
 
     refetchOnWindowFocus: false,
+    refetchOnMount: true
   });
 
   const columns: ColumnDef<User>[] = [
