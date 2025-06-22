@@ -376,7 +376,7 @@ const HtmlToPdfPage: React.FC = () => {
         <div className="mt-8 border-t border-black pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div className="text-center">
-              <div className="font-bold mb-12">KEPALA BIDANG / PPK</div>
+              <div className="font-bold mb-12">PEJABAT PEMBUAT KOMITMEN</div>
               <div className="font-bold underline">{data.penandatangan.ppk.nama}</div>
               <div>NIP. {data.penandatangan.ppk.nip}</div>
             </div>

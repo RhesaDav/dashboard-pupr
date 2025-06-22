@@ -1,4 +1,5 @@
 "use server";
+import { updatePaket } from "@/lib/pgClient";
 import { prisma } from "@/lib/prisma";
 import {
   endOfDay,
@@ -116,7 +117,7 @@ export async function getContractWithProgress(contractId: string) {
         masaPelaksanaan: true,
         volumeKontrak: true,
         satuanKontrak: true,
-        totalAddendumWaktu: true
+        totalAddendumWaktu: true,
       },
     });
 
@@ -320,6 +321,15 @@ export async function updateContractProgress(
         });
         updatedEntries.push(updatedEntry);
       }
+
+      const maxRealisasiEntry = updatedEntries.reduce((maxEntry, current) => {
+        return current.realisasi > maxEntry.realisasi ? current : maxEntry;
+      }, updatedEntries[0]);
+
+      await updatePaket({
+        id: contractId,
+        progresFisik: String(maxRealisasiEntry.realisasi),
+      });
       return updatedEntries;
     });
     return result;

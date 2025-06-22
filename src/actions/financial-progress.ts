@@ -1,4 +1,5 @@
 "use server"
+import { updatePaket } from "@/lib/pgClient";
 import { prisma } from "@/lib/prisma";
 import {
   FinancialProgressCreate,
@@ -47,6 +48,19 @@ export const upsertFinancialProgress = async (
         data: validatedData,
       });
     }
+
+    const totalProgress =
+      (validatedData.termin1 || 0) +
+      (validatedData.termin2 || 0) +
+      (validatedData.termin3 || 0) +
+      (validatedData.termin4 || 0) +
+      (validatedData.uangMuka || 0);
+
+
+    await updatePaket({
+      id: existingContract.id,
+      progresKeuangan: String(validatedData.totalPayment)
+    })
 
     revalidatePath(`/contracts/${validatedData.contractId}`);
 

@@ -203,24 +203,24 @@ function DataContractTable() {
 
             {/* Delete Button (conditional) */}
             {user?.role === "SUPERADMIN" && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DeleteContractDialog
-                      onDelete={async () => {
-                        const res = await deleteContract(contract.id as string);
-                        if (res.success) {
-                          toast.success(
-                            `Contract ${contract.namaPaket} berhasil dihapus`
-                          );
-                          refetch();
-                        } else {
-                          toast.error(`Gagal menghapus contract`);
-                        }
-                      }}
-                      contractId={String(contract.id)}
-                      contractName={contract.namaPaket || "-"}
-                      trigger={
+              <DeleteContractDialog
+                onDelete={async () => {
+                  const res = await deleteContract(contract.id as string);
+                  if (res.success) {
+                    toast.success(
+                      `Contract ${contract.namaPaket} berhasil dihapus`
+                    );
+                    refetch();
+                  } else {
+                    toast.error(`Gagal menghapus contract`);
+                  }
+                }}
+                contractId={String(contract.id)}
+                contractName={contract.namaPaket || "-"}
+                trigger={
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -229,14 +229,14 @@ function DataContractTable() {
                           <Trash className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
                         </Button>
-                      }
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Delete contract</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete contract</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                }
+              />
             )}
           </div>
         );

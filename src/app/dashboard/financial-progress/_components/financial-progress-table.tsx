@@ -62,7 +62,9 @@ function FinancialProgressTable() {
       ),
       cell: ({ row }) => (
         <div className="max-w-[200px] truncate font-medium">
+          <span title={row.original.namaPaket}>
           {row.original.namaPaket || "-"}
+          </span>
         </div>
       ),
     },
@@ -99,7 +101,7 @@ function FinancialProgressTable() {
         return (
           <div className="text-sm">
             {dateValue
-              ? format(new Date(dateValue as string), "dd/MM/yyyy")
+              ? format(new Date(dateValue as string), "dd MMM yyyy")
               : "-"}
           </div>
         );

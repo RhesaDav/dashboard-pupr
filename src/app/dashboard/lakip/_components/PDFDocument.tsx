@@ -450,7 +450,7 @@ const PdfDocument: React.FC<{ data: PdfData }> = ({ data }) => (
       {/* Bagian Tanda Tangan */}
       <View style={styles.signatureSection}>
         <View style={styles.signatureColumn}>
-          <Text style={styles.signatureTitle}>KEPALA BIDANG / PPK</Text>
+          <Text style={styles.signatureTitle}>PEJABAT PEMBUAT KOMITMEN</Text>
           <Text style={styles.signatureName}>{data.penandatangan.ppk.nama}</Text>
           <Text style={styles.signatureNip}>NIP. {data.penandatangan.ppk.nip}</Text>
         </View>

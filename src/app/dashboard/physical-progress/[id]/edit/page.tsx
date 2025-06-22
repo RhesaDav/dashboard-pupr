@@ -25,10 +25,10 @@ async function ContractProgressPage({
     id: id,
     namaPaket: contractData.contractDetails.namaPaket || "",
     nilaiKontrak: contractData.contractDetails.nilaiKontrak || 0,
-    tanggalKontrak: format(
-      contractData.contractDetails.tanggalKontrak || new Date(),
+    tanggalKontrak: contractData.contractDetails.tanggalKontrak ? format(
+      contractData.contractDetails.tanggalKontrak,
       "dd-MM-yyyy"
-    ),
+    ) : "-",
     masaPelaksanaan: contractData.contractDetails.masaPelaksanaan || 0,
     totalAddendumWaktu: contractData.contractDetails.totalAddendumWaktu || 0,
     volumeKontrak: contractData.contractDetails.volumeKontrak || "",

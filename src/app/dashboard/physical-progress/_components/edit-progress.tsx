@@ -12,7 +12,10 @@ import { formatRupiah } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { updateContractProgress } from "@/actions/progress";
+import {
+  getContractWithProgress,
+  updateContractProgress,
+} from "@/actions/progress";
 import { useForm, useFieldArray, Path } from "react-hook-form";
 import { AlertCircle, Calendar, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -33,6 +36,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 
 // Schema for form validation
 const progressSchema = z.object({
@@ -93,8 +98,18 @@ interface EditProgressProps {
 // Helper to sort months chronologically
 const sortMonthsChronologically = (months: MonthProgress[]) => {
   const monthOrder = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
   ];
 
   return [...months].sort((a, b) => {
@@ -111,7 +126,7 @@ const sortMonthsChronologically = (months: MonthProgress[]) => {
   });
 };
 
-export default function EditProgressPage({ contract }: EditProgressProps) {
+export default function EditProgressPage({}: EditProgressProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedMonths, setExpandedMonths] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<{
@@ -120,6 +135,45 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
   const params = useParams();
   const router = useRouter();
   const contractId = String(params.id);
+
+  const { data } = useQuery({
+    queryKey: ["getContractWithProgress", contractId],
+    queryFn: () => getContractWithProgress(contractId),
+  });
+
+  const startDate = new Date(
+    data?.contractDetails.tanggalKontrak || new Date()
+  );
+  const endDate = new Date(startDate);
+  endDate.setDate(
+    startDate.getDate() +
+      (((data?.contractDetails.masaPelaksanaan || 0) - 1 || 0) +
+        (data?.contractDetails.totalAddendumWaktu || 0))
+  );
+  const contract = {
+    id: contractId,
+    namaPaket: data?.contractDetails.namaPaket || "",
+    nilaiKontrak: data?.contractDetails.nilaiKontrak || 0,
+    tanggalKontrak: data?.contractDetails.tanggalKontrak
+      ? format(data?.contractDetails.tanggalKontrak, "dd-MM-yyyy")
+      : "-",
+    masaPelaksanaan: data?.contractDetails.masaPelaksanaan || 0,
+    totalAddendumWaktu: data?.contractDetails.totalAddendumWaktu || 0,
+    volumeKontrak: data?.contractDetails.volumeKontrak || "",
+    satuanKontrak: data?.contractDetails.satuanKontrak || "",
+    startDate: format(startDate, "dd-MM-yyyy"),
+    endDate: format(endDate, "dd-MM-yyyy"),
+    progress: data?.progressData.map((month) => ({
+      month: month.month,
+      items: month.items.map((item) => ({
+        ...item,
+        startDate: item.startDate ?? undefined,
+        endDate: item.endDate ?? undefined,
+      })),
+    })),
+  };
+
+  console.log(data?.contractDetails);
 
   // Sort months chronologically
   const initialProgressData = useMemo(() => {
@@ -195,7 +249,8 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
   ) => {
     const allEntries = getAllProgressEntriesSorted(formValues);
     const currentEntryIndex = allEntries.findIndex(
-      (entry) => entry.monthIndex === monthIndex && entry.weekIndex === weekIndex
+      (entry) =>
+        entry.monthIndex === monthIndex && entry.weekIndex === weekIndex
     );
 
     if (currentEntryIndex <= 0) {
@@ -210,7 +265,8 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     // Find highest previous value
     let highestPreviousValue = 0;
     for (let i = 0; i < currentEntryIndex; i++) {
-      const prevValue = field === "rencana" ? allEntries[i].rencana : allEntries[i].realisasi;
+      const prevValue =
+        field === "rencana" ? allEntries[i].rencana : allEntries[i].realisasi;
       if (prevValue > highestPreviousValue) {
         highestPreviousValue = prevValue;
       }
@@ -219,8 +275,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
     if (value < highestPreviousValue && value !== 0) {
       setValidationErrors((prev) => ({
         ...prev,
-        [`months.${monthIndex}.items.${weekIndex}.${field}`]: 
-          `Nilai ${field} pada ${weekIndex} (${value}%) tidak boleh lebih rendah dari nilai tertinggi sebelumnya (${highestPreviousValue}%)`,
+        [`months.${monthIndex}.items.${weekIndex}.${field}`]: `Nilai ${field} pada ${weekIndex} (${value}%) tidak boleh lebih rendah dari nilai tertinggi sebelumnya (${highestPreviousValue}%)`,
       }));
       return highestPreviousValue;
     }
@@ -295,13 +350,13 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
   const formatNumericInput = (value: string) => {
     if (value === "" || value === ".") return "0";
     if (value.endsWith(".")) value = value.slice(0, -1);
-    
+
     const numValue = Math.min(100, Math.max(0, parseFloat(value) || 0));
-    
+
     if (numValue % 1 === 0) {
       return numValue.toString();
     }
-    
+
     return numValue.toFixed(2).replace(/\.?0+$/, "");
   };
 
@@ -315,7 +370,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
 
     const sanitizedValue = rawValue.replace(/[^0-9.]/g, "");
     const numericValue = parseFloat(sanitizedValue);
-    
+
     if (!isNaN(numericValue) && numericValue > 100) {
       e.target.value = "100";
       return;
@@ -344,23 +399,24 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
   ) => {
     const formattedValue = formatNumericInput(e.target.value);
     const numValue = parseFloat(formattedValue);
-    
+
     e.target.value = formattedValue;
     setValue(`months.${monthIndex}.items.${weekIndex}.${field}`, numValue);
-    
+
     // Validate against previous values
     validateProgressValue(monthIndex, weekIndex, field, numValue);
-    
+
     // Calculate and update deviation
     const oppositeField = field === "rencana" ? "realisasi" : "rencana";
-    const oppositeValue = Number(
-      formValues.months[monthIndex].items[weekIndex][oppositeField]
-    ) || 0;
-    
-    const deviasi = field === "rencana" 
-      ? calculateDeviasi(numValue, oppositeValue)
-      : calculateDeviasi(oppositeValue, numValue);
-    
+    const oppositeValue =
+      Number(formValues.months[monthIndex].items[weekIndex][oppositeField]) ||
+      0;
+
+    const deviasi =
+      field === "rencana"
+        ? calculateDeviasi(numValue, oppositeValue)
+        : calculateDeviasi(oppositeValue, numValue);
+
     setValue(`months.${monthIndex}.items.${weekIndex}.deviasi`, deviasi);
   };
 
@@ -500,8 +556,10 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                               const rencanaErrorKey = `months.${monthIndex}.items.${weekIndex}.rencana`;
                               const realisasiErrorKey = `months.${monthIndex}.items.${weekIndex}.realisasi`;
 
-                              const hasRencanaError = !!validationErrors[rencanaErrorKey];
-                              const hasRealisasiError = !!validationErrors[realisasiErrorKey];
+                              const hasRencanaError =
+                                !!validationErrors[rencanaErrorKey];
+                              const hasRealisasiError =
+                                !!validationErrors[realisasiErrorKey];
 
                               return (
                                 <div
@@ -522,7 +580,7 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                       )}
                                     </div>
                                   </div>
-                                  
+
                                   {/* Progress inputs */}
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {/* Rencana input */}
@@ -534,20 +592,26 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                         <Input
                                           type="text"
                                           inputMode="decimal"
-                                          className={hasRencanaError ? "border-red-500 pr-8" : ""}
+                                          className={
+                                            hasRencanaError
+                                              ? "border-red-500 pr-8"
+                                              : ""
+                                          }
                                           {...register(
                                             `months.${monthIndex}.items.${weekIndex}.rencana`,
                                             {
-                                              onChange: (e) => handleNumericInputChange(
-                                                e, 
-                                                `months.${monthIndex}.items.${weekIndex}.rencana`
-                                              ),
-                                              onBlur: (e) => handleNumericInputBlur(
-                                                e, 
-                                                monthIndex, 
-                                                weekIndex, 
-                                                "rencana"
-                                              ),
+                                              onChange: (e) =>
+                                                handleNumericInputChange(
+                                                  e,
+                                                  `months.${monthIndex}.items.${weekIndex}.rencana`
+                                                ),
+                                              onBlur: (e) =>
+                                                handleNumericInputBlur(
+                                                  e,
+                                                  monthIndex,
+                                                  weekIndex,
+                                                  "rencana"
+                                                ),
                                             }
                                           )}
                                         />
@@ -561,20 +625,30 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                               </TooltipTrigger>
                                               <TooltipContent side="right">
                                                 <p className="text-xs max-w-xs">
-                                                  {validationErrors[rencanaErrorKey]}
+                                                  {
+                                                    validationErrors[
+                                                      rencanaErrorKey
+                                                    ]
+                                                  }
                                                 </p>
                                               </TooltipContent>
                                             </Tooltip>
                                           </TooltipProvider>
                                         )}
                                       </div>
-                                      {errors.months?.[monthIndex]?.items?.[weekIndex]?.rencana && (
+                                      {errors.months?.[monthIndex]?.items?.[
+                                        weekIndex
+                                      ]?.rencana && (
                                         <p className="text-red-500 text-xs mt-1">
-                                          {errors.months[monthIndex]?.items[weekIndex]?.rencana?.message}
+                                          {
+                                            errors.months[monthIndex]?.items[
+                                              weekIndex
+                                            ]?.rencana?.message
+                                          }
                                         </p>
                                       )}
                                     </div>
-                                    
+
                                     {/* Realisasi input */}
                                     <div>
                                       <label className="block text-sm font-medium mb-1">
@@ -584,20 +658,26 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                         <Input
                                           type="text"
                                           inputMode="decimal"
-                                          className={hasRealisasiError ? "border-red-500 pr-8" : ""}
+                                          className={
+                                            hasRealisasiError
+                                              ? "border-red-500 pr-8"
+                                              : ""
+                                          }
                                           {...register(
                                             `months.${monthIndex}.items.${weekIndex}.realisasi`,
                                             {
-                                              onChange: (e) => handleNumericInputChange(
-                                                e, 
-                                                `months.${monthIndex}.items.${weekIndex}.realisasi`
-                                              ),
-                                              onBlur: (e) => handleNumericInputBlur(
-                                                e, 
-                                                monthIndex, 
-                                                weekIndex, 
-                                                "realisasi"
-                                              ),
+                                              onChange: (e) =>
+                                                handleNumericInputChange(
+                                                  e,
+                                                  `months.${monthIndex}.items.${weekIndex}.realisasi`
+                                                ),
+                                              onBlur: (e) =>
+                                                handleNumericInputBlur(
+                                                  e,
+                                                  monthIndex,
+                                                  weekIndex,
+                                                  "realisasi"
+                                                ),
                                             }
                                           )}
                                         />
@@ -611,20 +691,30 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                               </TooltipTrigger>
                                               <TooltipContent side="right">
                                                 <p className="text-xs max-w-xs">
-                                                  {validationErrors[realisasiErrorKey]}
+                                                  {
+                                                    validationErrors[
+                                                      realisasiErrorKey
+                                                    ]
+                                                  }
                                                 </p>
                                               </TooltipContent>
                                             </Tooltip>
                                           </TooltipProvider>
                                         )}
                                       </div>
-                                      {errors.months?.[monthIndex]?.items?.[weekIndex]?.realisasi && (
+                                      {errors.months?.[monthIndex]?.items?.[
+                                        weekIndex
+                                      ]?.realisasi && (
                                         <p className="text-red-500 text-xs mt-1">
-                                          {errors.months[monthIndex]?.items[weekIndex]?.realisasi?.message}
+                                          {
+                                            errors.months[monthIndex]?.items[
+                                              weekIndex
+                                            ]?.realisasi?.message
+                                          }
                                         </p>
                                       )}
                                     </div>
-                                    
+
                                     {/* Deviasi display */}
                                     <div>
                                       <label className="block text-sm font-medium mb-1">
@@ -633,7 +723,9 @@ export default function EditProgressPage({ contract }: EditProgressProps) {
                                       <Input
                                         type="number"
                                         step="0.01"
-                                        value={(Number(week.deviasi) || 0).toFixed(1)}
+                                        value={(
+                                          Number(week.deviasi) || 0
+                                        ).toFixed(1)}
                                         readOnly
                                         className="bg-muted"
                                         style={{

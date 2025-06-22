@@ -808,6 +808,8 @@ export async function updateContract(id: string, updateData: any) {
     revalidatePath(`/contracts/${id}`);
     revalidatePath(`/contracts/${id}/progress`);
 
+    console.log(result.id)
+
     await updatePaket({
       id: result.id,
       tipePaket: "Fisik",
