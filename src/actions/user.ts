@@ -84,7 +84,7 @@ export const getAllUsers = async (filterParams: any = {}) => {
 
     if (currentUser.role !== "SUPERADMIN") {
       roleCondition = {
-        role: { not: "SUPERADMIN" },
+        role: { notIn: ["SUPERADMIN", "ADMIN"] },
       };
     }
 
