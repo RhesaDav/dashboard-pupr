@@ -39,7 +39,7 @@ import {
   SelectValue,
   Select,
 } from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { deleteContract, getAllContracts } from "@/actions/contract";
 import {
   Tooltip,
@@ -71,7 +71,8 @@ function DataContractTable() {
         limit: pageSizeParam,
         search: searchQuery,
       }),
-    refetchOnMount: true,
+    placeholderData: keepPreviousData,
+    refetchOnMount: false,
   });
 
   const { user } = useCurrentUser();

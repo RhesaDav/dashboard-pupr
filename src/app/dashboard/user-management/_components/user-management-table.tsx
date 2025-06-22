@@ -11,7 +11,7 @@ import UserAccessibilitySheet from "./user-accessibility-sheet";
 import CreateUserDialog from "./create-user-dialog";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getAllUsers } from "@/actions/user";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
@@ -46,18 +46,8 @@ function UserManagementTable() {
         limit: queryParams.pageSize,
         search: queryParams.search,
       }),
-
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    retry: (failureCount, error) => {
-      if (error && typeof error === "object" && "status" in error) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-
-    refetchOnWindowFocus: false,
-    refetchOnMount: true
+    placeholderData: keepPreviousData,
+    refetchOnMount: false
   });
 
   const columns: ColumnDef<User>[] = [
