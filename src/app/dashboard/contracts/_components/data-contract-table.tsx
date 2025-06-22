@@ -71,7 +71,7 @@ function DataContractTable() {
         limit: pageSizeParam,
         search: searchQuery,
       }),
-    refetchOnMount: "always",
+    refetchOnMount: true,
   });
 
   const { user } = useCurrentUser();
