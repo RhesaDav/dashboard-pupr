@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -59,26 +59,57 @@ export function DataTable<TData, TValue>({
   const [pageSize, setPageSize] = useState(10);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const pageParam = searchParams.get("page");
-    const sizeParam = searchParams.get("pageSize");
+    if (!isInitialized) {
+      const pageParam = searchParams.get("page");
+      const sizeParam = searchParams.get("pageSize");
 
-    const initialPage = pageParam ? Math.max(1, parseInt(pageParam)) : 1;
-    const initialSize = sizeParam ? parseInt(sizeParam) : 10;
+      const initialPage = pageParam ? Math.max(1, parseInt(pageParam)) : 1;
+      const initialSize = sizeParam ? parseInt(sizeParam) : 10;
 
-    setPageIndex(initialPage);
-    setPageSize(initialSize);
-  }, []);
+      setPageIndex(initialPage);
+      setPageSize(initialSize);
+      setIsInitialized(true);
+    }
+  }, [searchParams, isInitialized]);
 
   const pageCount = Math.ceil(totalItems / pageSize);
 
+  const updateURLParams = useCallback(
+    (newPageIndex: number, newPageSize: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", newPageIndex.toString());
+      params.set("pageSize", newPageSize.toString());
+
+      const newURL = `${pathname}?${params.toString()}`;
+      router.replace(newURL, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", pageIndex.toString());
-    params.set("pageSize", pageSize.toString());
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [pageIndex, pageSize, pathname, router, searchParams]);
+    if (isInitialized) {
+      const currentPage = parseInt(searchParams.get("page") || "1");
+      const currentPageSize = parseInt(searchParams.get("pageSize") || "10");
+
+      if (currentPage !== pageIndex || currentPageSize !== pageSize) {
+        updateURLParams(pageIndex, pageSize);
+      }
+    }
+  }, [pageIndex, pageSize, isInitialized, updateURLParams, searchParams]);
+
+  useEffect(() => {
+    if (isInitialized) {
+      const currentSearch = searchParams.get("search");
+      const currentPage = parseInt(searchParams.get("page") || "1");
+
+      if (currentSearch && currentPage > 1) {
+        setPageIndex(1);
+      }
+    }
+  }, [searchParams.get("search"), isInitialized]);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -119,6 +150,15 @@ export function DataTable<TData, TValue>({
     return pages;
   };
 
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPageIndex(1);
+  };
+
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
+  };
+
   const table = useReactTable({
     data,
     columns,
@@ -148,8 +188,10 @@ export function DataTable<TData, TValue>({
       );
       const newPageSize = newPagination.pageSize;
 
-      setPageIndex(newPageIndex);
-      setPageSize(newPageSize);
+      handlePageChange(newPageIndex);
+      if (newPageSize !== pageSize) {
+        handlePageSizeChange(newPageSize);
+      }
     },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -161,6 +203,14 @@ export function DataTable<TData, TValue>({
   useEffect(() => {
     setRowSelection({});
   }, [data]);
+
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col space-y-4">
@@ -239,6 +289,7 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
+
       {/* Pagination */}
       {!isLoading && totalItems > 0 && (
         <div className="flex items-center justify-between space-x-2 py-4">
@@ -247,10 +298,7 @@ export function DataTable<TData, TValue>({
               <p className="text-sm font-medium">Item per halaman</p>
               <select
                 value={pageSize}
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setPageIndex(1);
-                }}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                 className="h-8 rounded-md border border-input bg-background px-2 py-1 text-sm"
               >
                 {pageSizeOptions.map((size) => (
@@ -266,6 +314,7 @@ export function DataTable<TData, TValue>({
               {tableName}
             </div>
           </div>
+
           <div className="flex items-center space-x-1">
             <Button
               variant="outline"
@@ -292,7 +341,7 @@ export function DataTable<TData, TValue>({
                   <Button
                     variant={pageIndex === page ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setPageIndex(page)}
+                    onClick={() => handlePageChange(page)}
                     className="h-8 w-8 p-0"
                   >
                     {page}
@@ -312,7 +361,7 @@ export function DataTable<TData, TValue>({
             </Button>
           </div>
         </div>
-      )}{" "}
+      )}
     </div>
   );
 }
