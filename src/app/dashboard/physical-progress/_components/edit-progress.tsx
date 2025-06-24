@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -136,7 +136,7 @@ export default function EditProgressPage({}: EditProgressProps) {
   const router = useRouter();
   const contractId = String(params.id);
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["getContractWithProgress", contractId],
     queryFn: () => getContractWithProgress(contractId),
   });
@@ -191,6 +191,7 @@ export default function EditProgressPage({}: EditProgressProps) {
     setValue,
     control,
     formState: { errors },
+    reset,
   } = useForm<FormValues>({
     resolver: zodResolver(progressSchema),
     defaultValues: {
@@ -202,6 +203,22 @@ export default function EditProgressPage({}: EditProgressProps) {
     control,
     name: "months",
   });
+
+  useEffect(() => {
+    if (data?.progressData) {
+      const sortedData = sortMonthsChronologically(
+        data.progressData.map((month) => ({
+          month: month.month,
+          items: month.items.map((item) => ({
+            ...item,
+            startDate: item.startDate ?? undefined,
+            endDate: item.endDate ?? undefined,
+          })),
+        }))
+      );
+      reset({ months: sortedData });
+    }
+  }, [data?.progressData, reset]);
 
   // Calculate deviation between planned and actual progress
   const calculateDeviasi = (rencana: number, realisasi: number) => {
