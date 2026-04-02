@@ -79,7 +79,12 @@ const withPWA = nextPwa({
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["binamarga.s3.ap-southeast-2.amazonaws.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "binamarga.s3.ap-southeast-2.amazonaws.com",
+      },
+    ],
   },
   async redirects() {
     return [

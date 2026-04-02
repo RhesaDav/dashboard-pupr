@@ -1,13 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { User } from "@prisma/client";
-import { getCurrentUser } from "@/actions/auth";
+import { useSession } from "@/lib/auth-client";
 
 export function useCurrentUser() {
-  const [user, setUser] = useState<User | null>(null);
+  const { data, isPending, error } = useSession();
   const [budgetYear, setBudgetYear] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const getBudgetYearFromCookie = (): number | null => {
     if (typeof document === "undefined") return null;
@@ -21,32 +18,13 @@ export function useCurrentUser() {
   };
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        setLoading(true);
-        const response = await getCurrentUser();
-
-        if (!response) {
-          throw new Error("Failed to fetch user");
-        }
-
-        const budgetYear = getBudgetYearFromCookie();
-
-        if (!budgetYear) {
-          throw new Error("Budget year not found")
-        }
-
-        setUser(response);
-        setBudgetYear(budgetYear);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
+    setBudgetYear(getBudgetYearFromCookie());
   }, []);
 
-  return { user, budgetYear, loading, error };
+  return { 
+    user: data?.user || null, 
+    budgetYear, 
+    loading: isPending, 
+    error: error?.message || null 
+  };
 }

@@ -1,9 +1,19 @@
-import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
+import { PrismaClient } from '../src/generated/prisma/client.js';
 import { faker } from '@faker-js/faker';
-import bcrypt from 'bcryptjs';
 import { addDays } from 'date-fns';
+import { auth } from '../src/lib/auth';
 
-const prisma = new PrismaClient();
+import { PrismaPg } from "@prisma/adapter-pg"
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not defined in .env file");
+}
+
+const adapter = new PrismaPg(databaseUrl, { schema: "optimization" })
+const prisma = new PrismaClient({ adapter });
 
 function generateWeeks(startDate: Date, durationDays: number) {
   const weeks: { month: string; items: any[] }[] = [];
@@ -62,37 +72,33 @@ async function main() {
   await prisma.financialProgress.deleteMany();
   await prisma.addendum.deleteMany();
   await prisma.contract.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.session.deleteMany();
   await prisma.user.deleteMany();
+  // 🔐 Buat 3 user berdasarkan role menggunakan bcryptjs
+  // 🔐 Buat 3 user menggunakan Better Auth API
+  const seedUsers = [
+    { name: 'Admin User', email: 'admin@binamarga.com', role: 'ADMIN' },
+    { name: 'Superadmin User', email: 'superadmin@binamarga.com', role: 'SUPERADMIN' },
+    { name: 'Consultant User', email: 'consultant@binamarga.com', role: 'CONSULTANT' },
+  ];
 
-  // 🔐 Buat 3 user berdasarkan role
-  const passwordHash = await bcrypt.hash('123456', 10);
-
-  const users = await Promise.all([
-    prisma.user.create({
-      data: {
-        name: 'Admin User',
-        email: 'admin@binamarga.com',
-        password: passwordHash,
-        role: 'ADMIN',
-      },
-    }),
-    prisma.user.create({
-      data: {
-        name: 'Superadmin User',
-        email: 'superadmin@binamarga.com',
-        password: passwordHash,
-        role: 'SUPERADMIN',
-      },
-    }),
-    prisma.user.create({
-      data: {
-        name: 'Consultant User',
-        email: 'consultant@binamarga.com',
-        password: passwordHash,
-        role: 'CONSULTANT',
-      },
-    }),
-  ]);
+  for (const u of seedUsers) {
+    try {
+      await auth.api.signUpEmail({
+        body: {
+          email: u.email,
+          password: 'password123',
+          name: u.name,
+          role: u.role,
+        },
+      });
+    } catch (err) {
+      console.error(`Failed to seed user ${u.email}:`, err);
+    }
+  }
+  
+  const users = await prisma.user.findMany();
 
   for (let i = 0; i < 10; i++) {
     const tanggalKontrak = faker.date.between({ from: '2024-12-01', to: '2025-05-10' });
@@ -155,6 +161,8 @@ async function main() {
 main()
   .catch((e) => {
     console.error('❌ Error during seeding:', e);
+    if (e.code) console.error('Error Code:', e.code);
+    if (e.meta) console.error('Error Meta:', e.meta);
     process.exit(1);
   })
   .finally(async () => {

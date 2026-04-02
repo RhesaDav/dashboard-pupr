@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
-import { loginAction } from "@/actions/auth";
+import { signIn } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { Loader, Eye, EyeOff, Building2, CalendarDays } from "lucide-react";
 import Link from "next/link";
@@ -76,28 +76,30 @@ function SignInForm() {
     setErrorMessage(null);
 
     try {
-      const formData = new FormData();
+      const { data, error } = await signIn.email({
+        email: values.emailOrName,
+        password: values.password,
+      });
 
-      formData.append("budgetYear", values.budgetYear);
-      formData.append("email", values.emailOrName);
-      formData.append("password", values.password);
-
-      const res = await loginAction(formData);
-
-      if (!res?.error) {
+      if (!error) {
         toast.success("Login berhasil!", {
           description: "Selamat datang di Sistem Bina Marga",
           duration: 3000,
         });
-        if (res.role === "CONSULTANT" || res.role === "ADMIN") {
+        
+        // Simpan budgetYear di cookie sebagai fallback tambahan untuk server actions/API lain
+        document.cookie = `budgetYear=${values.budgetYear}; path=/`;
+
+        const role = data?.user?.role || "USER";
+        if (role === "CONSULTANT" || role === "ADMIN") {
           router.push("/dashboard/contracts");
         } else {
           router.push("/dashboard/home");
         }
       } else {
-        setErrorMessage(res.error);
+        setErrorMessage(error.message || "Email/username tidak terdaftar atau password salah");
         toast.error("Login gagal", {
-          description: res.error || "Periksa kembali email dan password Anda",
+          description: error.message || "Periksa kembali email dan password Anda",
           duration: 3000,
         });
       }

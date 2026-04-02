@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { loginAction, registerAction } from "@/actions/auth";
+import { signUp } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
 
@@ -44,18 +44,17 @@ function SignUpForm() {
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("name", values.name);
-      formData.append("email", values.email);
-      formData.append("password", values.password);
+      const { data, error } = await signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+      });
 
-      const res = await registerAction(formData);
-
-      if (!res?.error) {
-        toast.success("Login berhasil!");
-        router.push("/dashboard");
+      if (!error) {
+        toast.success("Registrasi berhasil!");
+        router.push("/dashboard/home");
       } else {
-        toast.error(res?.error || "Login gagal.");
+        toast.error(error.message || "Registrasi gagal.");
       }
     } catch (error) {
       toast.error("Terjadi kesalahan.");

@@ -99,7 +99,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   }
 
   const filteredMenuItems = menuItems.filter(item =>
-    user?.role && item.roles.includes(user.role)
+    user?.role && item.roles.includes(user.role as Role)
   );
 
   return (

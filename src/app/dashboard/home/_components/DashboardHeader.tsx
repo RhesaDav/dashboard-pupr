@@ -8,7 +8,7 @@ import { Clock, FileCheck } from "lucide-react";
 interface DashboardHeaderProps {
   greeting: string;
   currentTime: string;
-  user: User | null;
+  user: any;
 }
 
 export function DashboardHeader({ greeting, currentTime, user }: DashboardHeaderProps) {

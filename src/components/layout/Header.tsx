@@ -9,10 +9,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { logoutAction } from "@/actions/auth";
 import { LogOut, Menu, User } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import Image from "next/image";
+import { signOut } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -20,6 +21,7 @@ interface HeaderProps {
 
 const Header = ({ onToggleSidebar }: HeaderProps) => {
   const { user } = useCurrentUser();
+  const router = useRouter();
 
   return (
     <header className="bg-background shadow-sm p-3 md:p-4 flex items-center border-b sticky top-0 z-20">
@@ -82,7 +84,10 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
               </>
             )}
             <DropdownMenuItem
-              onClick={async () => await logoutAction()}
+              onClick={async () => {
+                await signOut();
+                router.push("/signin");
+              }}
               className="cursor-pointer"
             >
               <LogOut className="mr-2 h-4 w-4" />
