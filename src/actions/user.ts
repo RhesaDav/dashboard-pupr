@@ -1,12 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { Role } from "@/generated/prisma";
 import {
   CreateUserSchema,
   UpdateUserSchema,
   UserIdSchema,
 } from "@/schemas/userSchemas";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../generated/prisma";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
@@ -33,8 +34,19 @@ export const createUser = async (formData: FormData) => {
 
     const newUser = await prisma.user.create({
       data: {
-        ...validatedData,
-        password: await bcrypt.hash(validatedData.password, 10),
+        email: validatedData.email,
+        name: validatedData.name,
+        role: validatedData.role,
+        accounts: {
+          create: {
+            id: crypto.randomUUID(),
+            accountId: validatedData.email,
+            providerId: "credential",
+            password: await bcrypt.hash(validatedData.password, 10),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        },
       },
     });
 
@@ -174,7 +186,6 @@ export const updateUser = async (formData: FormData) => {
 
     const currentUser = await prisma.user.findUnique({
       where: { id: validatedData.id },
-      select: { password: true },
     });
 
     if (!currentUser) {
@@ -187,13 +198,28 @@ export const updateUser = async (formData: FormData) => {
       role: validatedData.role,
     };
 
-    updateData.password = validatedData.password
-      ? await bcrypt.hash(validatedData.password, 10)
-      : currentUser.password;
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id: validatedData.id },
+        data: updateData,
+      });
 
-    const updatedUser = await prisma.user.update({
-      where: { id: validatedData.id },
-      data: updateData,
+      if (validatedData.password) {
+        const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+        await tx.account.updateMany({
+          where: {
+            userId: validatedData.id,
+            providerId: "credential",
+          },
+          data: {
+            password: hashedPassword,
+            accountId: validatedData.email,
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      return user;
     });
 
     revalidatePath("/dashboard/user-management", "page");

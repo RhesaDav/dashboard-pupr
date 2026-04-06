@@ -233,8 +233,7 @@ exports.Prisma.UserScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   role: 'role',
-  lastLoggedIn: 'lastLoggedIn',
-  password: 'password'
+  lastLoggedIn: 'lastLoggedIn'
 };
 
 exports.Prisma.PasswordResetScalarFieldEnum = {
@@ -296,11 +295,7 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-exports.Role = exports.$Enums.Role = {
-  ADMIN: 'ADMIN',
-  SUPERADMIN: 'SUPERADMIN',
-  CONSULTANT: 'CONSULTANT'
-};
+
 
 exports.Prisma.ModelName = {
   Contract: 'Contract',

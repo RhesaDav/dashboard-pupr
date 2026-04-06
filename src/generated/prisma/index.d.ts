@@ -9338,9 +9338,8 @@ export namespace Prisma {
     image: string | null
     createdAt: Date | null
     updatedAt: Date | null
-    role: $Enums.Role | null
+    role: string | null
     lastLoggedIn: Date | null
-    password: string | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -9351,9 +9350,8 @@ export namespace Prisma {
     image: string | null
     createdAt: Date | null
     updatedAt: Date | null
-    role: $Enums.Role | null
+    role: string | null
     lastLoggedIn: Date | null
-    password: string | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -9366,7 +9364,6 @@ export namespace Prisma {
     updatedAt: number
     role: number
     lastLoggedIn: number
-    password: number
     _all: number
   }
 
@@ -9381,7 +9378,6 @@ export namespace Prisma {
     updatedAt?: true
     role?: true
     lastLoggedIn?: true
-    password?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -9394,7 +9390,6 @@ export namespace Prisma {
     updatedAt?: true
     role?: true
     lastLoggedIn?: true
-    password?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -9407,7 +9402,6 @@ export namespace Prisma {
     updatedAt?: true
     role?: true
     lastLoggedIn?: true
-    password?: true
     _all?: true
   }
 
@@ -9491,9 +9485,8 @@ export namespace Prisma {
     image: string | null
     createdAt: Date
     updatedAt: Date
-    role: $Enums.Role
+    role: string | null
     lastLoggedIn: Date | null
-    password: string | null
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -9523,7 +9516,6 @@ export namespace Prisma {
     updatedAt?: boolean
     role?: boolean
     lastLoggedIn?: boolean
-    password?: boolean
     passwordReset?: boolean | User$passwordResetArgs<ExtArgs>
     contractAccess?: boolean | User$contractAccessArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
@@ -9541,7 +9533,6 @@ export namespace Prisma {
     updatedAt?: boolean
     role?: boolean
     lastLoggedIn?: boolean
-    password?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -9554,7 +9545,6 @@ export namespace Prisma {
     updatedAt?: boolean
     role?: boolean
     lastLoggedIn?: boolean
-    password?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -9567,10 +9557,9 @@ export namespace Prisma {
     updatedAt?: boolean
     role?: boolean
     lastLoggedIn?: boolean
-    password?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "lastLoggedIn" | "password", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "lastLoggedIn", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     passwordReset?: boolean | User$passwordResetArgs<ExtArgs>
     contractAccess?: boolean | User$contractAccessArgs<ExtArgs>
@@ -9597,9 +9586,8 @@ export namespace Prisma {
       image: string | null
       createdAt: Date
       updatedAt: Date
-      role: $Enums.Role
+      role: string | null
       lastLoggedIn: Date | null
-      password: string | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -10034,9 +10022,8 @@ export namespace Prisma {
     readonly image: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
-    readonly role: FieldRef<"User", 'Role'>
+    readonly role: FieldRef<"User", 'String'>
     readonly lastLoggedIn: FieldRef<"User", 'DateTime'>
-    readonly password: FieldRef<"User", 'String'>
   }
     
 
@@ -15081,8 +15068,7 @@ export namespace Prisma {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     role: 'role',
-    lastLoggedIn: 'lastLoggedIn',
-    password: 'password'
+    lastLoggedIn: 'lastLoggedIn'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -15234,20 +15220,6 @@ export namespace Prisma {
    * Reference to a field of type 'Boolean'
    */
   export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-  /**
-   * Reference to a field of type 'Role'
-   */
-  export type EnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Role'>
-    
-
-
-  /**
-   * Reference to a field of type 'Role[]'
-   */
-  export type ListEnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Role[]'>
     
   /**
    * Deep Input Types
@@ -15900,9 +15872,8 @@ export namespace Prisma {
     image?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
-    role?: EnumRoleFilter<"User"> | $Enums.Role
+    role?: StringNullableFilter<"User"> | string | null
     lastLoggedIn?: DateTimeNullableFilter<"User"> | Date | string | null
-    password?: StringNullableFilter<"User"> | string | null
     passwordReset?: PasswordResetListRelationFilter
     contractAccess?: ContractAccessListRelationFilter
     sessions?: SessionListRelationFilter
@@ -15917,9 +15888,8 @@ export namespace Prisma {
     image?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    role?: SortOrder
+    role?: SortOrderInput | SortOrder
     lastLoggedIn?: SortOrderInput | SortOrder
-    password?: SortOrderInput | SortOrder
     passwordReset?: PasswordResetOrderByRelationAggregateInput
     contractAccess?: ContractAccessOrderByRelationAggregateInput
     sessions?: SessionOrderByRelationAggregateInput
@@ -15937,9 +15907,8 @@ export namespace Prisma {
     image?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
-    role?: EnumRoleFilter<"User"> | $Enums.Role
+    role?: StringNullableFilter<"User"> | string | null
     lastLoggedIn?: DateTimeNullableFilter<"User"> | Date | string | null
-    password?: StringNullableFilter<"User"> | string | null
     passwordReset?: PasswordResetListRelationFilter
     contractAccess?: ContractAccessListRelationFilter
     sessions?: SessionListRelationFilter
@@ -15954,9 +15923,8 @@ export namespace Prisma {
     image?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    role?: SortOrder
+    role?: SortOrderInput | SortOrder
     lastLoggedIn?: SortOrderInput | SortOrder
-    password?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -15973,9 +15941,8 @@ export namespace Prisma {
     image?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
-    role?: EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
+    role?: StringNullableWithAggregatesFilter<"User"> | string | null
     lastLoggedIn?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
-    password?: StringNullableWithAggregatesFilter<"User"> | string | null
   }
 
   export type PasswordResetWhereInput = {
@@ -17012,9 +16979,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
     passwordReset?: PasswordResetCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
@@ -17029,9 +16995,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
     passwordReset?: PasswordResetUncheckedCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
@@ -17046,9 +17011,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     passwordReset?: PasswordResetUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
@@ -17063,9 +17027,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     passwordReset?: PasswordResetUncheckedUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -17080,9 +17043,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
   }
 
   export type UserUpdateManyMutationInput = {
@@ -17093,9 +17055,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -17106,9 +17067,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PasswordResetCreateInput = {
@@ -17260,8 +17220,8 @@ export namespace Prisma {
     refreshTokenExpiresAt?: Date | string | null
     scope?: string | null
     password?: string | null
-    createdAt: Date | string
-    updatedAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
     user: UserCreateNestedOneWithoutAccountsInput
   }
 
@@ -17277,8 +17237,8 @@ export namespace Prisma {
     refreshTokenExpiresAt?: Date | string | null
     scope?: string | null
     password?: string | null
-    createdAt: Date | string
-    updatedAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type AccountUpdateInput = {
@@ -17325,8 +17285,8 @@ export namespace Prisma {
     refreshTokenExpiresAt?: Date | string | null
     scope?: string | null
     password?: string | null
-    createdAt: Date | string
-    updatedAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type AccountUpdateManyMutationInput = {
@@ -18111,13 +18071,6 @@ export namespace Prisma {
     contractId?: SortOrder
   }
 
-  export type EnumRoleFilter<$PrismaModel = never> = {
-    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumRoleFilter<$PrismaModel> | $Enums.Role
-  }
-
   export type PasswordResetListRelationFilter = {
     every?: PasswordResetWhereInput
     some?: PasswordResetWhereInput
@@ -18158,7 +18111,6 @@ export namespace Prisma {
     updatedAt?: SortOrder
     role?: SortOrder
     lastLoggedIn?: SortOrder
-    password?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -18171,7 +18123,6 @@ export namespace Prisma {
     updatedAt?: SortOrder
     role?: SortOrder
     lastLoggedIn?: SortOrder
-    password?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -18184,17 +18135,6 @@ export namespace Prisma {
     updatedAt?: SortOrder
     role?: SortOrder
     lastLoggedIn?: SortOrder
-    password?: SortOrder
-  }
-
-  export type EnumRoleWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumRoleWithAggregatesFilter<$PrismaModel> | $Enums.Role
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumRoleFilter<$PrismaModel>
-    _max?: NestedEnumRoleFilter<$PrismaModel>
   }
 
   export type PasswordResetCountOrderByAggregateInput = {
@@ -18726,10 +18666,6 @@ export namespace Prisma {
     connect?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
   }
 
-  export type EnumRoleFieldUpdateOperationsInput = {
-    set?: $Enums.Role
-  }
-
   export type PasswordResetUpdateManyWithoutUserNestedInput = {
     create?: XOR<PasswordResetCreateWithoutUserInput, PasswordResetUncheckedCreateWithoutUserInput> | PasswordResetCreateWithoutUserInput[] | PasswordResetUncheckedCreateWithoutUserInput[]
     connectOrCreate?: PasswordResetCreateOrConnectWithoutUserInput | PasswordResetCreateOrConnectWithoutUserInput[]
@@ -19128,23 +19064,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
-  }
-
-  export type NestedEnumRoleFilter<$PrismaModel = never> = {
-    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumRoleFilter<$PrismaModel> | $Enums.Role
-  }
-
-  export type NestedEnumRoleWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumRoleWithAggregatesFilter<$PrismaModel> | $Enums.Role
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumRoleFilter<$PrismaModel>
-    _max?: NestedEnumRoleFilter<$PrismaModel>
   }
 
   export type AddendumCreateWithoutContractInput = {
@@ -20220,9 +20139,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
     passwordReset?: PasswordResetCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -20236,9 +20154,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
     passwordReset?: PasswordResetUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -20357,9 +20274,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     passwordReset?: PasswordResetUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -20373,9 +20289,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     passwordReset?: PasswordResetUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -20567,8 +20482,8 @@ export namespace Prisma {
     refreshTokenExpiresAt?: Date | string | null
     scope?: string | null
     password?: string | null
-    createdAt: Date | string
-    updatedAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type AccountUncheckedCreateWithoutUserInput = {
@@ -20582,8 +20497,8 @@ export namespace Prisma {
     refreshTokenExpiresAt?: Date | string | null
     scope?: string | null
     password?: string | null
-    createdAt: Date | string
-    updatedAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type AccountCreateOrConnectWithoutUserInput = {
@@ -20713,9 +20628,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
     contractAccess?: ContractAccessCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -20729,9 +20643,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
     contractAccess?: ContractAccessUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -20761,9 +20674,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     contractAccess?: ContractAccessUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -20777,9 +20689,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     contractAccess?: ContractAccessUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -20793,9 +20704,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
     passwordReset?: PasswordResetCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessCreateNestedManyWithoutUserInput
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -20809,9 +20719,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
     passwordReset?: PasswordResetUncheckedCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessUncheckedCreateNestedManyWithoutUserInput
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -20841,9 +20750,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     passwordReset?: PasswordResetUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUpdateManyWithoutUserNestedInput
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -20857,9 +20765,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     passwordReset?: PasswordResetUncheckedUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUncheckedUpdateManyWithoutUserNestedInput
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -20873,9 +20780,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
     passwordReset?: PasswordResetCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
@@ -20889,9 +20795,8 @@ export namespace Prisma {
     image?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    role?: $Enums.Role
+    role?: string | null
     lastLoggedIn?: Date | string | null
-    password?: string | null
     passwordReset?: PasswordResetUncheckedCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
@@ -20921,9 +20826,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     passwordReset?: PasswordResetUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
@@ -20937,9 +20841,8 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    role?: NullableStringFieldUpdateOperationsInput | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    password?: NullableStringFieldUpdateOperationsInput | string | null
     passwordReset?: PasswordResetUncheckedUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -21129,8 +21032,8 @@ export namespace Prisma {
     refreshTokenExpiresAt?: Date | string | null
     scope?: string | null
     password?: string | null
-    createdAt: Date | string
-    updatedAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type PasswordResetUpdateWithoutUserInput = {
