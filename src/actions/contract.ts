@@ -286,10 +286,14 @@ export async function createContract(data: CompleteContractCreate) {
       title: validatedData.namaPaket,
     });
 
-    revalidatePath("/contracts");
+    revalidatePath("/dashboard/contracts", "page");
     return { success: true, data: result };
-  } catch (error) {
-    throw handlePrismaError(error);
+  } catch (error: any) {
+    console.error("Error in createContract:", error);
+    return { 
+      success: false, 
+      error: error.message || "Gagal membuat kontrak" 
+    };
   }
 }
 

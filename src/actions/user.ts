@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -33,6 +33,7 @@ export const createUser = async (formData: FormData) => {
       };
     }
 
+    console.log("Creating user...", validatedData.email);
     const newUser = await prisma.user.create({
       data: {
         email: validatedData.email,
@@ -55,6 +56,7 @@ export const createUser = async (formData: FormData) => {
 
     return { success: true, user: newUser };
   } catch (error) {
+    console.error("Error in createUser:", error);
     if (error instanceof ZodError) {
       return {
         success: false,

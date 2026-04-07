@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import {
@@ -307,6 +307,7 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
   };
 
   const handleFormSubmit = async () => {
+    if (isSubmitting || isLoading || isAnyImageUploading) return;
     const result = await form.trigger();
 
     const addendumItems = form.getValues("addendum") || [];

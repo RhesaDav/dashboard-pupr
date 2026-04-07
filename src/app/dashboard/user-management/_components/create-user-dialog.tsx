@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateUserSchema, CreateUserType } from "@/schemas/userSchemas";
@@ -35,6 +35,11 @@ export default function CreateUserDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const form = useForm<CreateUserType>({
     resolver: zodResolver(CreateUserSchema),
@@ -48,26 +53,34 @@ export default function CreateUserDialog() {
 
   const onSubmit = async (values: CreateUserType) => {
     setLoading(true);
-    const formData = new FormData();
-    formData.append("email", values.email);
-    formData.append("password", values.password);
-    if (values.name) formData.append("name", values.name);
-    formData.append("role", values.role);
+    try {
+      const formData = new FormData();
+      formData.append("email", values.email);
+      formData.append("password", values.password);
+      if (values.name) formData.append("name", values.name);
+      formData.append("role", values.role);
 
-    const res = await createUser(formData);
-    queryClient.refetchQueries({
-      queryKey: ['users']
-    })
-    setLoading(false);
+      const res = await createUser(formData);
+      queryClient.refetchQueries({
+        queryKey: ['users']
+      })
 
-    if (res.success) {
-      toast.success("User berhasil dibuat!");
-      form.reset();
-      setOpen(false);
-    } else {
-      toast.error(res.error || "Something wrong");
+      if (res.success) {
+        toast.success("User berhasil dibuat!");
+        form.reset();
+        setOpen(false);
+      } else {
+        toast.error(res.error || "Something wrong");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Gagal membuat user");
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

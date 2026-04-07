@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { FinancialProgressCreateSchema, FinancialProgressResponseSchema } from "./financial-progress.schema";
 import { LocationCreateSchema, LocationResponseSchema } from "./location.schema";
 import { PhysicalProgressCreateSchema, PhysicalProgressResponseSchema } from "./physical-progress.schema";
@@ -18,10 +18,10 @@ export const ContractCreateSchema = z.object({
   nilaiKontrak: z.number().nonnegative().nullable().optional().default(0.0),
   sumberDana: z.string().nullable().optional(),
   nomorKontrak: z.string().nullable().optional(),
-  tanggalKontrak: z.date().nullable().optional(),
+  tanggalKontrak: z.coerce.date().nullable().optional(),
   masaPelaksanaan: z.number().int().nonnegative().nullable().optional().default(0),
-  tanggalSelesaiAwal: z.date().nullable().optional(),
-  tanggalSelesaiAkhir: z.date().nullable().optional(),
+  tanggalSelesaiAwal: z.coerce.date().nullable().optional(),
+  tanggalSelesaiAkhir: z.coerce.date().nullable().optional(),
   totalAddendumWaktu: z.number().optional().default(0),
   subKegiatan: z.string().nullable().optional(),
   volumeKontrak: z.string().nullable().optional(),
@@ -29,7 +29,7 @@ export const ContractCreateSchema = z.object({
   konsultanSupervisi: z.string().nullable().optional(),
   nomorKontrakSupervisi: z.string().nullable().optional(),
   nilaiKontrakSupervisi: z.number().nonnegative().nullable().optional().default(0.0),
-  tanggalKontrakSupervisi: z.date().nullable().optional(),
+  tanggalKontrakSupervisi: z.coerce.date().nullable().optional(),
   masaPelaksanaanSupervisi: z.number().int().nonnegative().nullable().optional().default(0),
   hasilProdukAkhir: z.string().nullable().optional(),
   dimensi: z.string().nullable().optional(),
@@ -44,8 +44,8 @@ export const ContractUpdateSchema = ContractCreateSchema.partial();
 
 export const ContractResponseSchema = ContractCreateSchema.extend({
   id: z.string().uuid(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
 });
 
 export const CompleteContractCreateSchema = ContractCreateSchema.extend({
