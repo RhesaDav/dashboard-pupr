@@ -8,17 +8,18 @@ import {
   UpdateUserSchema,
   UserIdSchema,
 } from "@/schemas/userSchemas";
-import { Prisma } from "../generated/prisma";
+import { handlePrismaError, validateSchema } from "@/lib/utils";
+import { getCurrentUser } from "./auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@/generated/prisma";
 import { ZodError } from "zod";
-import { getCurrentUser } from "./auth";
 
 export const createUser = async (formData: FormData) => {
   try {
     const data = Object.fromEntries(formData.entries());
 
-    const validatedData = CreateUserSchema.parse(data);
+    const validatedData = await validateSchema(CreateUserSchema, data);
 
     const checkUser = await prisma.user.findFirst({
       where: {
@@ -29,7 +30,7 @@ export const createUser = async (formData: FormData) => {
     if (checkUser) {
       return {
         success: false,
-        error: "Email registered",
+        error: "Email sudah terdaftar",
       };
     }
 
@@ -55,19 +56,16 @@ export const createUser = async (formData: FormData) => {
     revalidatePath("/dashboard/user-management", "page");
 
     return { success: true, user: newUser };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in createUser:", error);
-    if (error instanceof ZodError) {
+    try {
+      handlePrismaError(error);
+    } catch (e: any) {
       return {
         success: false,
-        error: error.errors.map((err) => err.message).join(", "),
+        error: e.message || "Gagal membuat user",
       };
     }
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: "Something wrong" };
   }
 };
 
@@ -133,51 +131,40 @@ export const getAllUsers = async (filterParams: any = {}) => {
         hasPrevPage: page > 1,
       },
     };
-  } catch (error) {
-    if (error instanceof ZodError) {
+  } catch (error: any) {
+    console.error("Error in getAllUsers:", error);
+    try {
+      handlePrismaError(error);
+    } catch (e: any) {
       return {
         success: false,
-        error: error.errors.map((err) => err.message).join(", "),
+        error: e.message || "Gagal memuat daftar user",
       };
     }
-
-    if (error instanceof Error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-
-    return {
-      success: false,
-      error: "Something went wrong",
-    };
   }
 };
 
 export const getUserById = async (id: string) => {
   try {
-    const validatedId = UserIdSchema.parse({ id });
+    const validatedId = await validateSchema(UserIdSchema, { id });
 
     const user = await prisma.user.findUnique({
       where: { id: validatedId.id },
     });
 
-    if (!user) return { success: false, error: "User not found" };
+    if (!user) return { success: false, error: "User tidak ditemukan" };
 
     return { success: true, user };
-  } catch (error) {
-    if (error instanceof ZodError) {
+  } catch (error: any) {
+    console.error("Error in getUserById:", error);
+    try {
+      handlePrismaError(error);
+    } catch (e: any) {
       return {
         success: false,
-        error: error.errors.map((err) => err.message).join(", "),
+        error: e.message || "Gagal memuat detail user",
       };
     }
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: "Something wrong" };
   }
 };
 
@@ -185,14 +172,14 @@ export const updateUser = async (formData: FormData) => {
   try {
     const data = Object.fromEntries(formData.entries());
 
-    const validatedData = UpdateUserSchema.parse(data);
+    const validatedData = await validateSchema(UpdateUserSchema, data);
 
     const currentUser = await prisma.user.findUnique({
       where: { id: validatedData.id },
     });
 
     if (!currentUser) {
-      return { success: false, error: "User not found" };
+      return { success: false, error: "User tidak ditemukan" };
     }
 
     const updateData: any = {
@@ -223,24 +210,23 @@ export const updateUser = async (formData: FormData) => {
     revalidatePath("/dashboard/user-management", "page");
 
     return { success: true, user: updatedUser };
-  } catch (error) {
-    if (error instanceof ZodError) {
+  } catch (error: any) {
+    console.error("Error in updateUser:", error);
+    try {
+      handlePrismaError(error);
+    } catch (e: any) {
       return {
         success: false,
-        error: error.errors.map((err) => err.message).join(", "),
+        error: e.message || "Gagal memperbarui user",
       };
     }
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: "Something went wrong" };
   }
 };
 
 export const deleteUser = async (id: string) => {
   console.log(id);
   try {
-    const validatedId = UserIdSchema.parse({ id });
+    const validatedId = await validateSchema(UserIdSchema, { id });
 
     await prisma.user.delete({
       where: { id: validatedId.id },
@@ -248,18 +234,16 @@ export const deleteUser = async (id: string) => {
 
     revalidatePath("/dashboard/user-management", "page");
 
-    return { success: true, message: "User deleted successfully" };
-  } catch (error) {
-    if (error instanceof ZodError) {
+    return { success: true, message: "User berhasil dihapus" };
+  } catch (error: any) {
+    console.error("Error in deleteUser:", error);
+    try {
+      handlePrismaError(error);
+    } catch (e: any) {
       return {
         success: false,
-        error: error.errors.map((err) => err.message).join(", "),
+        error: e.message || "Gagal menghapus user",
       };
     }
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: "Something wrong" };
   }
 };

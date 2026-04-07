@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { prisma } from "@/lib/prisma";
 import { handlePrismaError, NotFoundError, validateSchema } from "@/lib/utils";
@@ -87,17 +87,17 @@ export async function updatePhysicalProgress(
 
     return {
       success: true,
-      message: `${results.length} progress records updated successfully`,
       data: results,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to update physical progress:", error);
-    return {
-      success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Failed to update physical progress",
-    };
+    try {
+      handlePrismaError(error);
+    } catch (e: any) {
+      return {
+        success: false,
+        error: e.message || "Gagal memperbarui progress fisik",
+      };
+    }
   }
 }

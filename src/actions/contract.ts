@@ -257,6 +257,8 @@ export async function createContract(data: CompleteContractCreate) {
       return contract;
     });
 
+    // Temporarily disabled secondary database sync
+    /*
     await insertPaket({
       id: result.id,
       tipePaket: "Fisik",
@@ -285,15 +287,20 @@ export async function createContract(data: CompleteContractCreate) {
       bidang: "Bina Marga",
       title: validatedData.namaPaket,
     });
+    */
 
     revalidatePath("/dashboard/contracts", "page");
     return { success: true, data: result };
   } catch (error: any) {
     console.error("Error in createContract:", error);
-    return { 
-      success: false, 
-      error: error.message || "Gagal membuat kontrak" 
-    };
+    try {
+      handlePrismaError(error);
+    } catch (e: any) {
+      return {
+        success: false,
+        error: e.message || "Gagal membuat kontrak",
+      };
+    }
   }
 }
 
@@ -814,6 +821,7 @@ export async function updateContract(id: string, updateData: any) {
 
     console.log(result.id)
 
+    /*
     await updatePaket({
       id: result.id,
       tipePaket: "Fisik",
@@ -826,7 +834,9 @@ export async function updateContract(id: string, updateData: any) {
       nomorKontrak: updateData.nomorKontrak,
       penyedia: updateData.namaPenyedia,
       nilaiKontrak: String(updateData.nilaiKontrak),
-      tanggalKontrak: format(updateData.tanggalKontrak, "yyyy-MM-dd"),
+      tanggalKontrak: updateData.tanggalKontrak 
+        ? format(updateData.tanggalKontrak, "yyyy-MM-dd")
+        : undefined,
       volumeKontrak: updateData.volumeKontrak,
       satuanKontrak: updateData.satuanKontrak,
       korwaslap: updateData.korwaslap,
@@ -840,10 +850,21 @@ export async function updateContract(id: string, updateData: any) {
       bidang: "Bina Marga",
       title: updateData.namaPaket,
     })
+    */
+
+    revalidatePath("/dashboard/contracts", "page");
 
     return { success: true, data: result };
-  } catch (error) {
-    throw handlePrismaError(error);
+  } catch (error: any) {
+    console.error("Error in updateContract:", error);
+    try {
+      handlePrismaError(error);
+    } catch (e: any) {
+      return {
+        success: false,
+        error: e.message || "Gagal memperbarui kontrak",
+      };
+    }
   }
 }
 export async function deleteContract(id: string) {
@@ -878,12 +899,21 @@ export async function deleteContract(id: string) {
       return deletedContract;
     });
 
-    await deletePaket(id);
+    // Temporarily disabled secondary database sync
+    // await deletePaket(id);
 
-    revalidatePath("/contracts");
+    revalidatePath("/dashboard/contracts", "page");
 
     return { success: true, data: result };
-  } catch (error) {
-    throw handlePrismaError(error);
+  } catch (error: any) {
+    console.error("Error in deleteContract:", error);
+    try {
+      handlePrismaError(error);
+    } catch (e: any) {
+      return {
+        success: false,
+        error: e.message || "Gagal menghapus kontrak",
+      };
+    }
   }
 }

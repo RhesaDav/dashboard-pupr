@@ -291,6 +291,7 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
         : await createContract(data);
       if (result.success) {
         toast.success(`Kontrak berhasil ${id ? "diperbarui" : "dibuat"}`);
+        router.refresh();
         router.push(`/dashboard/contracts`);
         if (!id) {
           form.reset();

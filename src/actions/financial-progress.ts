@@ -1,6 +1,7 @@
-﻿"use server"
+"use server"
 import { updatePaket } from "@/lib/pgClient";
 import { prisma } from "@/lib/prisma";
+import { handlePrismaError, validateSchema } from "@/lib/utils";
 import {
   FinancialProgressCreate,
   FinancialProgressCreateSchema,
@@ -11,7 +12,7 @@ export const upsertFinancialProgress = async (
   data: FinancialProgressCreate
 ) => {
   try {
-    const validatedData = FinancialProgressCreateSchema.parse(data);
+    const validatedData = await validateSchema(FinancialProgressCreateSchema, data);
 
     const existingContract = await prisma.contract.findUnique({
       where: { id: validatedData.contractId },
@@ -19,8 +20,8 @@ export const upsertFinancialProgress = async (
 
     if (!existingContract) {
       return {
-        status: "error",
-        error: "Contract not found",
+        success: false,
+        error: "Kontrak tidak ditemukan",
       };
     }
 
@@ -49,24 +50,29 @@ export const upsertFinancialProgress = async (
       });
     }
 
-    const totalProgress =
-      (validatedData.termin1 || 0) +
-      (validatedData.termin2 || 0) +
-      (validatedData.termin3 || 0) +
-      (validatedData.termin4 || 0) +
-      (validatedData.uangMuka || 0);
-
-
+    // Temporarily disabled secondary database sync
+    /*
     await updatePaket({
       id: existingContract.id,
       progresKeuangan: String(validatedData.totalPayment)
     })
+    */
 
     revalidatePath(`/contracts/${validatedData.contractId}`);
 
     return {
-      status: "success",
+      success: true,
       data: progress,
     };
-  } catch (error) {}
+  } catch (error: any) {
+    console.error("Error in upsertFinancialProgress:", error);
+    try {
+      handlePrismaError(error);
+    } catch (e: any) {
+      return {
+        success: false,
+        error: e.message || "Gagal memperbarui progress keuangan",
+      };
+    }
+  }
 };

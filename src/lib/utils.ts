@@ -1,4 +1,4 @@
-﻿import { clsx, type ClassValue } from "clsx";
+import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
   addDays,
@@ -156,6 +156,64 @@ export class AuthorizationError extends Error {
   }
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  namaPaket: "Nama Paket",
+  namaPenyedia: "Nama Penyedia",
+  ppk: "Pejabat Pembuat Komitmen (PPK)",
+  nipPPK: "NIP PPK",
+  nomorKontrak: "Nomor Kontrak",
+  tanggalKontrak: "Tanggal Kontrak",
+  masaPelaksanaan: "Masa Pelaksanaan",
+  subKegiatan: "Sub Kegiatan",
+  volumeKontrak: "Volume Kontrak",
+  satuanKontrak: "Satuan Kontrak",
+  paguAnggaran: "Pagu Anggaran",
+  nilaiKontrak: "Nilai Kontrak",
+  sumberDana: "Sumber Dana",
+  "location.kota": "Kota/Kabupaten",
+  "location.distrik": "Distrik",
+  "location.kampung": "Kampung",
+  "location.koordinatAwal": "Koordinat Awal",
+  korwaslap: "Koordinator Pengawas Lapangan",
+  nipKorwaslap: "NIP Korwaslap",
+  pengawasLapangan: "Pengawas Lapangan",
+  nipPengawasLapangan: "NIP Pengawas Lapangan",
+  email: "Email",
+  password: "Password",
+  name: "Nama",
+  role: "Role",
+};
+
+function translateZodIssue(issue: z.ZodIssue): string {
+  const path = issue.path.join(".");
+  const label = FIELD_LABELS[path] || path;
+
+  switch (issue.code) {
+    case "invalid_type":
+      if (issue.received === "undefined" || issue.received === "null") {
+        return `${label} wajib diisi`;
+      }
+      return `${label} tipe data tidak valid`;
+    case "too_small":
+      if (issue.type === "string")
+        return `${label} minimal ${issue.minimum} karakter`;
+      if (issue.type === "number")
+        return `${label} minimal bernilai ${issue.minimum}`;
+      return `${label} terlalu kecil`;
+    case "too_big":
+      if (issue.type === "string")
+        return `${label} maksimal ${issue.maximum} karakter`;
+      if (issue.type === "number")
+        return `${label} maksimal bernilai ${issue.maximum}`;
+      return `${label} terlalu besar`;
+    case "invalid_string":
+      if (issue.validation === "email") return `${label} format email tidak valid`;
+      return `${label} format tidak valid`;
+    default:
+      return `${label}: ${issue.message}`;
+  }
+}
+
 export async function validateSchema<T extends z.ZodType>(
   schema: T,
   data: unknown
@@ -164,28 +222,26 @@ export async function validateSchema<T extends z.ZodType>(
     return await schema.parseAsync(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const issues = error.errors.map((issue) => {
-        return `${issue.path.join(".")}: ${issue.message}`;
-      });
-      throw new ValidationError(issues.join(", "));
+      const issues = error.errors.map((issue) => translateZodIssue(issue));
+      throw new ValidationError(`Kesalahan validasi: ${issues.join(", ")}`);
     }
     throw error;
   }
 }
 
-export function handlePrismaError(error: unknown): never {
-  // if (error instanceof Prisma.PrismaClientKnownRequestError) {
-  //   switch (error.code) {
-  //     case "P2002":
-  //       throw new ValidationError("Data sudah ada dalam database.");
-  //     case "P2025":
-  //       throw new NotFoundError("Data tidak ditemukan.");
-  //     case "P2003":
-  //       throw new ValidationError("Referensi data tidak valid.");
-  //     default:
-  //       throw new DatabaseError(`Database error: ${error.message}`);
-  //   }
-  // }
+export function handlePrismaError(error: any): never {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    switch (error.code) {
+      case "P2002":
+        throw new ValidationError("Data dengan nilai tersebut sudah ada (duplikat).");
+      case "P2025":
+        throw new NotFoundError("Data tidak ditemukan.");
+      case "P2003":
+        throw new ValidationError("Referensi data tidak valid atau masih digunakan oleh data lain.");
+      default:
+        throw new DatabaseError(`Kesalahan database (${error.code}): ${(error as any).message}`);
+    }
+  }
 
   if (error instanceof Error) {
     throw error;
