@@ -1,11 +1,20 @@
-﻿import { Pool } from 'pg';
+import { Pool } from 'pg';
 
-const pool = new Pool({
+const globalForPg = globalThis as unknown as { pool: Pool };
+export const pool = globalForPg.pool || (process.env.DATABASE_URL_SIKERJA ? new Pool({
   connectionString: process.env.DATABASE_URL_SIKERJA,
-});
+}) : null);
+
+if (process.env.NODE_ENV !== "production") globalForPg.pool = pool as Pool;
 
 export const pgClient = {
-  query: (text: string, params?: any[]) => pool.query(text, params),
+  query: async (text: string, params?: any[]) => {
+    if (!pool) {
+      console.warn("DATABASE_URL_SIKERJA is not defined. Query skipped.");
+      return { rows: [] };
+    }
+    return pool.query(text, params);
+  },
 };
 
 export type TipePaket = 'Fisik' | 'Pengawasan' | 'Perencanaan' | 'LainLain';
