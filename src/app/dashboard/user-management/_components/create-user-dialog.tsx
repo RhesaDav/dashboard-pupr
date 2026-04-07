@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
-import { Role } from "@/generated/prisma";
+import { Role } from "@/generated/prisma/enums";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
@@ -138,7 +138,7 @@ export default function CreateUserDialog() {
                 <SelectValue placeholder="Pilih role" />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(Role).map((role) => (
+                {["ADMIN", "SUPERADMIN", "CONSULTANT"].map((role) => (
                   <SelectItem key={role} value={role}>
                     {role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()}
                   </SelectItem>

@@ -1,4 +1,4 @@
-﻿import { Role } from "@/generated/prisma";
+import { Role } from "@/generated/prisma/enums";
 import { z } from "zod";
 
 export const UserRoleEnum = z.enum(["ADMIN", "USER"]);
@@ -13,7 +13,7 @@ export const CreateUserSchema = z.object({
       /^[a-zA-Z0-9_]+$/,
       "Username hanya boleh mengandung huruf, angka, dan underscore"
     ),
-  role: z.nativeEnum(Role),
+  role: z.enum(["ADMIN", "SUPERADMIN", "CONSULTANT"]),
 });
 
 export const UpdateUserSchema = CreateUserSchema.extend({

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
@@ -100,11 +100,11 @@ function UserManagementTable() {
         return (
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${
-              roleColorMap[role] || "bg-gray-100 text-gray-800"
+              roleColorMap[role || ""] || "bg-gray-100 text-gray-800"
             }`}
-            aria-label={`Role: ${role}`}
+            aria-label={`Role: ${role || "N/A"}`}
           >
-            {role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()}
+            {role ? role.charAt(0).toUpperCase() + role.slice(1).toLowerCase() : "N/A"}
           </span>
         );
       },

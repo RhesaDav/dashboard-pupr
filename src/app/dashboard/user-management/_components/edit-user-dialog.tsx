@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { User, Role } from "@/generated/prisma";
+import { User } from "@/generated/prisma";
+import { Role } from "@/generated/prisma/enums";
 import { Loader, LucideEdit } from "lucide-react";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -26,7 +27,7 @@ export default function EditUserDialog({ user }: { user: User }) {
       id: user.id,
       email: user.email || "",
       name: user.name || "",
-      role: (user.role as Role) || Role.CONSULTANT,
+      role: (user.role as Role) || (Role ? Role.CONSULTANT : "CONSULTANT"),
       password: "",
     },
   });
@@ -140,7 +141,7 @@ export default function EditUserDialog({ user }: { user: User }) {
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(Role).map((role) => (
+                {["ADMIN", "SUPERADMIN", "CONSULTANT"].map((role) => (
                   <SelectItem key={role} value={role}>
                     {role.charAt(0) + role.slice(1).toLowerCase()}
                   </SelectItem>
