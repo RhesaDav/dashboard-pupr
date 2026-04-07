@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
 import { ArrowUpDown, Edit, Eye, MoreHorizontalIcon } from "lucide-react";
-import { Contract, FinancialProgress } from "@prisma/client";
+import { Contract, FinancialProgress } from "@/generated/prisma";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";

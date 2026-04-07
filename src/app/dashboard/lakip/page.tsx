@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import LakipTable from "./_components/lakip-table";
 import Pagination from "@/components/ui/pagination";
 import { getAllContracts } from "@/actions/contract";

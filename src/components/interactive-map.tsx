@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   MapContainer,
@@ -14,7 +14,7 @@ import { Search, MapPin, Navigation, Layers, X, ChevronDown, Check, Info } from 
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 
-const createCustomIcon = (color: string, emoji: string = "📍") => {
+const createCustomIcon = (color: string, emoji: string = "ðŸ“") => {
   return L.divIcon({
     html: `
       <div style="
@@ -46,8 +46,8 @@ const createCustomIcon = (color: string, emoji: string = "📍") => {
 
 const startIcon = createCustomIcon("#10b981", "A"); // Green
 const endIcon = createCustomIcon("#ef4444", "B"); // Red
-const searchIcon = createCustomIcon("#3b82f6", "🔍"); // Blue
-const currentIcon = createCustomIcon("#8b5cf6", "📍"); // Purple
+const searchIcon = createCustomIcon("#3b82f6", "ðŸ”"); // Blue
+const currentIcon = createCustomIcon("#8b5cf6", "ðŸ“"); // Purple
 
 interface Coordinates {
   lat: number;

@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import React, { useEffect, useState, useMemo } from "react";
 import { DeleteUserDialog } from "./delete-user-dialog";
-import { User } from "@prisma/client";
+import { User } from "@/generated/prisma";
 import EditUserDialog from "./edit-user-dialog";
 import { ArrowUpDown, Eye, Search } from "lucide-react";
 import UserAccessibilitySheet from "./user-accessibility-sheet";

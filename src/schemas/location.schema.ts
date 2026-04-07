@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 export const LocationCreateSchema = z.object({
   contractId: z.string().uuid({ message: "Contract ID harus berupa UUID yang valid" }),

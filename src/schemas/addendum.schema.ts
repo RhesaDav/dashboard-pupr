@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 export const AddendumCreateSchema = z.object({
   contractId: z.string().uuid({ message: "Contract ID harus berupa UUID yang valid" }),

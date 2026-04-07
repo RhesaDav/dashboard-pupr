@@ -1,4 +1,4 @@
-import DataContractTable from "./_components/data-contract-table";
+﻿import DataContractTable from "./_components/data-contract-table";
 import Pagination from "@/components/ui/pagination";
 import { getAllContracts } from "@/actions/contract";
 

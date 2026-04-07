@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import ReportTable from './_components/report-table';
 import Pagination from '@/components/ui/pagination';
 import { getAllContracts } from '@/actions/contract';

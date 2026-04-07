@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Percent, CircleDollarSign, Loader2 } from "lucide-react";
-import { FinancialProgress } from "@prisma/client";
+import { FinancialProgress } from "@/generated/prisma";
 import { FinancialProgressCreateSchema } from "@/schemas/financial-progress.schema";
 import { upsertFinancialProgress } from "@/actions/financial-progress";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

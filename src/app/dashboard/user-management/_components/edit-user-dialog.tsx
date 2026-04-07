@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { User, Role } from "@prisma/client";
+import { User, Role } from "@/generated/prisma";
 import { Loader, LucideEdit } from "lucide-react";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -26,7 +26,7 @@ export default function EditUserDialog({ user }: { user: User }) {
       id: user.id,
       email: user.email || "",
       name: user.name || "",
-      role: user.role || Role.CONSULTANT,
+      role: (user.role as Role) || Role.CONSULTANT,
       password: "",
     },
   });
@@ -104,7 +104,7 @@ export default function EditUserDialog({ user }: { user: User }) {
               id="password"
               type="password"
               autoComplete="new-password"
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               {...form.register("password")}
               disabled={loading}
             />
@@ -133,7 +133,7 @@ export default function EditUserDialog({ user }: { user: User }) {
             <Label htmlFor="role">Role</Label>
             <Select
               onValueChange={(value) => form.setValue("role", value as Role)}
-              defaultValue={user.role}
+              defaultValue={user.role ?? undefined}
               disabled={loading || user.role !== "SUPERADMIN"}
             >
               <SelectTrigger>

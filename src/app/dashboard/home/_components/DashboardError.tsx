@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 
 export function DashboardError() {

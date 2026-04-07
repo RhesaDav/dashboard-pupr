@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from "react";
 import { Progress } from "@/components/ui/progress";
@@ -16,7 +16,7 @@ import {
   FinancialProgress,
   Location,
   PhysicalProgress as ProgressType,
-} from "@prisma/client";
+} from "@/generated/prisma";
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { DataTableSearch } from "@/components/data-table-search";
 import { DataTableFilter } from "@/components/data-table-filter";

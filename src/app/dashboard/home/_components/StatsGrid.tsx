@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Activity, DollarSign, FileCheck, TrendingUp } from "lucide-react";
 import { StatsCard } from "./StatsCard";

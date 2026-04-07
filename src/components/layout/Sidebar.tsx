@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,7 +24,7 @@ import {
   TriangleAlert
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { Role } from "@prisma/client";
+import { Role } from "@/generated/prisma";
 import { useState } from "react";
 import Image from "next/image";
 

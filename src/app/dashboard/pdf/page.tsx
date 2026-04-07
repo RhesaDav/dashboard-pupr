@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useRef, useState } from 'react';
 import jsPDF from 'jspdf';
@@ -15,8 +15,8 @@ const samplePdfData = {
         kabupaten: "Kabupaten Pegunungan Arfak",
         distrik: "Distrik Testega",
         kampung: "Kampung Demora - Kampung Bomai",
-        koordinatAwal: "1°27'30,99\"S 133°33'17,85\"E",
-        koordinatAkhir: "1°21'42,30\"S 133°36'7,13\"E",
+        koordinatAwal: "1Â°27'30,99\"S 133Â°33'17,85\"E",
+        koordinatAkhir: "1Â°21'42,30\"S 133Â°36'7,13\"E",
     },
     pekerjaan_namaKegiatan: "Pembangunan Jalan Bts Kab. Pegaf - Testega - Bts Kab. Sintuni",
     manfaat: [

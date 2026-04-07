@@ -1,7 +1,7 @@
-"use server";
+﻿"use server";
 
 import { prisma } from "@/lib/prisma";
-import { Contract, PhysicalProgress, Role } from "@prisma/client";
+import { Contract, PhysicalProgress, Role } from "@/generated/prisma";
 import { addDays, format, subMonths, isBefore, isAfter } from "date-fns";
 import { cookies } from "next/headers";
 

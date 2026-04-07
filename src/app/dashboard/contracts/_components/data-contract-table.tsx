@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Column, ColumnDef } from "@tanstack/react-table";
@@ -16,7 +16,7 @@ import {
   Search,
   Trash,
 } from "lucide-react";
-import { Contract } from "@prisma/client";
+import { Contract } from "@/generated/prisma";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { DeleteContractDialog } from "./delete-contract-dialog";
 import { Checkbox } from "@/components/ui/checkbox";

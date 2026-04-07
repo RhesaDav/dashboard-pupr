@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -170,7 +170,7 @@ export default function ForgotPasswordPage() {
 
         <div className="bg-gray-50 px-6 py-5 text-center border-t border-gray-200">
           <p className="text-xs text-gray-500">
-            © {new Date().getFullYear()} Bina Marga. Hak cipta dilindungi.
+            Â© {new Date().getFullYear()} Bina Marga. Hak cipta dilindungi.
           </p>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 import { PaginationSchema } from "./pagination.schema";
 
 export const ContractFilterSchema = PaginationSchema.extend({

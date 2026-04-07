@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
-import { Role } from "@prisma/client";
+import { Role } from "@/generated/prisma";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
@@ -105,7 +105,7 @@ export default function CreateUserDialog() {
               autoComplete="new-password"
               id="password"
               type="password"
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               {...form.register("password")}
             />
             {form.formState.errors.password && (

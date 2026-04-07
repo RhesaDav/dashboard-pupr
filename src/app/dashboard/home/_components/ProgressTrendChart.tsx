@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Activity } from "lucide-react";
 import { ChartCard } from "./ChartCard";

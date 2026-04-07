@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Card,
@@ -37,7 +37,7 @@ export function ProblemContractsList({ contracts }: ProblemContractsListProps) {
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground mt-1 gap-1">
                     <Calendar className="w-4 h-4" />
-                    {contract.startDate} – {contract.endDate}
+                    {contract.startDate} â€“ {contract.endDate}
                   </div>
                 </div>
                 <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">

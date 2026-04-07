@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,7 +26,7 @@ import {
   ChevronRight,
   AlertCircle,
 } from "lucide-react";
-import { Contract, User } from "@prisma/client";
+import { Contract, User } from "@/generated/prisma";
 import { getAllContracts } from "@/actions/contract";
 import {
   getUserContractAccess,
@@ -288,7 +288,7 @@ export default function UserAccessibilitySheet({
                               <Badge variant="outline" className="font-normal">
                                 {contract.nomorKontrak || "No ID"}
                               </Badge>
-                              •{" "}
+                              â€¢{" "}
                               {contract.tanggalKontrak
                                 ? format(
                                     new Date(contract.tanggalKontrak),

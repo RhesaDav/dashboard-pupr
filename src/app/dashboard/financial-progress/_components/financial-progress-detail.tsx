@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Percent, CircleDollarSign } from "lucide-react";
-import { FinancialProgress } from "@prisma/client";
+import { FinancialProgress } from "@/generated/prisma";
 import { Label } from "@/components/ui/label";
 
 export function FinancialProgressDetail({

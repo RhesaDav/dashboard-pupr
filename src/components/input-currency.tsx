@@ -1,4 +1,4 @@
-// components/ui/input-currency.tsx
+﻿// components/ui/input-currency.tsx
 "use client";
 
 import React, { ChangeEvent, useEffect, useState } from "react";

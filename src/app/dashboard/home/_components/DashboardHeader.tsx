@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { User } from "@prisma/client";
+import { User } from "@/generated/prisma";
 import { Clock, FileCheck } from "lucide-react";
 
 interface DashboardHeaderProps {

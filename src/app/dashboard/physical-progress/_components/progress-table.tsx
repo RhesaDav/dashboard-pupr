@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
@@ -11,7 +11,7 @@ import {
   Eye,
   Trash,
 } from "lucide-react";
-import { Contract, PhysicalProgress } from "@prisma/client";
+import { Contract, PhysicalProgress } from "@/generated/prisma";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";

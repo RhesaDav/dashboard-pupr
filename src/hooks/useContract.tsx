@@ -1,5 +1,5 @@
-import { getAllContracts } from "@/actions/contract";
-import { Addendum, Contract, FinancialProgress, PhysicalProgress, Location } from "@prisma/client";
+﻿import { getAllContracts } from "@/actions/contract";
+import { Addendum, Contract, FinancialProgress, PhysicalProgress, Location } from "@/generated/prisma";
 import { useEffect, useState } from "react";
 
 interface FilterProps {

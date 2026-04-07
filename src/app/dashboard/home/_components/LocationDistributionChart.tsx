@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { MapPin } from "lucide-react";
 import { ChartCard } from "./ChartCard";

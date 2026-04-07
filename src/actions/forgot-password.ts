@@ -1,8 +1,8 @@
-"use server";
+﻿"use server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { randomBytes } from "crypto";
 import { sendEmail } from "@/lib/mail";
-import { hash } from "bcryptjs";
 import { z } from "zod";
 
 const resetTokenSchema = z
@@ -80,7 +80,7 @@ export async function requestPasswordResetAction(formData: FormData) {
             <p>Terima kasih,<br>Tim Bina Marga</p>
           </div>
           <div style="background-color: #f3f4f6; padding: 10px; text-align: center; font-size: 12px; color: #6b7280;">
-            © ${new Date().getFullYear()} Bina Marga. Hak cipta dilindungi.
+            Â© ${new Date().getFullYear()} Bina Marga. Hak cipta dilindungi.
           </div>
         </div>
       `,
@@ -168,11 +168,12 @@ export async function resetPasswordAction(formData: FormData) {
 
     const resetRecord = user.passwordReset[0];
 
-    const hashedPassword = await hash(password, 10);
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { password: hashedPassword },
+    // @ts-ignore - Better Auth types can sometimes be missing the 'admin' property in the server-side API inference
+    await auth.api.admin.setUserPassword({
+      body: {
+        userId: user.id,
+        newPassword: password,
+      },
     });
 
     await prisma.passwordReset.deleteMany({

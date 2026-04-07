@@ -1,6 +1,7 @@
-"use server";
+﻿"use server";
 
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { Role } from "@/generated/prisma";
 import {
   CreateUserSchema,
@@ -205,16 +206,11 @@ export const updateUser = async (formData: FormData) => {
       });
 
       if (validatedData.password) {
-        const hashedPassword = await bcrypt.hash(validatedData.password, 10);
-        await tx.account.updateMany({
-          where: {
+        // @ts-ignore - Better Auth types can sometimes be missing the 'admin' property in the server-side API inference
+        await auth.api.admin.setUserPassword({
+          body: {
             userId: validatedData.id,
-            providerId: "credential",
-          },
-          data: {
-            password: hashedPassword,
-            accountId: validatedData.email,
-            updatedAt: new Date(),
+            newPassword: validatedData.password,
           },
         });
       }

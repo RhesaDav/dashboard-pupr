@@ -9,6 +9,7 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
+import { Contract } from "@/generated/prisma";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Calendar, Info } from "lucide-react";
@@ -31,7 +32,7 @@ import {
 } from "@/components/ui/tooltip";
 import { v4 as uuidv4 } from "uuid";
 import { cn, romanize } from "@/lib/utils";
-import { Addendum } from "@prisma/client";
+import { Addendum } from "@/generated/prisma";
 import { addDays, format } from "date-fns";
 import { DateDayPicker } from "@/components/date-day-picker";
 import { Separator } from "@/components/ui/separator";
@@ -550,7 +551,7 @@ export default function AddendumStep() {
                               </FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="Contoh: m³, ton, unit"
+                                  placeholder="Contoh: mÂ³, ton, unit"
                                   value={item.satuan || ""}
                                   onChange={(e) =>
                                     updateAddendumItem(
@@ -656,7 +657,7 @@ export default function AddendumStep() {
                                   </FormLabel>
                                   <FormControl>
                                     <Input
-                                      placeholder="Contoh: m³, ton, unit"
+                                      placeholder="Contoh: mÂ³, ton, unit"
                                       value={item.satuan || ""}
                                       onChange={(e) =>
                                         updateAddendumItem(

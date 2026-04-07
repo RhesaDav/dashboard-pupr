@@ -37,7 +37,7 @@ import {
   FinancialProgress,
   PhysicalProgress,
   Location,
-} from "@prisma/client";
+} from "@/generated/prisma";
 import { useQuery } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";

@@ -1,5 +1,5 @@
-import { getAllUsers } from "@/actions/user";
-import { User } from "@prisma/client";
+﻿import { getAllUsers } from "@/actions/user";
+import { User } from "@/generated/prisma";
 import { useEffect, useState } from "react";
 
 interface FilterProps {

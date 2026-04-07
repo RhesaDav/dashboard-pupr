@@ -1,4 +1,4 @@
-type District = {
+﻿type District = {
   kodeKabupaten: string;
   namaKabupaten: string;
   namaDistrik: string;
