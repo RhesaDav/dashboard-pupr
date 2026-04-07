@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -40,15 +40,19 @@ export function FinancialProgressForm() {
         totalProgress,
         contractId: contractId,
       }),
-    onSuccess: () => {
-      toast.success("Progress finansial berhasil disimpan");
-      router.push("/dashboard/financial-progress");
-      queryClient.invalidateQueries({
-        queryKey: ["contract-financial-progress", contractId],
-      });
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success("Progress finansial berhasil disimpan");
+        router.push("/dashboard/financial-progress");
+        queryClient.invalidateQueries({
+          queryKey: ["contract-financial-progress", contractId],
+        });
+      } else {
+        toast.error(data.error || "Gagal menyimpan progress");
+      }
     },
-    onError: () => {
-      toast.error("Gagal menyimpan progress");
+    onError: (error: any) => {
+      toast.error(error.message || "Gagal menyimpan progress");
     },
   });
 

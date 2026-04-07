@@ -297,7 +297,7 @@ export default function MultiStepForm({ id }: MultiStepFormProps) {
           form.reset();
         }
       } else {
-        toast.error(`Gagal ${id ? "memperbarui" : "membuat"} kontrak`);
+        toast.error(result.error || `Gagal ${id ? "memperbarui" : "membuat"} kontrak`);
       }
     } catch (error: any) {
       toast.error(error.message || "Terjadi kesalahan");
