@@ -196,7 +196,13 @@ export const updateUser = async (formData: FormData) => {
 
       if (validatedData.password) {
         // @ts-ignore - Better Auth types can sometimes be missing the 'admin' property in the server-side API inference
-        await auth.api.admin.setUserPassword({
+        const adminApi = auth.api.admin;
+        
+        if (!adminApi) {
+          throw new Error("Better Auth Admin API is not initialized. Please check your plugin configuration.");
+        }
+
+        await adminApi.setUserPassword({
           body: {
             userId: validatedData.id,
             newPassword: validatedData.password,

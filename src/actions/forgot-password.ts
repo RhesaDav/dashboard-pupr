@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { randomBytes } from "crypto";
@@ -169,7 +169,13 @@ export async function resetPasswordAction(formData: FormData) {
     const resetRecord = user.passwordReset[0];
 
     // @ts-ignore - Better Auth types can sometimes be missing the 'admin' property in the server-side API inference
-    await auth.api.admin.setUserPassword({
+    const adminApi = auth.api.admin;
+    
+    if (!adminApi) {
+      throw new Error("Better Auth Admin API is not initialized. Please check your plugin configuration.");
+    }
+
+    await adminApi.setUserPassword({
       body: {
         userId: user.id,
         newPassword: password,
