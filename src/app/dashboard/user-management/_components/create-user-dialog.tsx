@@ -118,7 +118,7 @@ export default function CreateUserDialog() {
               autoComplete="new-password"
               id="password"
               type="password"
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               {...form.register("password")}
             />
             {form.formState.errors.password && (

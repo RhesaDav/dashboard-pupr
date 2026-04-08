@@ -105,7 +105,7 @@ export default function EditUserDialog({ user }: { user: User }) {
               id="password"
               type="password"
               autoComplete="new-password"
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               {...form.register("password")}
               disabled={loading}
             />

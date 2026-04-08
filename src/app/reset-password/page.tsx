@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, Suspense } from "react";
 import { useForm } from "react-hook-form";
@@ -249,7 +249,7 @@ function ResetPasswordPage() {
                           <div className="relative">
                             <Input
                               type={showPassword ? "text" : "password"}
-                              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                              placeholder="••••••••"
                               className="h-12 w-full pr-10 border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-lg shadow-sm px-4 text-base transition-colors duration-150"
                               {...field}
                             />
@@ -291,7 +291,7 @@ function ResetPasswordPage() {
                           <div className="relative">
                             <Input
                               type={showConfirmPassword ? "text" : "password"}
-                              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                              placeholder="••••••••"
                               className="h-12 w-full pr-10 border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-lg shadow-sm px-4 text-base transition-colors duration-150"
                               {...field}
                             />
@@ -331,7 +331,7 @@ function ResetPasswordPage() {
 
         <div className="bg-gray-50 px-6 py-5 text-center border-t border-gray-200">
           <p className="text-xs text-gray-500">
-            Â© {new Date().getFullYear()} Bina Marga. Hak cipta dilindungi.
+            © {new Date().getFullYear()} Bina Marga. Hak cipta dilindungi.
           </p>
         </div>
       </div>
