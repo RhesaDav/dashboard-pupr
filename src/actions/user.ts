@@ -1,3 +1,4 @@
+// Cache invalidate 2
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -12,6 +13,7 @@ import { handlePrismaError, validateSchema } from "@/lib/utils";
 import { getCurrentUser } from "./auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { Prisma } from "@/generated/prisma";
 import { ZodError } from "zod";
 
@@ -35,23 +37,43 @@ export const createUser = async (formData: FormData) => {
     }
 
     console.log("Creating user...", validatedData.email);
-    const newUser = await prisma.user.create({
-      data: {
-        email: validatedData.email,
-        name: validatedData.name,
-        role: validatedData.role,
-        accounts: {
-          create: {
-            id: crypto.randomUUID(),
-            accountId: validatedData.email,
-            providerId: "credential",
-            password: await bcrypt.hash(validatedData.password, 10),
-            createdAt: new Date(),
-            updatedAt: new Date(),
+    
+    const api = auth.api;
+    let newUser;
+    
+    // Use Better Auth's API to ensure consistent password hashing, account linkage, and event hooks are triggered.
+    if (api && api.createUser) {
+      newUser = await api.createUser({
+        body: {
+          email: validatedData.email,
+          name: validatedData.name,
+          password: validatedData.password,
+          role: validatedData.role,
+        },
+        headers: await headers(),
+      });
+      // The API return type contains the user object
+      newUser = newUser?.user || newUser;
+    } else {
+      // Fallback
+      newUser = await prisma.user.create({
+        data: {
+          email: validatedData.email,
+          name: validatedData.name,
+          role: validatedData.role,
+          accounts: {
+            create: {
+              id: crypto.randomUUID(),
+              accountId: validatedData.email,
+              providerId: "credential",
+              password: await bcrypt.hash(validatedData.password, 10),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
           },
         },
-      },
-    });
+      });
+    }
 
     revalidatePath("/dashboard/user-management", "page");
 
@@ -188,36 +210,57 @@ export const updateUser = async (formData: FormData) => {
       role: validatedData.role,
     };
 
-    const updatedUser = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.update({
+    let updatedUser;
+    const api = auth.api;
+    
+    if (api && api.adminUpdateUser) {
+      updatedUser = await api.adminUpdateUser({
+        body: {
+          userId: validatedData.id,
+          data: {
+            name: validatedData.name,
+            email: validatedData.email,
+            role: validatedData.role,
+          }
+        },
+        headers: await headers(),
+      });
+      // The Better Auth API directly returns the user.
+    } else {
+      updatedUser = await prisma.user.update({
         where: { id: validatedData.id },
         data: updateData,
       });
+    }
 
-      if (validatedData.password) {
-        // @ts-ignore - Better Auth types can sometimes be missing the 'admin' property in the server-side API inference
-        const adminApi = auth.api.admin;
-        
-        if (!adminApi) {
-          throw new Error("Better Auth Admin API is not initialized. Please check your plugin configuration.");
-        }
-
-        await adminApi.setUserPassword({
-          body: {
-            userId: validatedData.id,
-            newPassword: validatedData.password,
-          },
-        });
+    if (validatedData.password) {
+      if (!api || !api.setUserPassword) {
+        throw new Error("Better Auth API (setUserPassword) is not correctly initialized.");
       }
 
-      return user;
-    });
+      await api.setUserPassword({
+        body: {
+          userId: validatedData.id,
+          newPassword: validatedData.password,
+        },
+        headers: await headers(), // Forward session to authenticate as SUPERADMIN
+      });
+    }
 
     revalidatePath("/dashboard/user-management", "page");
 
     return { success: true, user: updatedUser };
   } catch (error: any) {
     console.error("Error in updateUser:", error);
+    
+    // Better Auth API Error Handling
+    if (error.status === 'UNAUTHORIZED' || error.statusCode === 401) {
+      return {
+        success: false,
+        error: "Anda tidak memiliki izin (Superadmin) untuk melakukan tindakan ini."
+      };
+    }
+
     try {
       handlePrismaError(error);
     } catch (e: any) {
@@ -234,9 +277,21 @@ export const deleteUser = async (id: string) => {
   try {
     const validatedId = await validateSchema(UserIdSchema, { id });
 
-    await prisma.user.delete({
-      where: { id: validatedId.id },
-    });
+    // Ensure we are calling the internal Better Auth API to cleanly delete the user and clear sessions.
+    const api = auth.api;
+    if (api && api.removeUser) {
+      await api.removeUser({
+        body: {
+          userId: validatedId.id,
+        },
+        headers: await headers(),
+      });
+    } else {
+      // Fallback if Better Auth admin plugin is somehow unavailable
+      await prisma.user.delete({
+        where: { id: validatedId.id },
+      });
+    }
 
     revalidatePath("/dashboard/user-management", "page");
 

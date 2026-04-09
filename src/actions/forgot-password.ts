@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { randomBytes } from "crypto";
 import { sendEmail } from "@/lib/mail";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 
 const resetTokenSchema = z
   .object({
@@ -168,17 +169,15 @@ export async function resetPasswordAction(formData: FormData) {
 
     const resetRecord = user.passwordReset[0];
 
-    // @ts-ignore - Better Auth types can sometimes be missing the 'admin' property in the server-side API inference
-    const adminApi = auth.api.admin;
-    
-    if (!adminApi) {
-      throw new Error("Better Auth Admin API is not initialized. Please check your plugin configuration.");
-    }
-
-    await adminApi.setUserPassword({
-      body: {
+    // Update the password in the Account table directly using Prisma
+    // This bypasses the administrative role check since we already validated the reset token
+    await prisma.account.updateMany({
+      where: {
         userId: user.id,
-        newPassword: password,
+        providerId: "credential",
+      },
+      data: {
+        password: await bcrypt.hash(password, 10),
       },
     });
 
