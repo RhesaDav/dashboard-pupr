@@ -157,7 +157,7 @@ model ContractAccess {
 
 model User {
   id            String   @id @default(uuid())
-  name          String
+  name          String   @unique
   email         String   @unique
   emailVerified Boolean  @default(false)
   image         String?
