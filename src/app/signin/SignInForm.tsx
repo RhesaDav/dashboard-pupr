@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
+import { resolveIdentifierAction } from "@/actions/auth";
 import { toast } from "sonner";
 import { Loader, Eye, EyeOff, Building2, CalendarDays } from "lucide-react";
 import Link from "next/link";
@@ -76,8 +77,21 @@ function SignInForm() {
     setErrorMessage(null);
 
     try {
+      // Step 1: Resolve identifier (email or name) to a valid email
+      const resolution = await resolveIdentifierAction(values.emailOrName);
+      
+      if (!resolution.success || !resolution.email) {
+        setErrorMessage(resolution.error || "Email/username tidak terdaftar");
+        toast.error("Login gagal", {
+          description: resolution.error || "Email/username tidak terdaftar",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Use the resolved email to sign in
       const { data, error } = await signIn.email({
-        email: values.emailOrName,
+        email: resolution.email,
         password: values.password,
       });
 

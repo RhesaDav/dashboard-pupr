@@ -1,4 +1,4 @@
-﻿
+
 /**
  * Client
 **/
@@ -88,7 +88,7 @@ export type Role = $Enums.Role
 export const Role: typeof $Enums.Role
 
 /**
- * ##  Prisma Client Ê²Ë¢
+ * ##  Prisma Client ʲˢ
  *
  * Type-safe database client for TypeScript & Node.js
  * @example
@@ -111,7 +111,7 @@ export class PrismaClient<
   [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['other'] }
 
     /**
-   * ##  Prisma Client Ê²Ë¢
+   * ##  Prisma Client ʲˢ
    *
    * Type-safe database client for TypeScript & Node.js
    * @example
@@ -2199,7 +2199,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Contracts from the position of the cursor.
+     * Take `±n` Contracts from the position of the cursor.
      */
     take?: number
     /**
@@ -3083,7 +3083,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Contracts from the position of the cursor.
+     * Take `±n` Contracts from the position of the cursor.
      */
     take?: number
     /**
@@ -3135,7 +3135,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Contracts from the position of the cursor.
+     * Take `±n` Contracts from the position of the cursor.
      */
     take?: number
     /**
@@ -3187,7 +3187,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Contracts from the position of the cursor.
+     * Take `±n` Contracts from the position of the cursor.
      */
     take?: number
     /**
@@ -3686,7 +3686,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` PhysicalProgresses from the position of the cursor.
+     * Take `±n` PhysicalProgresses from the position of the cursor.
      */
     take?: number
     /**
@@ -4411,7 +4411,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` PhysicalProgresses from the position of the cursor.
+     * Take `±n` PhysicalProgresses from the position of the cursor.
      */
     take?: number
     /**
@@ -4463,7 +4463,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` PhysicalProgresses from the position of the cursor.
+     * Take `±n` PhysicalProgresses from the position of the cursor.
      */
     take?: number
     /**
@@ -4515,7 +4515,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` PhysicalProgresses from the position of the cursor.
+     * Take `±n` PhysicalProgresses from the position of the cursor.
      */
     take?: number
     /**
@@ -4906,7 +4906,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` FinancialProgresses from the position of the cursor.
+     * Take `±n` FinancialProgresses from the position of the cursor.
      */
     take?: number
     /**
@@ -5610,7 +5610,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` FinancialProgresses from the position of the cursor.
+     * Take `±n` FinancialProgresses from the position of the cursor.
      */
     take?: number
     /**
@@ -5662,7 +5662,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` FinancialProgresses from the position of the cursor.
+     * Take `±n` FinancialProgresses from the position of the cursor.
      */
     take?: number
     /**
@@ -5714,7 +5714,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` FinancialProgresses from the position of the cursor.
+     * Take `±n` FinancialProgresses from the position of the cursor.
      */
     take?: number
     /**
@@ -6051,7 +6051,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Locations from the position of the cursor.
+     * Take `±n` Locations from the position of the cursor.
      */
     take?: number
     /**
@@ -6725,7 +6725,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Locations from the position of the cursor.
+     * Take `±n` Locations from the position of the cursor.
      */
     take?: number
     /**
@@ -6777,7 +6777,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Locations from the position of the cursor.
+     * Take `±n` Locations from the position of the cursor.
      */
     take?: number
     /**
@@ -6829,7 +6829,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Locations from the position of the cursor.
+     * Take `±n` Locations from the position of the cursor.
      */
     take?: number
     /**
@@ -7202,7 +7202,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Addenda from the position of the cursor.
+     * Take `±n` Addenda from the position of the cursor.
      */
     take?: number
     /**
@@ -7913,7 +7913,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Addenda from the position of the cursor.
+     * Take `±n` Addenda from the position of the cursor.
      */
     take?: number
     /**
@@ -7965,7 +7965,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Addenda from the position of the cursor.
+     * Take `±n` Addenda from the position of the cursor.
      */
     take?: number
     /**
@@ -8017,7 +8017,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Addenda from the position of the cursor.
+     * Take `±n` Addenda from the position of the cursor.
      */
     take?: number
     /**
@@ -8330,7 +8330,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` ContractAccesses from the position of the cursor.
+     * Take `±n` ContractAccesses from the position of the cursor.
      */
     take?: number
     /**
@@ -8984,7 +8984,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` ContractAccesses from the position of the cursor.
+     * Take `±n` ContractAccesses from the position of the cursor.
      */
     take?: number
     /**
@@ -9036,7 +9036,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` ContractAccesses from the position of the cursor.
+     * Take `±n` ContractAccesses from the position of the cursor.
      */
     take?: number
     /**
@@ -9088,7 +9088,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` ContractAccesses from the position of the cursor.
+     * Take `±n` ContractAccesses from the position of the cursor.
      */
     take?: number
     /**
@@ -9339,6 +9339,9 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     role: string | null
+    banned: boolean | null
+    banReason: string | null
+    banExpires: Date | null
     lastLoggedIn: Date | null
   }
 
@@ -9351,6 +9354,9 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     role: string | null
+    banned: boolean | null
+    banReason: string | null
+    banExpires: Date | null
     lastLoggedIn: Date | null
   }
 
@@ -9363,6 +9369,9 @@ export namespace Prisma {
     createdAt: number
     updatedAt: number
     role: number
+    banned: number
+    banReason: number
+    banExpires: number
     lastLoggedIn: number
     _all: number
   }
@@ -9377,6 +9386,9 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     role?: true
+    banned?: true
+    banReason?: true
+    banExpires?: true
     lastLoggedIn?: true
   }
 
@@ -9389,6 +9401,9 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     role?: true
+    banned?: true
+    banReason?: true
+    banExpires?: true
     lastLoggedIn?: true
   }
 
@@ -9401,6 +9416,9 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     role?: true
+    banned?: true
+    banReason?: true
+    banExpires?: true
     lastLoggedIn?: true
     _all?: true
   }
@@ -9425,7 +9443,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Users from the position of the cursor.
+     * Take `±n` Users from the position of the cursor.
      */
     take?: number
     /**
@@ -9486,6 +9504,9 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     role: string | null
+    banned: boolean | null
+    banReason: string | null
+    banExpires: Date | null
     lastLoggedIn: Date | null
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
@@ -9515,6 +9536,9 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     role?: boolean
+    banned?: boolean
+    banReason?: boolean
+    banExpires?: boolean
     lastLoggedIn?: boolean
     passwordReset?: boolean | User$passwordResetArgs<ExtArgs>
     contractAccess?: boolean | User$contractAccessArgs<ExtArgs>
@@ -9532,6 +9556,9 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     role?: boolean
+    banned?: boolean
+    banReason?: boolean
+    banExpires?: boolean
     lastLoggedIn?: boolean
   }, ExtArgs["result"]["user"]>
 
@@ -9544,6 +9571,9 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     role?: boolean
+    banned?: boolean
+    banReason?: boolean
+    banExpires?: boolean
     lastLoggedIn?: boolean
   }, ExtArgs["result"]["user"]>
 
@@ -9556,10 +9586,13 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     role?: boolean
+    banned?: boolean
+    banReason?: boolean
+    banExpires?: boolean
     lastLoggedIn?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "lastLoggedIn", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "banned" | "banReason" | "banExpires" | "lastLoggedIn", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     passwordReset?: boolean | User$passwordResetArgs<ExtArgs>
     contractAccess?: boolean | User$contractAccessArgs<ExtArgs>
@@ -9587,6 +9620,9 @@ export namespace Prisma {
       createdAt: Date
       updatedAt: Date
       role: string | null
+      banned: boolean | null
+      banReason: string | null
+      banExpires: Date | null
       lastLoggedIn: Date | null
     }, ExtArgs["result"]["user"]>
     composites: {}
@@ -10023,6 +10059,9 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
     readonly role: FieldRef<"User", 'String'>
+    readonly banned: FieldRef<"User", 'Boolean'>
+    readonly banReason: FieldRef<"User", 'String'>
+    readonly banExpires: FieldRef<"User", 'DateTime'>
     readonly lastLoggedIn: FieldRef<"User", 'DateTime'>
   }
     
@@ -10107,7 +10146,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Users from the position of the cursor.
+     * Take `±n` Users from the position of the cursor.
      */
     take?: number
     /**
@@ -10159,7 +10198,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Users from the position of the cursor.
+     * Take `±n` Users from the position of the cursor.
      */
     take?: number
     /**
@@ -10211,7 +10250,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Users from the position of the cursor.
+     * Take `±n` Users from the position of the cursor.
      */
     take?: number
     /**
@@ -10612,7 +10651,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` PasswordResets from the position of the cursor.
+     * Take `±n` PasswordResets from the position of the cursor.
      */
     take?: number
     /**
@@ -11258,7 +11297,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` PasswordResets from the position of the cursor.
+     * Take `±n` PasswordResets from the position of the cursor.
      */
     take?: number
     /**
@@ -11310,7 +11349,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` PasswordResets from the position of the cursor.
+     * Take `±n` PasswordResets from the position of the cursor.
      */
     take?: number
     /**
@@ -11362,7 +11401,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` PasswordResets from the position of the cursor.
+     * Take `±n` PasswordResets from the position of the cursor.
      */
     take?: number
     /**
@@ -11717,7 +11756,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Sessions from the position of the cursor.
+     * Take `±n` Sessions from the position of the cursor.
      */
     take?: number
     /**
@@ -12407,7 +12446,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Sessions from the position of the cursor.
+     * Take `±n` Sessions from the position of the cursor.
      */
     take?: number
     /**
@@ -12459,7 +12498,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Sessions from the position of the cursor.
+     * Take `±n` Sessions from the position of the cursor.
      */
     take?: number
     /**
@@ -12511,7 +12550,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Sessions from the position of the cursor.
+     * Take `±n` Sessions from the position of the cursor.
      */
     take?: number
     /**
@@ -12872,7 +12911,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Accounts from the position of the cursor.
+     * Take `±n` Accounts from the position of the cursor.
      */
     take?: number
     /**
@@ -13574,7 +13613,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Accounts from the position of the cursor.
+     * Take `±n` Accounts from the position of the cursor.
      */
     take?: number
     /**
@@ -13626,7 +13665,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Accounts from the position of the cursor.
+     * Take `±n` Accounts from the position of the cursor.
      */
     take?: number
     /**
@@ -13678,7 +13717,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Accounts from the position of the cursor.
+     * Take `±n` Accounts from the position of the cursor.
      */
     take?: number
     /**
@@ -13997,7 +14036,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Verifications from the position of the cursor.
+     * Take `±n` Verifications from the position of the cursor.
      */
     take?: number
     /**
@@ -14623,7 +14662,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Verifications from the position of the cursor.
+     * Take `±n` Verifications from the position of the cursor.
      */
     take?: number
     /**
@@ -14671,7 +14710,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Verifications from the position of the cursor.
+     * Take `±n` Verifications from the position of the cursor.
      */
     take?: number
     /**
@@ -14719,7 +14758,7 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `Â±n` Verifications from the position of the cursor.
+     * Take `±n` Verifications from the position of the cursor.
      */
     take?: number
     /**
@@ -15068,6 +15107,9 @@ export namespace Prisma {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     role: 'role',
+    banned: 'banned',
+    banReason: 'banReason',
+    banExpires: 'banExpires',
     lastLoggedIn: 'lastLoggedIn'
   };
 
@@ -15873,6 +15915,9 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     role?: StringNullableFilter<"User"> | string | null
+    banned?: BoolNullableFilter<"User"> | boolean | null
+    banReason?: StringNullableFilter<"User"> | string | null
+    banExpires?: DateTimeNullableFilter<"User"> | Date | string | null
     lastLoggedIn?: DateTimeNullableFilter<"User"> | Date | string | null
     passwordReset?: PasswordResetListRelationFilter
     contractAccess?: ContractAccessListRelationFilter
@@ -15889,6 +15934,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     role?: SortOrderInput | SortOrder
+    banned?: SortOrderInput | SortOrder
+    banReason?: SortOrderInput | SortOrder
+    banExpires?: SortOrderInput | SortOrder
     lastLoggedIn?: SortOrderInput | SortOrder
     passwordReset?: PasswordResetOrderByRelationAggregateInput
     contractAccess?: ContractAccessOrderByRelationAggregateInput
@@ -15908,6 +15956,9 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     role?: StringNullableFilter<"User"> | string | null
+    banned?: BoolNullableFilter<"User"> | boolean | null
+    banReason?: StringNullableFilter<"User"> | string | null
+    banExpires?: DateTimeNullableFilter<"User"> | Date | string | null
     lastLoggedIn?: DateTimeNullableFilter<"User"> | Date | string | null
     passwordReset?: PasswordResetListRelationFilter
     contractAccess?: ContractAccessListRelationFilter
@@ -15924,6 +15975,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     role?: SortOrderInput | SortOrder
+    banned?: SortOrderInput | SortOrder
+    banReason?: SortOrderInput | SortOrder
+    banExpires?: SortOrderInput | SortOrder
     lastLoggedIn?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
@@ -15942,6 +15996,9 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     role?: StringNullableWithAggregatesFilter<"User"> | string | null
+    banned?: BoolNullableWithAggregatesFilter<"User"> | boolean | null
+    banReason?: StringNullableWithAggregatesFilter<"User"> | string | null
+    banExpires?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     lastLoggedIn?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   }
 
@@ -16980,6 +17037,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
     passwordReset?: PasswordResetCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessCreateNestedManyWithoutUserInput
@@ -16996,6 +17056,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
     passwordReset?: PasswordResetUncheckedCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessUncheckedCreateNestedManyWithoutUserInput
@@ -17012,6 +17075,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     passwordReset?: PasswordResetUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUpdateManyWithoutUserNestedInput
@@ -17028,6 +17094,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     passwordReset?: PasswordResetUncheckedUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUncheckedUpdateManyWithoutUserNestedInput
@@ -17044,6 +17113,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
   }
 
@@ -17056,6 +17128,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
@@ -17068,6 +17143,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
@@ -18110,6 +18188,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     role?: SortOrder
+    banned?: SortOrder
+    banReason?: SortOrder
+    banExpires?: SortOrder
     lastLoggedIn?: SortOrder
   }
 
@@ -18122,6 +18203,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     role?: SortOrder
+    banned?: SortOrder
+    banReason?: SortOrder
+    banExpires?: SortOrder
     lastLoggedIn?: SortOrder
   }
 
@@ -18134,6 +18218,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     role?: SortOrder
+    banned?: SortOrder
+    banReason?: SortOrder
+    banExpires?: SortOrder
     lastLoggedIn?: SortOrder
   }
 
@@ -20140,6 +20227,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
     passwordReset?: PasswordResetCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
@@ -20155,6 +20245,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
     passwordReset?: PasswordResetUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
@@ -20275,6 +20368,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     passwordReset?: PasswordResetUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
@@ -20290,6 +20386,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     passwordReset?: PasswordResetUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -20629,6 +20728,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
     contractAccess?: ContractAccessCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
@@ -20644,6 +20746,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
     contractAccess?: ContractAccessUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
@@ -20675,6 +20780,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     contractAccess?: ContractAccessUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
@@ -20690,6 +20798,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     contractAccess?: ContractAccessUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -20705,6 +20816,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
     passwordReset?: PasswordResetCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessCreateNestedManyWithoutUserInput
@@ -20720,6 +20834,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
     passwordReset?: PasswordResetUncheckedCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessUncheckedCreateNestedManyWithoutUserInput
@@ -20751,6 +20868,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     passwordReset?: PasswordResetUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUpdateManyWithoutUserNestedInput
@@ -20766,6 +20886,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     passwordReset?: PasswordResetUncheckedUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUncheckedUpdateManyWithoutUserNestedInput
@@ -20781,6 +20904,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
     passwordReset?: PasswordResetCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessCreateNestedManyWithoutUserInput
@@ -20796,6 +20922,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string | null
+    banned?: boolean | null
+    banReason?: string | null
+    banExpires?: Date | string | null
     lastLoggedIn?: Date | string | null
     passwordReset?: PasswordResetUncheckedCreateNestedManyWithoutUserInput
     contractAccess?: ContractAccessUncheckedCreateNestedManyWithoutUserInput
@@ -20827,6 +20956,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     passwordReset?: PasswordResetUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUpdateManyWithoutUserNestedInput
@@ -20842,6 +20974,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: NullableStringFieldUpdateOperationsInput | string | null
+    banned?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    banExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastLoggedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     passwordReset?: PasswordResetUncheckedUpdateManyWithoutUserNestedInput
     contractAccess?: ContractAccessUncheckedUpdateManyWithoutUserNestedInput

@@ -1,12 +1,12 @@
-﻿import { AnyNull } from '@/generated/prisma-runtime-utils';
-import { DbNull } from '@/generated/prisma-runtime-utils';
-import { Decimal } from '@/generated/prisma-runtime-utils';
-import { isAnyNull } from '@/generated/prisma-runtime-utils';
-import { isDbNull } from '@/generated/prisma-runtime-utils';
-import { isJsonNull } from '@/generated/prisma-runtime-utils';
-import { isObjectEnumValue } from '@/generated/prisma-runtime-utils';
-import { JsonNull } from '@/generated/prisma-runtime-utils';
-import { NullTypes } from '@/generated/prisma-runtime-utils';
+import { AnyNull } from '@prisma/client-runtime-utils';
+import { DbNull } from '@prisma/client-runtime-utils';
+import { Decimal } from '@prisma/client-runtime-utils';
+import { isAnyNull } from '@prisma/client-runtime-utils';
+import { isDbNull } from '@prisma/client-runtime-utils';
+import { isJsonNull } from '@prisma/client-runtime-utils';
+import { isObjectEnumValue } from '@prisma/client-runtime-utils';
+import { JsonNull } from '@prisma/client-runtime-utils';
+import { NullTypes } from '@prisma/client-runtime-utils';
 
 export { AnyNull }
 
